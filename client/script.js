@@ -8,7 +8,7 @@ const btnStart = document.getElementById('btn-start');
 const btnMbyll = document.getElementById('btn-mbyll');
 
 let isMyTurn = false;
-let hasDrawnCard = false; // Rregull: Duhet te terheqesh leter para se te hedhesh
+let hasDrawnCard = false; 
 let doraImeData = []; 
 
 // Ruajtja e emrit
@@ -32,6 +32,11 @@ socket.on('receiveCards', (cards) => {
     cards.forEach(card => {
         handContainer.appendChild(createCard(card.v, card.s));
     });
+    
+    // Kontrolli fillestar: Nëse sapo morëm 11 letra, jemi fillimtarët
+    if (doraImeData.length === 11) {
+        hasDrawnCard = true;
+    }
 });
 
 socket.on('gameStarted', (data) => {
@@ -59,7 +64,17 @@ socket.on('updateGameState', (data) => {
     });
 
     isMyTurn = (data.activePlayerId === socket.id);
-    if (isMyTurn) hasDrawnCard = false; // Resetohet ne fillim te rradhes
+    
+    if (isMyTurn) {
+        // RREGULLI I RI: Nëse është rradha ime dhe kam 11 letra, 
+        // jam fillimtar ose sapo kam marrë letër, pra mund të hedh direkt.
+        if (doraImeData.length === 11) {
+            hasDrawnCard = true;
+        } else {
+            hasDrawnCard = false;
+        }
+    }
+    
     updateTurnUI();
 });
 
@@ -95,7 +110,7 @@ function createCard(v, s) {
     cardDiv.className = 'card';
     cardDiv.draggable = true;
     cardDiv.innerHTML = `${v}<br>${s}`;
-    cardDiv.dataset.v = v; // Ruajme vleren ne dataset per drop-in
+    cardDiv.dataset.v = v; 
     cardDiv.dataset.s = s;
     if(s === '♥' || s === '♦') cardDiv.style.color = 'red';
 
@@ -113,7 +128,7 @@ handContainer.addEventListener('dragover', e => {
     else handContainer.insertBefore(draggingCard, afterElement);
 });
 
-// Hedhja e letrës (Discard) - KETU BEME NDRYSHIMET KRYESORE
+// Hedhja e letrës (Discard)
 discardPile.addEventListener('dragover', e => e.preventDefault());
 discardPile.addEventListener('drop', () => {
     if (!isMyTurn) return alert("Nuk është radha jote!");
@@ -134,13 +149,15 @@ discardPile.addEventListener('drop', () => {
     draggingCard.style.transform = `rotate(${randomRotate}deg)`;
     discardPile.appendChild(draggingCard);
     
-    isMyTurn = false; // Bllokohet menjehere deri ne njoftimin tjeter
+    hasDrawnCard = false; // Resetohet per rrethin tjeter
+    isMyTurn = false; 
     socket.emit('endTurn'); 
 });
 
 // 6. Mbyllja dhe Pikët
 function checkCombinations() {
     const cards = handContainer.querySelectorAll('.card');
+    // Ne Zion mbyllesh kur mbetesh me 10 letra (pasi ke hedhur te 11-ten)
     if (cards.length >= 10) {
         btnMbyll.style.display = 'block';
         btnMbyll.classList.add('glow-green');
