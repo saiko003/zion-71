@@ -8,9 +8,10 @@ const btnStart = document.getElementById('btn-start');
 const btnMbyll = document.getElementById('btn-mbyll');
 
 let isMyTurn = false;
-let doraImeData = []; // Këtu ruajmë të dhënat e letrave (v dhe s)
+let hasDrawnCard = false; // Rregull: Duhet te terheqesh leter para se te hedhesh
+let doraImeData = []; 
 
-// Ruajtja e emrit (Rregulli 16)
+// Ruajtja e emrit
 let myName = localStorage.getItem('zion_player_name');
 if (!myName) {
     myName = prompt("Shkruaj emrin tënd:");
@@ -26,7 +27,7 @@ btnStart.addEventListener('click', () => {
 socket.on('receiveCards', (cards) => {
     document.getElementById('lobby-controls').style.display = 'none';
     handContainer.innerHTML = '';
-    doraImeData = cards; // Ruajmë të dhënat
+    doraImeData = cards; 
     
     cards.forEach(card => {
         handContainer.appendChild(createCard(card.v, card.s));
@@ -39,7 +40,7 @@ socket.on('gameStarted', (data) => {
     if(data.jackpot.s === '♥' || data.jackpot.s === '♦') jackpotDiv.style.color = 'red';
 });
 
-// 3. Menaxhimi i Rradhës (Rregulli 13)
+// 3. Menaxhimi i Rradhës
 socket.on('updateGameState', (data) => {
     const scoreBody = document.getElementById('score-body');
     scoreBody.innerHTML = '';
@@ -58,6 +59,7 @@ socket.on('updateGameState', (data) => {
     });
 
     isMyTurn = (data.activePlayerId === socket.id);
+    if (isMyTurn) hasDrawnCard = false; // Resetohet ne fillim te rradhes
     updateTurnUI();
 });
 
@@ -71,13 +73,15 @@ function updateTurnUI() {
     }
 }
 
-// 4. Marrja e Letrës (Rregulli 3 & 12)
+// 4. Marrja e Letrës
 deckElement.addEventListener('click', () => {
     if (!isMyTurn) return alert("Nuk është radha jote!");
+    if (hasDrawnCard) return alert("E more një letër, tani duhet të hedhësh një!");
     socket.emit('drawCard');
 });
 
 socket.on('cardDrawn', (card) => {
+    hasDrawnCard = true;
     doraImeData.push(card);
     const newCard = createCard(card.v, card.s);
     handContainer.appendChild(newCard);
@@ -91,6 +95,8 @@ function createCard(v, s) {
     cardDiv.className = 'card';
     cardDiv.draggable = true;
     cardDiv.innerHTML = `${v}<br>${s}`;
+    cardDiv.dataset.v = v; // Ruajme vleren ne dataset per drop-in
+    cardDiv.dataset.s = s;
     if(s === '♥' || s === '♦') cardDiv.style.color = 'red';
 
     cardDiv.addEventListener('dragstart', () => cardDiv.classList.add('dragging'));
@@ -99,7 +105,6 @@ function createCard(v, s) {
     return cardDiv;
 }
 
-// Renditja në dorë
 handContainer.addEventListener('dragover', e => {
     e.preventDefault();
     const draggingCard = document.querySelector('.dragging');
@@ -108,20 +113,32 @@ handContainer.addEventListener('dragover', e => {
     else handContainer.insertBefore(draggingCard, afterElement);
 });
 
-// Hedhja e letrës (Discard)
+// Hedhja e letrës (Discard) - KETU BEME NDRYSHIMET KRYESORE
 discardPile.addEventListener('dragover', e => e.preventDefault());
 discardPile.addEventListener('drop', () => {
-    const draggingCard = document.querySelector('.dragging');
-    if (draggingCard.innerHTML.includes('★')) return alert("Xhokeri nuk mund të hidhet!");
+    if (!isMyTurn) return alert("Nuk është radha jote!");
+    if (!hasDrawnCard) return alert("Duhet të marrësh një letër te stiva para se të hedhësh!");
 
+    const draggingCard = document.querySelector('.dragging');
+    const v = draggingCard.dataset.v;
+    const s = draggingCard.dataset.s;
+
+    if (v === '★') return alert("Xhokeri nuk mund të hidhet!");
+
+    // Hiq letran nga dora (memorja)
+    const index = doraImeData.findIndex(c => c.v === v && c.s === s);
+    if (index > -1) doraImeData.splice(index, 1);
+
+    // Vizuale
     const randomRotate = Math.floor(Math.random() * 40) - 20;
     draggingCard.style.transform = `rotate(${randomRotate}deg)`;
     discardPile.appendChild(draggingCard);
     
-    socket.emit('endTurn'); // Kalon radhën te tjetri
+    isMyTurn = false; // Bllokohet menjehere deri ne njoftimin tjeter
+    socket.emit('endTurn'); 
 });
 
-// 6. Mbyllja dhe Pikët (Rregulli 7 & 8)
+// 6. Mbyllja dhe Pikët
 function checkCombinations() {
     const cards = handContainer.querySelectorAll('.card');
     if (cards.length >= 10) {
@@ -133,7 +150,8 @@ function checkCombinations() {
 }
 
 btnMbyll.addEventListener('click', () => {
-    let isFlush = confirm("A është kjo mbyllje FLUSH?");
+    if (!isMyTurn) return alert("Nuk mund të mbyllësh lojën jashtë rradhës!");
+    let isFlush = confirm("A është kjo mbyllje FLUSH (pa asnjë letër jashtë)?");
     socket.emit('playerClosed', { isFlush: isFlush });
     btnMbyll.style.display = 'none';
 });
@@ -150,19 +168,19 @@ function llogaritPiket(cards) {
     return cards.reduce((acc, card) => {
         if (card.v === 'A') return acc + 11;
         if (['K', 'Q', 'J'].includes(card.v)) return acc + 10;
-        if (card.v === 'X') return acc + 0;
+        if (card.v === 'X' || card.v === '★') return acc + 0;
         return acc + parseInt(card.v);
     }, 0);
 }
 
-// Chat (Rregulli 20)
+// Chat
 const chatInput = document.getElementById('chat-input');
 const btnSend = document.getElementById('btn-send');
 const chatMessages = document.getElementById('chat-messages');
 
 btnSend.addEventListener('click', () => {
     if (chatInput.value.trim()) {
-        socket.emit('sendMessage', chatInput.value);
+        socket.emit('sendMessage', { user: myName, text: chatInput.value });
         chatInput.value = '';
     }
 });
@@ -174,7 +192,6 @@ socket.on('receiveMessage', (data) => {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 });
 
-// Helper për Drag & Drop
 function getDragAfterElement(container, x) {
     const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
     return draggableElements.reduce((closest, child) => {
