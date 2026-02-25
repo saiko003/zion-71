@@ -33,10 +33,8 @@ socket.on('receiveCards', (cards) => {
         handContainer.appendChild(createCard(card.v, card.s));
     });
     
-    // Kontrolli fillestar: Nëse sapo morëm 11 letra, jemi fillimtarët
-    if (doraImeData.length === 11) {
-        hasDrawnCard = true;
-    }
+    // Fillimtari me 11 letra mund të mbyllë direkt ose të hedhë
+    checkMbylljaButton();
 });
 
 socket.on('gameStarted', (data) => {
@@ -66,15 +64,11 @@ socket.on('updateGameState', (data) => {
     isMyTurn = (data.activePlayerId === socket.id);
     
     if (isMyTurn) {
-        // RREGULLI I RI: Nëse është rradha ime dhe kam 11 letra, 
-        // jam fillimtar ose sapo kam marrë letër, pra mund të hedh direkt.
-        if (doraImeData.length === 11) {
-            hasDrawnCard = true;
-        } else {
-            hasDrawnCard = false;
-        }
+        // Nëse kam 11 letra në fillim të rradhës, jam fillimtar
+        hasDrawnCard = (doraImeData.length === 11);
     }
     
+    checkMbylljaButton();
     updateTurnUI();
 });
 
@@ -91,7 +85,7 @@ function updateTurnUI() {
 // 4. Marrja e Letrës
 deckElement.addEventListener('click', () => {
     if (!isMyTurn) return alert("Nuk është radha jote!");
-    if (hasDrawnCard) return alert("E more një letër, tani duhet të hedhësh një!");
+    if (hasDrawnCard) return alert("E more një letër, tani duhet të hedhësh një ose të mbyllësh!");
     socket.emit('drawCard');
 });
 
@@ -101,7 +95,7 @@ socket.on('cardDrawn', (card) => {
     const newCard = createCard(card.v, card.s);
     handContainer.appendChild(newCard);
     newCard.style.animation = "pullCard 0.5s ease-out";
-    checkCombinations();
+    checkMbylljaButton(); // Shfaq butonin sepse tani kemi 11 letra
 });
 
 // 5. Krijimi i Letrës dhe Drag & Drop
@@ -149,18 +143,18 @@ discardPile.addEventListener('drop', () => {
     draggingCard.style.transform = `rotate(${randomRotate}deg)`;
     discardPile.appendChild(draggingCard);
     
-    hasDrawnCard = false; // Resetohet per rrethin tjeter
+    hasDrawnCard = false; 
     isMyTurn = false; 
+    checkMbylljaButton(); // Fshih butonin pasi hodhëm letrën
     socket.emit('endTurn'); 
 });
 
-// 6. Mbyllja dhe Pikët
-function checkCombinations() {
-    const cards = handContainer.querySelectorAll('.card');
-    // Ne Zion mbyllesh kur mbetesh me 10 letra (pasi ke hedhur te 11-ten)
-    if (cards.length >= 10) {
+// 6. Logjika e Butonit Mbyll
+function checkMbylljaButton() {
+    // Butoni shfaqet VETËM nëse është rradha jote DHE ke 11 letra në dorë
+    if (isMyTurn && doraImeData.length === 11) {
         btnMbyll.style.display = 'block';
-        btnMbyll.classList.add('glow-green');
+        btnMall.classList.add('glow-green');
     } else {
         btnMbyll.style.display = 'none';
     }
@@ -168,6 +162,8 @@ function checkCombinations() {
 
 btnMbyll.addEventListener('click', () => {
     if (!isMyTurn) return alert("Nuk mund të mbyllësh lojën jashtë rradhës!");
+    if (doraImeData.length < 11) return alert("Duhet të kesh 11 letra për të mbyllur (10 të rregullta + 1 për ta hedhur)!");
+    
     let isFlush = confirm("A është kjo mbyllje FLUSH (pa asnjë letër jashtë)?");
     socket.emit('playerClosed', { isFlush: isFlush });
     btnMbyll.style.display = 'none';
