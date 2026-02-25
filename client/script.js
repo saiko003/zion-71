@@ -1,5 +1,5 @@
 // 1. Inicializimi dhe Lidhja
-const socket = io('https://zion-71-server.onrender.com');
+const socket = io('https://zion-71.onrender.com');
 const handContainer = document.getElementById('player-hand');
 const discardPile = document.getElementById('discard-pile');
 const deckElement = document.getElementById('deck');
