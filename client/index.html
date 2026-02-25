@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZION 71 - Loja e Letrave</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="scoreboard-container">
+            <h3>Pikët (ZION 71)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lojtari</th>
+                        <th>Pikët</th>
+                        <th>Rradha</th>
+                    </tr>
+                </thead>
+                <tbody id="score-body">
+                    </tbody>
+            </table>
+        </div>
+
+        <div id="table-area">
+            <div id="deck-area">
+                <div id="deck" class="card-back">STIVA</div>
+                <div id="jackpot" class="card">?</div>
+                <div id="discard-pile" class="card-slot">HEDH KËTU</div>
+            </div>
+            
+            <div id="lobby-controls">
+                <button id="btn-start">NIS LOJËN</button>
+            </div>
+        </div>
+
+        <div id="player-area">
+            <div id="player-hand">
+                </div>
+            <button id="btn-mbyll">MBYLL LOJËN</button>
+        </div>
+
+        <div id="chat-container">
+            <div id="chat-messages"></div>
+            <div id="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Shkruaj...">
+                <button id="btn-send">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
