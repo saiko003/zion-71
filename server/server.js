@@ -32,16 +32,23 @@ io.on('connection', (socket) => {
         }
     });
 
-    // START GAME
+    // START GAME - NDRYSHIMI KËTU
     socket.on('startGame', () => {
         if (players.length < 2) return;
 
         deck = createFullDeck(); 
-        currentTurnIndex = 0; // Gjithmonë fillon lojtari i parë
+        currentTurnIndex = 0; // Lojtari i parë në listë fillon lojën
 
-        players.forEach((player) => {
-            player.hand = deck.splice(0, 9);
-            player.hand.push({ v: '★', s: 'X', type: 'joker' }); // Xhokeri fiks
+        players.forEach((player, index) => {
+            // RREGULLI: Lojtari që fillon (index === currentTurnIndex) merr 10 letra
+            // Të tjerët marrin 9 letra
+            let cardsToGive = (index === currentTurnIndex) ? 10 : 9;
+            
+            player.hand = deck.splice(0, cardsToGive);
+            
+            // Të gjithë marrin nga një Xhoker (X ★)
+            player.hand.push({ v: '★', s: 'X', type: 'joker' }); 
+            
             io.to(player.id).emit('receiveCards', player.hand);
         });
 
@@ -50,9 +57,9 @@ io.on('connection', (socket) => {
         sendGameState();
     });
 
-    // DRAW CARD (E shtova që serveri të menaxhojë stivën)
+    // DRAW CARD
     socket.on('drawCard', () => {
-        if (players[currentTurnIndex].id === socket.id && deck.length > 0) {
+        if (players.length > 0 && players[currentTurnIndex].id === socket.id && deck.length > 0) {
             const newCard = deck.pop();
             io.to(socket.id).emit('cardDrawn', newCard);
         }
@@ -61,7 +68,6 @@ io.on('connection', (socket) => {
     // END TURN
     socket.on('endTurn', () => {
         if (players.length > 0) {
-            // Kalojmë rradhën te lojtari tjetër që nuk është eliminuar
             do {
                 currentTurnIndex = (currentTurnIndex + 1) % players.length;
             } while (players[currentTurnIndex].eliminated && players.filter(p => !p.eliminated).length > 1);
@@ -70,7 +76,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // PLAYER CLOSED (MBYLLJA)
+    // PLAYER CLOSED
     socket.on('playerClosed', (data) => {
         const winner = players.find(p => p.id === socket.id);
         if (!winner) return;
@@ -104,10 +110,8 @@ io.on('connection', (socket) => {
         players = players.filter(p => p.id !== socket.id);
         if (currentTurnIndex >= players.length) currentTurnIndex = 0;
         sendGameState();
-        console.log('Lojtari u largua.');
     });
 
-    // Funksion ndihmës për të dërguar gjendjen e lojës (që të mos përsërisim kod)
     function sendGameState() {
         io.emit('updateGameState', {
             players: players.map(p => ({ 
@@ -125,14 +129,13 @@ function createFullDeck() {
     let newDeck = [];
     const symbols = ['♠', '♣', '♥', '♦'];
     const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-    // 2 palë letra (si Zion-i origjinal)
     for (let i = 0; i < 2; i++) {
         symbols.forEach(s => values.forEach(v => newDeck.push({ v, s })));
     }
     return newDeck.sort(() => Math.random() - 0.5);
 }
 
-const PORT = process.env.PORT || 10000; // Porti 10000 preferohet nga Render
+const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
     console.log(`Serveri po punon te porti ${PORT}`);
 });
