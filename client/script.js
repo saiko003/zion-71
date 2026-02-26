@@ -459,3 +459,30 @@ socket.on('receiveMessage', (data) => {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 });
+
+// KJO ZGJIDH PROBLEMIN E TELEFONIT
+const touchHandler = (id, eventName) => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('pointerdown', (e) => {
+            // Simulon klikimin që të mos ndryshosh gjithë logjikën e lojës
+            el.click(); 
+        }, { passive: false });
+    }
+};
+
+// I aktivizojmë për elementet kryesore
+touchHandler('deck');
+touchHandler('jackpot');
+touchHandler('discard-pile');
+touchHandler('btn-start');
+touchHandler('btn-mbyll');
+touchHandler('btn-send-chat');
+
+// Për letrat që krijohen në dorë (dinamike)
+document.getElementById('player-hand').addEventListener('pointerdown', (e) => {
+    const card = e.target.closest('.card');
+    if (card) {
+        card.click();
+    }
+}, { passive: false });
