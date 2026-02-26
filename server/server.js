@@ -12,7 +12,7 @@ const io = new Server(server, {
 
 let players = []; 
 let currentTurnIndex = 0;
-let dealerIndex = 0; // Pika 2: Roli i ndarësit që lëviz
+let dealerIndex = 0; 
 let deck = [];
 let gameInProgress = false;
 
@@ -21,6 +21,7 @@ io.on('connection', (socket) => {
 
     // JOIN GAME
     socket.on('joinGame', (playerName) => {
+        // RREGULLI: Maksimumi 5 lojtarë dhe nuk hyhet dot nëse loja ka nisur
         if (players.length < 5 && !gameInProgress) {
             const newPlayer = {
                 id: socket.id,
@@ -31,33 +32,42 @@ io.on('connection', (socket) => {
                 pointsSubmitted: false
             };
             players.push(newPlayer);
+            console.log(`${newPlayer.name} u bashkua.`);
             sendGameState();
+        } else if (gameInProgress) {
+            socket.emit('receiveMessage', { user: 'SISTEMI', text: 'Loja ka nisur, prit raundin tjetër.' });
         }
     });
 
-    // START GAME / NEXT ROUND (Pika 2 & 16)
+    // START GAME / NEXT ROUND
     socket.on('startGame', () => {
-        if (players.length < 2) return;
+        // RREGULLI: Loja duhet të ketë 2 deri në 5 lojtarë
+        if (players.length < 2) {
+            socket.emit('receiveMessage', { user: 'SISTEMI', text: 'Duhen të paktën 2 lojtarë për të nisur!' });
+            return;
+        }
         
         gameInProgress = true;
         deck = createFullDeck(); 
         
-        // Pika 16: Radhën e fillon Ndarësi (Dealer)
+        // Ndarësi fillon raundin
         currentTurnIndex = dealerIndex;
 
         players.forEach((player, index) => {
-            player.pointsSubmitted = false;
-            // Pika 1: Ndarësi merr 10 letra + 1 Xhoker, të tjerët 9 + 1 Xhoker
-            let cardsToGive = (index === dealerIndex) ? 10 : 9;
-            
-            player.hand = deck.splice(0, cardsToGive);
-            // Pika 1: Shtohet Xhokeri automatikisht
-            player.hand.push({ v: '★', s: 'X', type: 'joker' }); 
-            
-            io.to(player.id).emit('receiveCards', player.hand);
+            if (!player.eliminated) {
+                player.pointsSubmitted = false;
+                // Ndarësi (index === dealerIndex) merr 10 letra, të tjerët 9
+                let cardsToGive = (index === dealerIndex) ? 10 : 9;
+                player.hand = deck.splice(0, cardsToGive);
+                
+                // Çdo lojtar merr 1 Xhoker (★) automatikisht
+                player.hand.push({ v: '★', s: 'X', type: 'joker' }); 
+                
+                io.to(player.id).emit('receiveCards', player.hand);
+            }
         });
 
-        // Pika 6: Jackpot (letra vertikale poshtë stivës)
+        // Jackpot (letra nën stivë)
         let jackpotCard = deck.pop();
         io.emit('gameStarted', { 
             jackpot: jackpotCard,
@@ -67,17 +77,16 @@ io.on('connection', (socket) => {
         sendGameState();
     });
 
-    // DRAW CARD (Pika 3 & 12)
+    // DRAW CARD
     socket.on('drawCard', () => {
         const currentPlayer = players[currentTurnIndex];
         if (currentPlayer && currentPlayer.id === socket.id && deck.length > 0) {
             const newCard = deck.pop();
             io.to(socket.id).emit('cardDrawn', newCard);
-            // Nëse mbaron stiva, Pika 3 thotë të përzihen letrat (do shtohet në v2)
         }
     });
 
-    // END TURN (Pika 10 & 15)
+    // END TURN
     socket.on('endTurn', () => {
         if (players.length > 0) {
             moveToNextPlayer();
@@ -85,7 +94,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // PLAYER CLOSED (Pika 7)
+    // PLAYER CLOSED
     socket.on('playerClosed', (data) => {
         const winner = players.find(p => p.id === socket.id);
         if (!winner) return;
@@ -97,27 +106,33 @@ io.on('connection', (socket) => {
         });
     });
 
-    // SUBMIT POINTS (Pika 17)
+    // SUBMIT POINTS
     socket.on('submitMyPoints', (data) => {
         const player = players.find(p => p.id === socket.id);
         if (player && !player.pointsSubmitted) {
             player.score += data.points;
             player.pointsSubmitted = true;
             
-            // Pika 9: Eliminimi në 71
+            // Eliminimi mbi 71 pikë
             if (player.score > 71) {
                 player.eliminated = true;
             }
         }
 
-        // Kontrollo nëse të gjithë kanë dërguar pikët për të përgatitur raundin tjetër
+        // Kontrolli nëse raundi u mbyll nga të gjithë
+        const activePlayers = players.filter(p => !p.eliminated);
         if (players.every(p => p.pointsSubmitted || p.eliminated)) {
-            prepareNextRound();
+            if (activePlayers.length <= 1) {
+                io.emit('receiveMessage', { user: 'SISTEMI', text: 'Loja mbaroi! Kemi një fitues.' });
+                gameInProgress = false;
+            } else {
+                prepareNextRound();
+            }
         }
         sendGameState();
     });
 
-    // CHAT (Pika 14)
+    // CHAT
     socket.on('sendMessage', (data) => {
         io.emit('receiveMessage', {
             user: data.user,
@@ -133,7 +148,6 @@ io.on('connection', (socket) => {
         sendGameState();
     });
 
-    // FUNKSIONET NDIHMËSE
     function moveToNextPlayer() {
         let attempts = 0;
         do {
@@ -143,13 +157,12 @@ io.on('connection', (socket) => {
     }
 
     function prepareNextRound() {
-        // Pika 16: Roli i ndarësit lëviz me radhë
         dealerIndex = (dealerIndex + 1) % players.length;
-        // Nëse ndarësi i ri është i eliminuar, lëvize te tjetri
         while (players[dealerIndex].eliminated && players.filter(p => !p.eliminated).length > 1) {
             dealerIndex = (dealerIndex + 1) % players.length;
         }
         gameInProgress = false; 
+        io.emit('receiveMessage', { user: 'SISTEMI', text: 'Raundi u mbyll. Ndarësi i ri mund të nisë lojën.' });
     }
 
     function sendGameState() {
@@ -170,11 +183,9 @@ function createFullDeck() {
     let newDeck = [];
     const symbols = ['♠', '♣', '♥', '♦'];
     const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-    // Pika 1: 2 pako letra (104 letra)
     for (let i = 0; i < 2; i++) {
         symbols.forEach(s => values.forEach(v => newDeck.push({ v, s })));
     }
-    // Shuffle
     return newDeck.sort(() => Math.random() - 0.5);
 }
 
