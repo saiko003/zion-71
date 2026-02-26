@@ -284,10 +284,44 @@ btnMbyll.addEventListener('click', () => {
     socket.emit('playerClosed', { isFlush, hand: handToVerify });
 });
 
+// PËRDITËSUAR: Visual Reveal pas mbylljes
 socket.on('roundOver', (data) => {
+    // 1. Krijo Overlay për Visual Reveal
+    const winnerOverlay = document.createElement('div');
+    winnerOverlay.id = "winner-reveal-overlay";
+    winnerOverlay.innerHTML = `
+        <div class="winner-content">
+            <h2 style="color: gold; margin-bottom: 10px;">🏆 ${data.winnerName} MBYLLI LOJËN!</h2>
+            <p style="margin-bottom: 15px;">${data.isFlush ? "🔥 MBYLLJE FLUSH (x2 PIKË)" : "Mbyllje Normale"}</p>
+            <div id="winning-cards-showcase" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;"></div>
+            <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.7;">Raundi i ri fillon pas pak...</p>
+        </div>
+    `;
+    document.body.appendChild(winnerOverlay);
+
+    // 2. Shto letrat e fituesit në dritare
+    const showcase = document.getElementById('winning-cards-showcase');
+    if (data.winningHand) {
+        data.winningHand.forEach(card => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card mini';
+            cardDiv.style.width = "50px";
+            cardDiv.style.height = "75px";
+            cardDiv.style.fontSize = "0.9rem";
+            cardDiv.innerHTML = `${card.v}<br>${card.s}`;
+            if (['♥', '♦'].includes(card.s)) cardDiv.style.color = 'red';
+            showcase.appendChild(cardDiv);
+        });
+    }
+
+    // 3. Llogarit pikët personale
     let p = llogaritPiket(doraImeData);
     socket.emit('submitMyPoints', { points: p, isFlush: data.isFlush });
-    alert(`Raundi u mbyll nga ${data.winnerName}!`);
+
+    // 4. Hiq overlay pas 5 sekondave
+    setTimeout(() => {
+        winnerOverlay.remove();
+    }, 5000);
 });
 
 function llogaritPiket(cards) {
