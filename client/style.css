@@ -382,8 +382,53 @@ body {
     font-weight: bold;
     transform: none !important; /* Hiq efektet hover gjatë reveal */
 }
+/* ... kodet e mëparshme për .card, #player-hand, etj ... */
+
+/* 1. MËNYRA DHE PARALAJMËRIMI I ORIENTIMIT */
+#orientation-warning {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #1b2a3d; /* Ngjyra jote aktuale */
+    z-index: 9999;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Kur telefoni mbahet drejt (Portrait) */
+@media screen and (orientation: portrait) {
+    #orientation-warning {
+        display: flex; /* Shfaq mesazhin */
+    }
+    #game-container {
+        display: none; /* Fsheh lojën */
+    }
+}
+
+/* Kur telefoni mbahet shtrirë (Landscape) */
+@media screen and (orientation: landscape) {
+    #orientation-warning {
+        display: none; /* Fsheh mesazhin */
+    }
+    #game-container {
+        display: flex;
+        flex-direction: column; /* Mbaje column nëse dëshiron që elementet të rrinë njëri nën tjetrin edhe në landscape */
+        justify-content: space-around;
+        height: 100vh;
+        width: 100vw;
+    }
+}
+
+/* 2. RREGULLI PËR TASTIERËN (Që shtuam më herët) */
 @media (max-height: 500px) {
     #chat-container {
-        display: none; /* Fsheh chat-in nëse ekrani bëhet shumë i vogël (p.sh. kur del tastiera) */
+        display: none; 
     }
 }
