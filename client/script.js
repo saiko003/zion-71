@@ -479,71 +479,90 @@ socket.on('receiveMessage', (data) => {
 // ... këtu mbaron kodi yt i vjetër (p.sh. socket.on('receiveMessage', ...))
 
 // ==========================================
-// 1. KJO ZGJIDH PROBLEMIN E TELEFONIT (Vendose këtu)
+// SISTEMI I RI I NDËRVEPRIMIT (IPHONE & PC)
 // ==========================================
-const touchHandler = (id) => {
+
+// Funksion për klikim të shpejtë në iPhone pa bllokuar sistemin
+const setupFastClick = (id, action) => {
     const el = document.getElementById(id);
-    if (el) {
-        el.addEventListener('pointerdown', (e) => {
-            el.click(); 
-        }, { passive: false });
-    }
+    if (!el) return;
+    el.addEventListener('touchstart', (e) => {
+        // Lejojmë klikimin vetëm nëse nuk jemi duke bërë drag
+        if (!document.querySelector('.dragging')) {
+            action();
+        }
+    }, { passive: true });
 };
 
-touchHandler('deck');
-touchHandler('jackpot');
-touchHandler('discard-pile');
-touchHandler('btn-start');
-touchHandler('btn-mbyll');
-touchHandler('btn-send-chat');
+// Aktivizo klikimet për elementet kryesore
+setupFastClick('deck', () => {
+    if (isMyTurn && doraImeData.length === 10) socket.emit('drawCard');
+    else if (isMyTurn) socket.emit('requestMyCards');
+});
 
-const playerHand = document.getElementById('player-hand');
-if (playerHand) {
-    playerHand.addEventListener('pointerdown', (e) => {
-        const card = e.target.closest('.card');
-        if (card) {
-            card.click();
-        }
-    }, { passive: false });
-}
+setupFastClick('jackpot', () => {
+    // Këtu thërrasim eventin tënd ekzistues që ke shkruar lart në kod
+    jackpotElement.click(); 
+});
 
-// ==========================================
-// 2. BLOKIMI I SCROLL-IT (Krejt në fund)
-// ==========================================
-window.addEventListener('scroll', () => {
-    window.scrollTo(0, 0);
-}, { passive: false });
-
-// Kjo detyron letrën të ndjekë gishtin në iPhone
+// LOGJIKA E LËVIZJES (DRAG) PËR IPHONE
 document.addEventListener('touchmove', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (draggingCard) {
-        if (e.cancelable) e.preventDefault(); // Ndalo scroll-in e faqes
+        if (e.cancelable) e.preventDefault();
         const touch = e.touches[0];
         
         draggingCard.style.position = 'fixed';
         draggingCard.style.zIndex = '1000';
+        // KRITIKE: pointerEvents none që gishti të "shohë" çfarë ka poshtë letrës
+        draggingCard.style.pointerEvents = 'none'; 
         draggingCard.style.left = (touch.clientX - draggingCard.offsetWidth / 2) + 'px';
         draggingCard.style.top = (touch.clientY - draggingCard.offsetHeight / 2) + 'px';
     }
 }, { passive: false });
 
-// Logjika për lëshimin e letrës (Drop) në iPhone
+// LOGJIKA E LËSHIMIT (DROP) PËR IPHONE
 document.addEventListener('touchend', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (!draggingCard) return;
 
-    const dropZone = discardPile.getBoundingClientRect();
     const touch = e.changedTouches[0];
+    const dropZone = discardPile.getBoundingClientRect();
 
-    // Kontrollo nëse gishti u lëshua mbi zonën e hedhjes (Discard Pile)
-    if (touch.clientX > dropZone.left && touch.clientX < dropZone.right &&
-        touch.clientY > dropZone.top && touch.clientY < dropZone.bottom) {
-        
-        // Këtu shto logjikën tënde të hedhjes (socket.emit etj.)
-        console.log("Letra u hodh me sukses nga iPhone!");
+    // Kontrollojmë nëse jemi mbi zonën e hedhjes
+    const isOverDiscard = (
+        touch.clientX > dropZone.left && touch.clientX < dropZone.right &&
+        touch.clientY > dropZone.top && touch.clientY < dropZone.bottom
+    );
+
+    if (isOverDiscard && isMyTurn && doraImeData.length >= 11) {
+        // Marrim vlerat nga letra që po tërheqim
+        const parts = draggingCard.innerHTML.split('<br>');
+        const val = parts[0];
+        const suit = parts[1];
+
+        if (val !== '★') {
+            const idx = doraImeData.findIndex(c => c.v === val && c.s === suit);
+            if (idx > -1) {
+                const cardDiscarded = { v: val, s: suit };
+                doraImeData.splice(idx, 1);
+                renderHand();
+                
+                isMyTurn = false;
+                socket.emit('cardDiscarded', cardDiscarded);
+                socket.emit('endTurn');
+                
+                updateTurnUI();
+                checkTurnLogic();
+            }
+        } else {
+            alert("Xhokeri nuk hidhet!");
+        }
     }
-    
-    draggingCard.style.position = ''; // Ktheje letrën në vendin e vet nëse nuk u hodh
+
+    // Resetojmë letrën në gjendje normale
+    draggingCard.style.position = '';
+    draggingCard.style.zIndex = '';
+    draggingCard.style.pointerEvents = 'auto';
     draggingCard.classList.remove('dragging');
 }, { passive: false });
