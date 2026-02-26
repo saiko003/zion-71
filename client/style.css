@@ -424,7 +424,7 @@ body {
     }
 }
 
-/* 2. RREGULLIMI KOMPLET PËR LANDSCAPE (FULL SCREEN FIX) */
+/* 2. RREGULLIMI KOMPLET PËR LANDSCAPE (OPTIMIZUAR PËR IPHONE) */
 @media screen and (orientation: landscape) {
     #orientation-warning {
         display: none;
@@ -433,51 +433,53 @@ body {
     body {
         margin: 0;
         padding: 0;
-        overflow: hidden; /* Ndalon scroll-in që të mos priten letrat */
-        height: 100vh;
+        overflow: hidden;
+        /* svh është zgjidhja për iPhone Safari */
+        height: 100svh; 
         width: 100vw;
+        position: fixed;
     }
 
     #game-container {
         display: grid;
-        /* Ndajmë ekranin: 180px për pikët majtas, pjesa tjetër për lojën */
-        grid-template-columns: 180px 1fr; 
-        /* Ndajmë lartësinë: pjesa e sipërme për stivën, pjesa e poshtme për letrat */
+        /* Pikët majtas, loja djathtas */
+        grid-template-columns: 140px 1fr; 
+        /* Stiva lart, letrat poshtë */
         grid-template-rows: 1fr auto; 
-        height: 100vh;
+        height: 100svh;
         width: 100vw;
-        padding: 10px;
-        gap: 10px;
+        /* Mbron letrat nga vija e poshtme e iPhone dhe notch-i anash */
+        padding: 5px 10px calc(8px + env(safe-area-inset-bottom)) 10px;
         box-sizing: border-box;
+        gap: 5px;
     }
 
-    /* Tabelën e pikëve e vendosim në kolonën e parë majtas */
+    /* Tabelën e pikëve */
     #scoreboard-container {
         grid-column: 1;
-        grid-row: 1 / 3; /* Zë gjithë lartësinë nga lart poshtë */
+        grid-row: 1 / 3;
         width: 100%;
-        max-height: 95vh;
-        font-size: 0.75rem;
-        background: rgba(0, 0, 0, 0.4);
-        padding: 8px;
-        border-radius: 10px;
+        max-height: 90svh;
+        font-size: 0.7rem;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 5px;
+        border-radius: 8px;
         overflow-y: auto;
-        border: 1px solid rgba(255,255,255,0.1);
     }
 
     #score-table {
         width: 100%;
     }
 
-    /* Zona e tavolinës (Stiva dhe Jackpot) */
+    /* Zona e tavolinës (Deck & Jackpot) */
     #table-area {
         grid-column: 2;
         grid-row: 1;
         display: flex;
-        flex-direction: row; /* I rreshtojmë horizontalisht */
         justify-content: center;
         align-items: center;
-        gap: 20px;
+        gap: 15px;
+        transform: scale(0.9); /* Zvogëlohet pak që të lërë vend për dorën */
     }
 
     /* Zona e lojtarit (Letrat në dorë) */
@@ -488,47 +490,45 @@ body {
         flex-direction: column;
         align-items: center;
         justify-content: flex-end;
-        padding-bottom: 5px;
     }
 
     #player-hand {
         display: flex;
-        gap: 4px;
+        gap: 3px;
         justify-content: center;
         width: 100%;
-        /* Ky shkallëzim siguron që letrat të mos priten në lartësi */
-        transform: scale(0.85); 
+        /* I ngrisim letrat pak më lart dhe i zvogëlojmë për iPhone */
+        transform: scale(0.8); 
         transform-origin: bottom center;
+        margin-bottom: 2px;
     }
 
-    /* Përmasat e letrave specifike për landscape që të nxënë vend */
+    /* Përmasat e letrave FIX për iPhone Landscape */
     .card, .card-back {
-        width: 58px !important;
-        height: 82px !important;
-        font-size: 1rem !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        width: 52px !important;
+        height: 75px !important;
+        font-size: 0.9rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
     }
 
-    /* Fshehim elementet e panevojshme që vjedhin hapësirë */
+    /* Fshehim gjërat që zënë vend kot */
     #chat-container, h3, #asistenti-container span:last-child {
         display: none !important;
     }
     
-    /* Butoni Start dhe Mbyll të jenë më kompaktë */
     .start-btn, .glow-btn {
-        padding: 8px 15px;
-        font-size: 0.8rem;
+        padding: 6px 12px;
+        font-size: 0.75rem;
     }
 }
 
-/* 3. FIX PËR TELEFONAT SHUMË TË SHKURTËR */
-@media screen and (orientation: landscape) and (max-height: 380px) {
+/* 3. FIX PËR MODELE SHUMË TË VOGLA (iPhone SE etj) */
+@media screen and (orientation: landscape) and (max-height: 350px) {
     .card, .card-back {
-        width: 50px !important;
-        height: 70px !important;
-        font-size: 0.8rem !important;
+        width: 45px !important;
+        height: 65px !important;
     }
     #player-hand {
-        transform: scale(0.8);
+        transform: scale(0.75);
     }
 }
