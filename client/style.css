@@ -285,15 +285,18 @@ body {
 
 #chat-messages {
     height: 120px;
-    overflow-y: auto;
+    overflow-y: auto !important; /* Sigurohet që scroll-i lejohet */
     font-size: 0.95rem;
     margin-bottom: 12px;
     padding-right: 5px;
     display: flex;
     flex-direction: column;
     color: white;
-}
 
+    /* --- SHTESAT PËR MOBILE --- */
+    touch-action: pan-y; /* Lejon gishtin të lëvizë lart-poshtë VETËM këtu */
+    -webkit-overflow-scrolling: touch; /* E bën scroll-in e butë në iPhone */
+}
 /* Stili i mesazheve individuale */
 .chat-entry {
     margin-bottom: 6px;
