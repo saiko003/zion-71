@@ -210,13 +210,13 @@ function updateAsistenti() {
 
 // --- EVENTET ---
 
+// RREGULLIMI: Tërheqja nga Deck (punon pa kushte nëse është radha jote)
 deckElement.addEventListener('click', () => {
-    // Kontroll i rreptë që lejon tërheqjen vetëm nëse ke 10 letra
     if (!isMyTurn || doraImeData.length >= 11) return;
     socket.emit('drawCard');
 });
 
-// PËRDITËSUAR: Klikimi mbi Jackpot (Rregulli Flush)
+// PËRDITËSUAR: Klikimi mbi Jackpot (Rregulli Flush i rreptë)
 jackpotElement.addEventListener('click', () => {
     if (!isMyTurn || doraImeData.length !== 10) {
         alert("Jackpot merret vetëm si letra e 11-të kur po mbyll lojën!");
@@ -226,7 +226,7 @@ jackpotElement.addEventListener('click', () => {
     const parts = jackpotElement.innerHTML.split('<br>');
     const jackpotCard = { v: parts[0], s: parts[1] };
 
-    // Kontrollo nëse të gjitha letrat në dorë përputhen me simbolin e Jackpot-it
+    // Jackpot merret VETËM nëse ke 10 letrat me të njëjtin simbol
     const isFlushMatch = doraImeData.every(card => card.v === '★' || card.s === jackpotCard.s);
 
     if (isFlushMatch) {
@@ -251,7 +251,7 @@ socket.on('jackpotDrawn', (card) => {
 
 discardPile.addEventListener('dragover', e => e.preventDefault());
 discardPile.addEventListener('drop', (e) => {
-    e.preventDefault(); // E detyrueshme për drop
+    e.preventDefault(); 
     if (!isMyTurn || doraImeData.length < 11) return;
     
     const draggingCard = document.querySelector('.dragging');
@@ -265,15 +265,14 @@ discardPile.addEventListener('drop', (e) => {
 
     const idx = doraImeData.findIndex(c => c.v === val && c.s === suit);
     if (idx > -1) {
-        const cardDiscarded = { v: val, s: suit }; // Krijo objektin
+        const cardDiscarded = { v: val, s: suit }; 
         doraImeData.splice(idx, 1);
         renderHand();
         
-        // PËRMIRËSUAR: Resetojmë gjendjen dhe dërgojmë sinjalin te serveri
         isMyTurn = false;
         hasDrawnCard = false;
         
-        socket.emit('cardDiscarded', cardDiscarded); // Njofto serverin për letrën e hedhur
+        socket.emit('cardDiscarded', cardDiscarded); 
         socket.emit('endTurn');
         
         updateTurnUI();
@@ -283,25 +282,24 @@ discardPile.addEventListener('drop', (e) => {
 
 btnMbyll.addEventListener('click', () => {
     let ready = false;
-    let handToVerify = [];
+    let isFlushWin = false;
     
-    // Kontrollo mbylljen normale
-    for (let i = 0; i < doraImeData.length; i++) {
-        let testHand = doraImeData.filter((_, idx) => idx !== i);
-        if (validateZionHand(testHand)) {
-            ready = true;
-            handToVerify = doraImeData; 
-            break;
-        }
-    }
-
-    // Kontrollo mbylljen Flush
+    // Kontrolli Flush (pa pasur nevojë për rreshta/grupe)
     const firstSymbolCard = doraImeData.find(c => c.v !== '★');
     if (firstSymbolCard) {
-        const isFlush = doraImeData.every(c => c.v === '★' || c.s === firstSymbolCard.s);
-        if (isFlush) {
-            ready = true;
-            handToVerify = doraImeData;
+        isFlushWin = doraImeData.every(c => c.v === '★' || c.s === firstSymbolCard.s);
+    }
+
+    if (isFlushWin) {
+        ready = true;
+    } else {
+        // Kontrolli mbylljes normale (Grupe/Rreshta)
+        for (let i = 0; i < doraImeData.length; i++) {
+            let testHand = doraImeData.filter((_, idx) => idx !== i);
+            if (validateZionHand(testHand)) {
+                ready = true;
+                break;
+            }
         }
     }
 
@@ -310,13 +308,11 @@ btnMbyll.addEventListener('click', () => {
         return;
     }
 
-    let isFlush = confirm("A është mbyllje FLUSH?");
-    socket.emit('playerClosed', { isFlush, hand: handToVerify });
+    socket.emit('playerClosed', { isFlush: isFlushWin, hand: doraImeData });
 });
 
 // PËRDITËSUAR: Visual Reveal pas mbylljes
 socket.on('roundOver', (data) => {
-    // 1. Krijo Overlay për Visual Reveal
     const winnerOverlay = document.createElement('div');
     winnerOverlay.id = "winner-reveal-overlay";
     winnerOverlay.innerHTML = `
@@ -329,7 +325,6 @@ socket.on('roundOver', (data) => {
     `;
     document.body.appendChild(winnerOverlay);
 
-    // 2. Shto letrat e fituesit në dritare
     const showcase = document.getElementById('winning-cards-showcase');
     if (data.winningHand) {
         data.winningHand.forEach(card => {
@@ -344,11 +339,9 @@ socket.on('roundOver', (data) => {
         });
     }
 
-    // 3. Llogarit pikët personale
     let p = llogaritPiket(doraImeData);
     socket.emit('submitMyPoints', { points: p, isFlush: data.isFlush });
 
-    // 4. Hiq overlay pas 5 sekondave
     setTimeout(() => {
         winnerOverlay.remove();
     }, 5000);
@@ -366,11 +359,9 @@ function llogaritPiket(cards) {
 function updateTurnUI() {
     document.body.style.boxShadow = isMyTurn ? "inset 0 0 50px #27ae60" : "none";
     
-    // Glow për Deck
     if(isMyTurn && doraImeData.length === 10) deckElement.classList.add('active-deck');
     else deckElement.classList.remove('active-deck');
 
-    // SHTUAR: Glow për Jackpot (kur mund të merret)
     if(isMyTurn && doraImeData.length === 10) jackpotElement.classList.add('glow-jackpot');
     else jackpotElement.classList.remove('glow-jackpot');
 }
