@@ -12,7 +12,7 @@ let players = [];
 let currentTurnIndex = 0;
 let deck = [];
 let lastWinnerId = null;
-let jackpotCard = null; // 1. SHTUAR: Variabli për Jackpot
+let jackpotCard = null; // Ruajmë letrën Jackpot që shohin të gjithë
 
 io.on('connection', (socket) => {
     socket.on('joinGame', (name) => {
@@ -34,10 +34,6 @@ io.on('connection', (socket) => {
 
         deck = createFullDeck();
         
-        // 2. SHTUAR: Logjika e Jackpot në momentin e nisjes
-        // Marrim letrën e fundit të mbetur në stivë si Jackpot
-        jackpotCard = deck.pop();
-        
         if (lastWinnerId) {
             let winIdx = players.findIndex(p => p.id === lastWinnerId);
             currentTurnIndex = (winIdx + 1) % players.length;
@@ -49,6 +45,7 @@ io.on('connection', (socket) => {
             currentTurnIndex = (currentTurnIndex + 1) % players.length;
         }
 
+        // Shpërndajmë letrat lojtarëve
         players.forEach((p, i) => {
             if (!p.eliminated) {
                 let count = (i === currentTurnIndex) ? 10 : 9;
@@ -57,6 +54,12 @@ io.on('connection', (socket) => {
                 io.to(p.id).emit('receiveCards', p.hand);
             }
         });
+
+        // LOGJIKA E RE: Letra e Jackpot-it merret nga fundi i stivës pas shpërndarjes
+        if (deck.length > 0) {
+            jackpotCard = deck.pop(); 
+        }
+
         sendGameState();
     });
 
@@ -110,7 +113,7 @@ io.on('connection', (socket) => {
             })),
             activePlayerId: players[currentTurnIndex]?.id,
             deckCount: deck.length,
-            jackpotCard: jackpotCard // 3. SHTUAR: Dërgimi i Jackpot te lojtarët
+            jackpotCard: jackpotCard // Kjo i tregon front-end-it çfarë të vizatojë te stiva
         });
     }
 
