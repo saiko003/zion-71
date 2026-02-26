@@ -53,6 +53,10 @@ socket.on('updateGameState', (data) => {
         jackpotElement.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
         if (['♥', '♦'].includes(data.jackpotCard.s)) jackpotElement.style.color = 'red';
         else jackpotElement.style.color = 'black';
+        jackpotElement.style.display = 'block';
+    } else {
+        jackpotElement.innerHTML = '';
+        jackpotElement.style.display = 'none';
     }
 
     isMyTurn = (data.activePlayerId === socket.id);
@@ -204,7 +208,23 @@ deckElement.addEventListener('click', () => {
     socket.emit('drawCard');
 });
 
+// SHTUAR: Klikimi mbi Jackpot
+jackpotElement.addEventListener('click', () => {
+    if (!isMyTurn || doraImeData.length !== 10) {
+        alert("Jackpot merret vetëm si letra e 11-të kur po mbyll lojën!");
+        return;
+    }
+    socket.emit('drawJackpot');
+});
+
 socket.on('cardDrawn', (card) => {
+    doraImeData.push(card);
+    renderHand();
+    checkTurnLogic();
+});
+
+// SHTUAR: Kur merret Jackpot
+socket.on('jackpotDrawn', (card) => {
     doraImeData.push(card);
     renderHand();
     checkTurnLogic();
@@ -226,12 +246,15 @@ discardPile.addEventListener('drop', (e) => {
 
     const idx = doraImeData.findIndex(c => c.v === val && c.s === suit);
     if (idx > -1) {
+        const cardDiscarded = { v: val, s: suit }; // Krijo objektin
         doraImeData.splice(idx, 1);
         renderHand();
         
         // PËRMIRËSUAR: Resetojmë gjendjen dhe dërgojmë sinjalin te serveri
         isMyTurn = false;
         hasDrawnCard = false;
+        
+        socket.emit('cardDiscarded', cardDiscarded); // Njofto serverin për letrën e hedhur
         socket.emit('endTurn');
         
         updateTurnUI();
@@ -278,6 +301,12 @@ function llogaritPiket(cards) {
 
 function updateTurnUI() {
     document.body.style.boxShadow = isMyTurn ? "inset 0 0 50px #27ae60" : "none";
+    
+    // Glow për Deck
     if(isMyTurn && doraImeData.length === 10) deckElement.classList.add('active-deck');
     else deckElement.classList.remove('active-deck');
+
+    // SHTUAR: Glow për Jackpot (kur mund të merret)
+    if(isMyTurn && doraImeData.length === 10) jackpotElement.classList.add('glow-jackpot');
+    else jackpotElement.classList.remove('glow-jackpot');
 }
