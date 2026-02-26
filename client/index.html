@@ -6,17 +6,15 @@
     <title>ZION 71 - Loja e Letrave</title>
     <link rel="stylesheet" href="style.css">
     
-    <script src="https://zion-71.onrender.com/socket.io/socket.io.js"></script>
-
-    <script src="https://zion-71-server.onrender.com/socket.io/socket.io.js"></script>
-    
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
 
     <div id="game-container">
         <div id="scoreboard-container">
             <h3>Pikët (ZION 71)</h3>
-            <table id="score-table"> <thead>
+            <table id="score-table"> 
+                <thead>
                     <tr>
                         <th>Lojtari</th>
                         <th>Pikët</th>
@@ -42,14 +40,14 @@
         <div id="player-area">
             <div id="player-hand">
                 </div>
-            <button id="btn-mbyll" class="glow-btn">MBYLL LOJËN</button>
+            <button id="btn-mbyll" class="glow-btn" style="display: none;">MBYLL LOJËN</button>
         </div>
 
         <div id="chat-container">
             <div id="chat-messages"></div>
             <div id="chat-input-area">
                 <input type="text" id="chat-input" placeholder="Shkruaj një mesazh...">
-                <button id="btn-send">Send</button>
+                <button id="btn-send">Dërgo</button>
             </div>
         </div>
     </div>
