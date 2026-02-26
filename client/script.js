@@ -96,18 +96,21 @@ function renderHand() {
         
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
-        // --- LOGJIKA PËR PC (MOUSE) ---
         div.addEventListener('dragstart', (e) => {
             div.classList.add('dragging');
-            // Kjo i thotë browser-it që po lëvizim një element
-            e.dataTransfer.setData('text/plain', div.dataset.index);
+            // E rëndësishme për Firefox dhe Chrome
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', index); 
         });
 
         div.addEventListener('dragend', () => {
+            // I japim 100ms kohë që të përfundojë eventi 'drop' në stivë
+            setTimeout(() => {
             div.classList.remove('dragging');
             resetCardStyles(div);
             saveNewOrder();
-        });
+        }, 100);
+    });
 
         // --- LOGJIKA PËR IPHONE (TOUCH START & END) ---
         div.addEventListener('touchstart', (e) => {
@@ -510,18 +513,32 @@ setupFastClick('deck', () => {
 });
 setupFastClick('jackpot', () => jackpotElement.click());
 
-// 3. LOGJIKA E HEDHJES (PC - Mouse)
+// 1. Duhet t'i themi browser-it që kjo zonë LEJON hedhjen e letrave
 discardPile.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    discardPile.style.background = "rgba(39, 174, 96, 0.2)"; // Ndryshon ngjyrën kur afron letrën
+    e.preventDefault(); // KRITIKE: Pa këtë, 'drop' nuk punon në PC!
+    discardPile.style.background = "rgba(39, 174, 96, 0.3)";
+    discardPile.style.transform = "scale(1.1)";
 });
-discardPile.addEventListener('dragleave', () => discardPile.style.background = "");
-discardPile.addEventListener('drop', (e) => {
-    e.preventDefault();
+
+discardPile.addEventListener('dragleave', () => {
     discardPile.style.background = "";
-    const draggingCard = document.querySelector('.card.dragging');
-    if (draggingCard) processDiscard(draggingCard);
+    discardPile.style.transform = "";
 });
+
+// 2. Eventi i lëshimit të letrës
+discardPile.addEventListener('drop', (e) => {
+    e.preventDefault(); // Ndalon browser-in të bëjë veprime të tjera
+    discardPile.style.background = "";
+    discardPile.style.transform = "";
+
+    const draggingCard = document.querySelector('.card.dragging');
+    if (draggingCard) {
+        processDiscard(draggingCard);
+    } else {
+        console.error("PC: Nuk u gjet asnjë letër me klasën .dragging");
+    }
+});
+
 document.addEventListener('touchmove', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (draggingCard) {
