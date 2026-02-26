@@ -199,7 +199,7 @@ function updateAsistenti() {
 // --- EVENTET ---
 
 deckElement.addEventListener('click', () => {
-    // PËRMIRËSUAR: Kontroll i rreptë që lejon tërheqjen vetëm nëse ke 10 letra
+    // Kontroll i rreptë që lejon tërheqjen vetëm nëse ke 10 letra
     if (!isMyTurn || doraImeData.length >= 11) return;
     socket.emit('drawCard');
 });
@@ -211,20 +211,31 @@ socket.on('cardDrawn', (card) => {
 });
 
 discardPile.addEventListener('dragover', e => e.preventDefault());
-discardPile.addEventListener('drop', () => {
+discardPile.addEventListener('drop', (e) => {
+    e.preventDefault(); // E detyrueshme për drop
     if (!isMyTurn || doraImeData.length < 11) return;
+    
     const draggingCard = document.querySelector('.dragging');
-    const parts = draggingCard.innerHTML.split('<br>');
-    if (parts[0] === '★') return alert("Xhokeri nuk hidhet!");
+    if (!draggingCard) return;
 
-    const idx = doraImeData.findIndex(c => c.v === parts[0] && c.s === parts[1]);
+    const parts = draggingCard.innerHTML.split('<br>');
+    const val = parts[0];
+    const suit = parts[1];
+
+    if (val === '★') return alert("Xhokeri nuk hidhet!");
+
+    const idx = doraImeData.findIndex(c => c.v === val && c.s === suit);
     if (idx > -1) {
         doraImeData.splice(idx, 1);
         renderHand();
-        // PËRMIRËSUAR: Resetojmë gjendjen menjëherë pas hedhjes
+        
+        // PËRMIRËSUAR: Resetojmë gjendjen dhe dërgojmë sinjalin te serveri
         isMyTurn = false;
         hasDrawnCard = false;
         socket.emit('endTurn');
+        
+        updateTurnUI();
+        checkTurnLogic();
     }
 });
 
@@ -267,6 +278,6 @@ function llogaritPiket(cards) {
 
 function updateTurnUI() {
     document.body.style.boxShadow = isMyTurn ? "inset 0 0 50px #27ae60" : "none";
-    if(isMyTurn && !hasDrawnCard) deckElement.classList.add('active-deck');
+    if(isMyTurn && doraImeData.length === 10) deckElement.classList.add('active-deck');
     else deckElement.classList.remove('active-deck');
 }
