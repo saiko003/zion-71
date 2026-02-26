@@ -460,18 +460,20 @@ socket.on('receiveMessage', (data) => {
     }
 });
 
-// KJO ZGJIDH PROBLEMIN E TELEFONIT
-const touchHandler = (id, eventName) => {
+// ... këtu mbaron kodi yt i vjetër (p.sh. socket.on('receiveMessage', ...))
+
+// ==========================================
+// 1. KJO ZGJIDH PROBLEMIN E TELEFONIT (Vendose këtu)
+// ==========================================
+const touchHandler = (id) => {
     const el = document.getElementById(id);
     if (el) {
         el.addEventListener('pointerdown', (e) => {
-            // Simulon klikimin që të mos ndryshosh gjithë logjikën e lojës
             el.click(); 
         }, { passive: false });
     }
 };
 
-// I aktivizojmë për elementet kryesore
 touchHandler('deck');
 touchHandler('jackpot');
 touchHandler('discard-pile');
@@ -479,10 +481,19 @@ touchHandler('btn-start');
 touchHandler('btn-mbyll');
 touchHandler('btn-send-chat');
 
-// Për letrat që krijohen në dorë (dinamike)
-document.getElementById('player-hand').addEventListener('pointerdown', (e) => {
-    const card = e.target.closest('.card');
-    if (card) {
-        card.click();
-    }
+const playerHand = document.getElementById('player-hand');
+if (playerHand) {
+    playerHand.addEventListener('pointerdown', (e) => {
+        const card = e.target.closest('.card');
+        if (card) {
+            card.click();
+        }
+    }, { passive: false });
+}
+
+// ==========================================
+// 2. BLOKIMI I SCROLL-IT (Krejt në fund)
+// ==========================================
+window.addEventListener('scroll', () => {
+    window.scrollTo(0, 0);
 }, { passive: false });
