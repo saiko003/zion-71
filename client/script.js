@@ -110,34 +110,28 @@ function renderHand() {
         // --- LOGJIKA PËR IPHONE (TOUCH START & END) ---
         div.addEventListener('touchstart', (e) => {
             if (!isMyTurn) return;
-    
-            // Ndalojmë zmadhimin/scroll-in e iPhone
             if (e.cancelable) e.preventDefault(); 
 
             const touch = e.touches[0];
             const rect = div.getBoundingClientRect();
 
-            // Ruajmë distancën mes gishtit dhe cepit të letrës (offset)
-            // që letra të mos "kërcejë" në mes të gishtit
+            // Ruajmë distancën mes gishtit dhe cepit të letrës
             const offsetX = touch.clientX - rect.left;
             const offsetY = touch.clientY - rect.top;
 
             div.classList.add('dragging');
 
-            // Pozicionimi fillestar saktësisht ku është letra
             div.style.position = 'fixed';
             div.style.zIndex = '1000';
-            div.style.width = rect.width + 'px';  // Mbajmë madhësinë e saktë
+            div.style.width = rect.width + 'px';
             div.style.height = rect.height + 'px';
             div.style.left = rect.left + 'px';
             div.style.top = rect.top + 'px';
             div.style.pointerEvents = 'none';
 
-            // Ruajmë offset-et te elementi që t'i përdorim te touchmove
             div.dataset.offsetX = offsetX;
             div.dataset.offsetY = offsetY;
         }, { passive: false });
-
         div.addEventListener('touchend', (e) => {
             // 1. Marrim koordinatat e fundit ku ishte gishti para se të largohej
             const touch = e.changedTouches[0];
@@ -523,39 +517,49 @@ discardPile.addEventListener('drop', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (draggingCard) processDiscard(draggingCard);
 });
-
 document.addEventListener('touchmove', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (draggingCard) {
         if (e.cancelable) e.preventDefault();
         const touch = e.touches[0];
-        
-        // 1. Lëvizja e letrës (Kjo pjesë e jote është ok)
-        draggingCard.style.left = (touch.clientX - draggingCard.offsetWidth / 2) + 'px';
-        draggingCard.style.top = (touch.clientY - draggingCard.offsetHeight / 2) + 'px';
 
-        // 2. RENDITJA (Vetëm nëse gishti është poshtë te zona e letrave)
+        // 1. Lëvizja precize (Përdorim offset-et që ruajtëm te touchstart)
+        const offsetX = parseFloat(draggingCard.dataset.offsetX) || draggingCard.offsetWidth / 2;
+        const offsetY = parseFloat(draggingCard.dataset.offsetY) || draggingCard.offsetHeight / 2;
+
+        draggingCard.style.left = (touch.clientX - offsetX) + 'px';
+        draggingCard.style.top = (touch.clientY - offsetY) + 'px';
+
+        // 2. RENDITJA (Reordering)
         const handRect = handContainer.getBoundingClientRect();
-        if (touch.clientY > handRect.top - 50) { // 50px tolerancë lart
+        // Lejojmë renditjen vetëm nëse gishti është afër zonës së dorës
+        if (touch.clientY > handRect.top - 100) { 
             handleReorder(touch.clientX); 
         }
 
-        // 3. ZONA E HEDHJES (Feedback-u yt vizual)
+        // 3. ZONA E HEDHJES (Feedback-u vizual)
         const dropZone = discardPile.getBoundingClientRect();
+        const tolerance = 40; // Pak tolerancë ekstra për gishtin
+        
         const isOver = (
-            touch.clientX > dropZone.left && touch.clientX < dropZone.right &&
-            touch.clientY > dropZone.top && touch.clientY < dropZone.bottom
+            touch.clientX > (dropZone.left - tolerance) && 
+            touch.clientX < (dropZone.right + tolerance) &&
+            touch.clientY > (dropZone.top - tolerance) && 
+            touch.clientY < (dropZone.bottom + tolerance)
         );
 
         if (isOver) {
             discardPile.style.background = "rgba(39, 174, 96, 0.4)"; 
             discardPile.style.transform = "scale(1.15)";
+            discardPile.style.borderColor = "#2ecc71";
         } else {
             discardPile.style.background = ""; 
             discardPile.style.transform = "";  
+            discardPile.style.borderColor = "";
         }
     }
 }, { passive: false });
+
 
 document.addEventListener('touchend', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
