@@ -180,12 +180,20 @@ function validateZionHand(cards) {
 function updateAsistenti() {
     let ready = false;
     if (doraImeData.length === 11) {
+        // 1. Kontrolli Normal (Kombinime)
         for (let i = 0; i < doraImeData.length; i++) {
             let testHand = doraImeData.filter((_, idx) => idx !== i);
             if (validateZionHand(testHand)) {
                 ready = true;
                 break;
             }
+        }
+
+        // 2. Kontrolli FLUSH (Të gjitha një simbol - nuk ka rëndësi renditja)
+        const firstSymbolCard = doraImeData.find(c => c.v !== '★');
+        if (firstSymbolCard) {
+            const isFlush = doraImeData.every(c => c.v === '★' || c.s === firstSymbolCard.s);
+            if (isFlush) ready = true;
         }
     }
 
@@ -208,13 +216,24 @@ deckElement.addEventListener('click', () => {
     socket.emit('drawCard');
 });
 
-// SHTUAR: Klikimi mbi Jackpot
+// PËRDITËSUAR: Klikimi mbi Jackpot (Rregulli Flush)
 jackpotElement.addEventListener('click', () => {
     if (!isMyTurn || doraImeData.length !== 10) {
         alert("Jackpot merret vetëm si letra e 11-të kur po mbyll lojën!");
         return;
     }
-    socket.emit('drawJackpot');
+
+    const parts = jackpotElement.innerHTML.split('<br>');
+    const jackpotCard = { v: parts[0], s: parts[1] };
+
+    // Kontrollo nëse të gjitha letrat në dorë përputhen me simbolin e Jackpot-it
+    const isFlushMatch = doraImeData.every(card => card.v === '★' || card.s === jackpotCard.s);
+
+    if (isFlushMatch) {
+        socket.emit('drawJackpot');
+    } else {
+        alert("Jackpot-in mund ta marrësh vetëm nëse të gjitha letrat e tua kanë simbolin: " + jackpotCard.s);
+    }
 });
 
 socket.on('cardDrawn', (card) => {
@@ -266,12 +285,23 @@ btnMbyll.addEventListener('click', () => {
     let ready = false;
     let handToVerify = [];
     
+    // Kontrollo mbylljen normale
     for (let i = 0; i < doraImeData.length; i++) {
         let testHand = doraImeData.filter((_, idx) => idx !== i);
         if (validateZionHand(testHand)) {
             ready = true;
             handToVerify = doraImeData; 
             break;
+        }
+    }
+
+    // Kontrollo mbylljen Flush
+    const firstSymbolCard = doraImeData.find(c => c.v !== '★');
+    if (firstSymbolCard) {
+        const isFlush = doraImeData.every(c => c.v === '★' || c.s === firstSymbolCard.s);
+        if (isFlush) {
+            ready = true;
+            handToVerify = doraImeData;
         }
     }
 
