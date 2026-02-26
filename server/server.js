@@ -81,14 +81,23 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- LOGJIKA E RE E JACKPOT ---
+    socket.on('drawJackpot', () => {
+        const player = players[currentTurnIndex];
+        // Jackpot merret vetëm nëse është radha e lojtarit dhe Jackpot ekziston
+        if (player?.id === socket.id && jackpotCard) {
+            const card = jackpotCard;
+            jackpotCard = null; // Hiqet nga tavolina pasi merret
+            io.to(socket.id).emit('jackpotDrawn', card);
+            sendGameState();
+        }
+    });
+
     socket.on('endTurn', () => {
-        // Shënim: Letra që lojtari hedh shtohet te discardPile përmes një njoftimi nga front-end
-        // ose mund ta shtoni këtu nëse dërgoni objektin e letrës te endTurn.
         moveToNextPlayer();
         sendGameState();
     });
 
-    // SHTUAR: Kur lojtari hedh një letër, serveri e shton te discardPile
     socket.on('cardDiscarded', (card) => {
         discardPile.push(card);
         console.log("Letra u shtua në discardPile. Total:", discardPile.length);
