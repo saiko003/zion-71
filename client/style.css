@@ -382,3 +382,8 @@ body {
     font-weight: bold;
     transform: none !important; /* Hiq efektet hover gjatë reveal */
 }
+@media (max-height: 500px) {
+    #chat-container {
+        display: none; /* Fsheh chat-in nëse ekrani bëhet shumë i vogël (p.sh. kur del tastiera) */
+    }
+}
