@@ -1,5 +1,5 @@
 // 1. Inicializimi dhe Lidhja
-const socket = io('https://zion-71.onrender.com');
+const socket = io('https://zion-71-server.onrender.com'); // Sigurohu që kjo lidhet me serverin tënd
 const handContainer = document.getElementById('player-hand');
 const discardPile = document.getElementById('discard-pile');
 const deckElement = document.getElementById('deck');
@@ -33,7 +33,6 @@ socket.on('receiveCards', (cards) => {
         handContainer.appendChild(createCard(card.v, card.s));
     });
     
-    // Fillimtari me 11 letra mund të mbyllë direkt ose të hedhë
     checkMbylljaButton();
 });
 
@@ -64,7 +63,7 @@ socket.on('updateGameState', (data) => {
     isMyTurn = (data.activePlayerId === socket.id);
     
     if (isMyTurn) {
-        // Nëse kam 11 letra në fillim të rradhës, jam fillimtar
+        // Rregulli: Nëse ke 11 letra në fillim, je ndarësi që duhet të hedhë një letër
         hasDrawnCard = (doraImeData.length === 11);
     }
     
@@ -74,10 +73,10 @@ socket.on('updateGameState', (data) => {
 
 function updateTurnUI() {
     if (isMyTurn) {
-        document.body.style.boxShadow = "inset 0 0 50px #27ae60";
+        document.body.classList.add('active-turn-glow');
         deckElement.classList.add('active-deck');
     } else {
-        document.body.style.boxShadow = "none";
+        document.body.classList.remove('active-turn-glow');
         deckElement.classList.remove('active-deck');
     }
 }
@@ -95,7 +94,7 @@ socket.on('cardDrawn', (card) => {
     const newCard = createCard(card.v, card.s);
     handContainer.appendChild(newCard);
     newCard.style.animation = "pullCard 0.5s ease-out";
-    checkMbylljaButton(); // Shfaq butonin sepse tani kemi 11 letra
+    checkMbylljaButton();
 });
 
 // 5. Krijimi i Letrës dhe Drag & Drop
@@ -134,7 +133,7 @@ discardPile.addEventListener('drop', () => {
 
     if (v === '★') return alert("Xhokeri nuk mund të hidhet!");
 
-    // Hiq letran nga dora (memorja)
+    // Hiq letrën nga dora (logjika)
     const index = doraImeData.findIndex(c => c.v === v && c.s === s);
     if (index > -1) doraImeData.splice(index, 1);
 
@@ -145,44 +144,48 @@ discardPile.addEventListener('drop', () => {
     
     hasDrawnCard = false; 
     isMyTurn = false; 
-    checkMbylljaButton(); // Fshih butonin pasi hodhëm letrën
+    checkMbylljaButton(); 
     socket.emit('endTurn'); 
 });
 
-// 6. Logjika e Butonit Mbyll
+// 6. Logjika e Butonit Mbyll (Sipas Rregullit 7)
 function checkMbylljaButton() {
-    // Butoni shfaqet VETËM nëse është rradha jote DHE ke 11 letra në dorë
+    // Shfaqet vetëm nëse ke 11 letra (9 + Xhoker + 1 për të hedhur)
     if (isMyTurn && doraImeData.length === 11) {
         btnMbyll.style.display = 'block';
-        btnMall.classList.add('glow-green');
+        btnMbyll.classList.add('glow-green'); // Rregulluar bug-u btnMall
     } else {
         btnMbyll.style.display = 'none';
+        btnMbyll.classList.remove('glow-green');
     }
 }
 
 btnMbyll.addEventListener('click', () => {
     if (!isMyTurn) return alert("Nuk mund të mbyllësh lojën jashtë rradhës!");
-    if (doraImeData.length < 11) return alert("Duhet të kesh 11 letra për të mbyllur (10 të rregullta + 1 për ta hedhur)!");
+    if (doraImeData.length < 11) return alert("Duhet të kesh 11 letra për të mbyllur!");
     
-    let isFlush = confirm("A është kjo mbyllje FLUSH (pa asnjë letër jashtë)?");
+    let isFlush = confirm("A është kjo mbyllje FLUSH (2x pikë për të tjerët)?");
     socket.emit('playerClosed', { isFlush: isFlush });
     btnMbyll.style.display = 'none';
 });
 
 socket.on('roundOver', (data) => {
     let piket = llogaritPiket(doraImeData);
-    if (data.isFlush) piket *= 2;
+    // Nëse dikush tjetër mbylli me FLUSH, pikët e mia dyfishohen
+    if (data.isFlush && data.winnerId !== socket.id) {
+        piket *= 2;
+    }
     
     socket.emit('submitMyPoints', { points: piket });
     alert(`Raundi mbaroi! Fituesi: ${data.winnerName}. More ${piket} pikë.`);
 });
 
+// 8. Logjika e Pikëve (Sipas Rregullit 8)
 function llogaritPiket(cards) {
     return cards.reduce((acc, card) => {
-        if (card.v === 'A') return acc + 11;
-        if (['K', 'Q', 'J'].includes(card.v)) return acc + 10;
-        if (card.v === 'X' || card.v === '★') return acc + 0;
-        return acc + parseInt(card.v);
+        if (card.v === '★' || card.v === 'X') return acc + 0; // Xhokeri 0 pikë
+        if (['10', 'J', 'Q', 'K', 'A'].includes(card.v)) return acc + 10; // Figurat dhe 10-shi vlen 10
+        return acc + parseInt(card.v); // 2-9 sipas vlerës
     }, 0);
 }
 
@@ -200,6 +203,7 @@ btnSend.addEventListener('click', () => {
 
 socket.on('receiveMessage', (data) => {
     const msgDiv = document.createElement('div');
+    msgDiv.classList.add('chat-msg');
     msgDiv.innerHTML = `<b>${data.user}:</b> ${data.text}`;
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
