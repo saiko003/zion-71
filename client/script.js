@@ -94,15 +94,11 @@ function renderHand() {
         div.dataset.index = index;
         div.innerHTML = `${card.v}<br>${card.s}`;
         
-        // Ngjyra e kuqe për zemrat dhe kubat
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
         // --- LOGJIKA PËR PC (MOUSE) ---
         div.addEventListener('dragstart', (e) => {
             div.classList.add('dragging');
-            if (e.dataTransfer) {
-                e.dataTransfer.setData('text/plain', index);
-            }
         });
 
         div.addEventListener('dragend', () => {
@@ -111,39 +107,40 @@ function renderHand() {
             saveNewOrder();
         });
 
-        // --- LOGJIKA PËR IPHONE (TOUCH) ---
+        // --- LOGJIKA PËR IPHONE (TOUCH START & END) ---
         div.addEventListener('touchstart', (e) => {
-            // Lejo dragging vetëm nëse është radha jote
             if (!isMyTurn) return;
             div.classList.add('dragging');
+            const touch = e.touches[0];
+
+            // Pozicionimi i menjëhershëm që të mos kërcejë
+            div.style.position = 'fixed';
+            div.style.zIndex = '1000';
+            div.style.pointerEvents = 'none'; 
+            div.style.left = (touch.clientX - 60 / 2) + 'px'; // 60 është gjerësia mesatare e letrës
+            div.style.top = (touch.clientY - 90 / 2) + 'px';
         }, { passive: true });
 
         div.addEventListener('touchend', (e) => {
             div.classList.remove('dragging');
-            resetCardStyles(div); // Kjo e kthen letrën në kornizë
+            resetCardStyles(div); 
             saveNewOrder();
+            
+            discardPile.style.background = "";
+            discardPile.style.transform = "";
         }, { passive: true });
 
-        // Reordering (Renditja e letrave duke i lëvizur)
+        // Ky dragover duhet vetëm për PC
         div.addEventListener('dragover', (e) => {
             e.preventDefault();
             const draggingCard = document.querySelector('.dragging');
-            if (!draggingCard || draggingCard.parentElement !== handContainer) return;
-
-            const cards = [...handContainer.querySelectorAll('.card:not(.dragging)')];
-            const nextCard = cards.find(c => {
-                const box = c.getBoundingClientRect();
-                return e.clientX <= box.left + box.width / 2;
-            });
-
-            if (nextCard) handContainer.insertBefore(draggingCard, nextCard);
-            else handContainer.appendChild(draggingCard);
+            if (!draggingCard) return;
+            handleReorder(e.clientX);
         });
 
         handContainer.appendChild(div);
     });
 }
-
 // Funksion ndihmës për të kthyer letrën në gjendje normale (pa position fixed)
 function resetCardStyles(el) {
     el.style.position = '';
@@ -510,14 +507,17 @@ document.addEventListener('touchmove', (e) => {
         if (e.cancelable) e.preventDefault();
         const touch = e.touches[0];
         
-        // Lëvizja e letrës
+        // 1. Lëvizja e letrës
         draggingCard.style.position = 'fixed';
         draggingCard.style.zIndex = '1000';
         draggingCard.style.pointerEvents = 'none'; 
         draggingCard.style.left = (touch.clientX - draggingCard.offsetWidth / 2) + 'px';
         draggingCard.style.top = (touch.clientY - draggingCard.offsetHeight / 2) + 'px';
 
-        // FEEDBACK VIZUAL: Kontrollo nëse jemi mbi zonën e hedhjes
+        // 2. KRITIKE: Lejon renditjen e letrave në dorë (Reordering)
+        handleReorder(touch.clientX); 
+
+        // 3. FEEDBACK VIZUAL: Kontrollo zonën e hedhjes
         const dropZone = discardPile.getBoundingClientRect();
         const isOver = (
             touch.clientX > dropZone.left && touch.clientX < dropZone.right &&
@@ -525,11 +525,11 @@ document.addEventListener('touchmove', (e) => {
         );
 
         if (isOver) {
-            discardPile.style.background = "rgba(39, 174, 96, 0.2)"; // Ndizet jeshil
-            discardPile.style.transform = "scale(1.1)"; // Zmadhohet pak
+            discardPile.style.background = "rgba(39, 174, 96, 0.2)"; 
+            discardPile.style.transform = "scale(1.1)"; 
         } else {
-            discardPile.style.background = ""; // Fiket
-            discardPile.style.transform = "";  // Kthehet në madhësi normale
+            discardPile.style.background = ""; 
+            discardPile.style.transform = "";  
         }
     }
 }, { passive: false });
@@ -593,5 +593,23 @@ function processDiscard(draggingCard) {
         
         updateTurnUI();
         checkTurnLogic();
+    }
+}
+
+// --- FUNKSIONI NDIHMËS PËR RENDITJEN (SHËRBEJNË PËR PC DHE IPHONE) ---
+function handleReorder(clientX) {
+    const draggingCard = document.querySelector('.card.dragging');
+    if (!draggingCard) return;
+
+    const cards = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+    const nextCard = cards.find(c => {
+        const box = c.getBoundingClientRect();
+        return clientX <= box.left + box.width / 2;
+    });
+
+    if (nextCard) {
+        handContainer.insertBefore(draggingCard, nextCard);
+    } else {
+        handContainer.appendChild(draggingCard);
     }
 }
