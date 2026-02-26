@@ -210,9 +210,12 @@ function updateAsistenti() {
 
 // --- EVENTET ---
 
+// UPDATE: Kontrolli i fortë për stivën (Deck)
 deckElement.addEventListener('click', () => {
     if (isMyTurn && doraImeData.length === 10) {
         socket.emit('drawCard');
+    } else if (isMyTurn && doraImeData.length >= 11) {
+        alert("Ti tashmë e ke marrë letrën! Hidhe njërën në tokë.");
     }
 });
 
@@ -391,32 +394,37 @@ function llogaritPiket(cards) {
     }, 0);
 }
 
+// UPDATE: UI Përmirësim vizual për Deck
 function updateTurnUI() {
     document.body.style.boxShadow = isMyTurn ? "inset 0 0 50px #27ae60" : "none";
-    if(isMyTurn && doraImeData.length === 10) deckElement.classList.add('active-deck');
-    else deckElement.classList.remove('active-deck');
+    
+    if(isMyTurn && doraImeData.length === 10) {
+        deckElement.classList.add('active-deck');
+        deckElement.style.opacity = "1";
+    } else {
+        deckElement.classList.remove('active-deck');
+        deckElement.style.opacity = "0.7";
+    }
+
     if(isMyTurn && doraImeData.length === 10) jackpotElement.classList.add('glow-jackpot');
     else jackpotElement.classList.remove('glow-jackpot');
 }
-// --- LOGJIKA E CHAT-IT (SHTOJE KËTË NË FUND) ---
 
-// Këtu merr elementet nga HTML (Sigurohu që ID-të janë të sakta)
+// --- LOGJIKA E CHAT-IT ---
+
 const chatInput = document.getElementById('chat-input'); 
 const btnSendChat = document.getElementById('btn-send-chat');
 const chatMessages = document.getElementById('chat-messages');
 
-// Funksioni për dërgimin e mesazhit
 if (btnSendChat && chatInput) {
     btnSendChat.addEventListener('click', () => {
         const msg = chatInput.value.trim();
         if (msg !== "") {
-            // Dërgojmë mesazhin në server
             socket.emit('sendMessage', { name: myName, message: msg });
-            chatInput.value = ""; // Pastrojmë fushën e shkrimit
+            chatInput.value = ""; 
         }
     });
 
-    // Lejo dërgimin edhe duke shtypur butonin "Enter"
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             btnSendChat.click();
@@ -424,16 +432,12 @@ if (btnSendChat && chatInput) {
     });
 }
 
-// Pritja e mesazheve nga lojtarët e tjerë (përfshirë veten)
 socket.on('receiveMessage', (data) => {
     if (chatMessages) {
         const msgDiv = document.createElement('div');
-        msgDiv.className = 'chat-entry'; // Mund ta stilizosh me CSS
+        msgDiv.className = 'chat-entry'; 
         msgDiv.innerHTML = `<strong>${data.name}:</strong> ${data.message}`;
-        
         chatMessages.appendChild(msgDiv);
-        
-        // Auto-scroll për të parë gjithmonë mesazhin e fundit
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 });
