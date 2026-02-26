@@ -478,9 +478,13 @@ socket.on('receiveMessage', (data) => {
 
 // ... këtu mbaron kodi yt i vjetër (p.sh. socket.on('receiveMessage', ...))
 
-// ==========================================
-// SISTEMI I RI I NDËRVEPRIMIT (IPHONE & PC)
-// ==========================================
+// 1. Bllokimi i Scroll-it dhe Zoom-it (Për iPhone)
+window.addEventListener('scroll', () => {
+    window.scrollTo(0, 0);
+}, { passive: false });
+
+// KËTU SHTOJE:
+document.addEventListener('gesturestart', (e) => e.preventDefault());
 
 // Funksion për klikim të shpejtë në iPhone pa bllokuar sistemin
 const setupFastClick = (id, action) => {
