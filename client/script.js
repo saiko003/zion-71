@@ -419,19 +419,26 @@ function updateTurnUI() {
 
 // --- LOGJIKA E CHAT-IT ---
 
+// --- LOGJIKA E PLOTË E CHAT-IT ---
 const chatInput = document.getElementById('chat-input'); 
 const btnSendChat = document.getElementById('btn-send-chat');
 const chatMessages = document.getElementById('chat-messages');
 
 if (btnSendChat && chatInput) {
+    // Dërgimi me klikim të butonit
     btnSendChat.addEventListener('click', () => {
         const msg = chatInput.value.trim();
         if (msg !== "") {
-            socket.emit('sendMessage', { name: myName, message: msg });
-            chatInput.value = ""; 
+            // Dërgojmë mesazhin te serveri
+            socket.emit('sendMessage', { 
+                name: typeof myName !== 'undefined' ? myName : "Lojtar", 
+                message: msg 
+            });
+            chatInput.value = ""; // Pastrojmë fushën
         }
     });
 
+    // Dërgimi me butonin Enter nga tastiera
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             btnSendChat.click();
@@ -439,12 +446,16 @@ if (btnSendChat && chatInput) {
     });
 }
 
+// Marrja e mesazheve nga serveri
 socket.on('receiveMessage', (data) => {
     if (chatMessages) {
         const msgDiv = document.createElement('div');
         msgDiv.className = 'chat-entry'; 
         msgDiv.innerHTML = `<strong>${data.name}:</strong> ${data.message}`;
+        
         chatMessages.appendChild(msgDiv);
+        
+        // Auto-scroll në fund të chat-it
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 });
