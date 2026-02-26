@@ -7,7 +7,10 @@ const app = express();
 app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: { origin: "*" }
+    cors: { 
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
 });
 
 let players = []; 
@@ -17,11 +20,14 @@ let deck = [];
 let gameInProgress = false;
 
 io.on('connection', (socket) => {
-    console.log('Një lojtar u lidh:', socket.id);
+    console.log('Një lojtar u lidh me ID:', socket.id);
 
     // JOIN GAME
     socket.on('joinGame', (playerName) => {
-        // RREGULLI: Maksimumi 5 lojtarë dhe nuk hyhet dot nëse loja ka nisur
+        // Kontrollo nëse lojtari është tashmë në listë për të shmangur dublikimet
+        const existingPlayer = players.find(p => p.id === socket.id);
+        if (existingPlayer) return;
+
         if (players.length < 5 && !gameInProgress) {
             const newPlayer = {
                 id: socket.id,
@@ -32,48 +38,49 @@ io.on('connection', (socket) => {
                 pointsSubmitted: false
             };
             players.push(newPlayer);
-            console.log(`${newPlayer.name} u bashkua.`);
+            console.log(`Lojtari u shtua: ${newPlayer.name}. Total: ${players.length}`);
             sendGameState();
-        } else if (gameInProgress) {
-            socket.emit('receiveMessage', { user: 'SISTEMI', text: 'Loja ka nisur, prit raundin tjetër.' });
+        } else {
+            socket.emit('receiveMessage', { user: 'SISTEMI', text: 'Tavolina është plot ose loja ka nisur.' });
         }
     });
 
-    // START GAME / NEXT ROUND
+    // START GAME
     socket.on('startGame', () => {
-        // RREGULLI: Loja duhet të ketë 2 deri në 5 lojtarë
+        console.log(`Tentativa për nisje nga ${socket.id}. Lojtarë prezentë: ${players.length}`);
+
+        // RREGULLI: Duhen të paktën 2 lojtarë
         if (players.length < 2) {
-            socket.emit('receiveMessage', { user: 'SISTEMI', text: 'Duhen të paktën 2 lojtarë për të nisur!' });
+            socket.emit('receiveMessage', { user: 'SISTEMI', text: 'Duhen të paktën 2 lojtarë për të nisur lojën!' });
+            console.log("Nisja dështoi: Mungojnë lojtarët.");
             return;
         }
         
         gameInProgress = true;
         deck = createFullDeck(); 
-        
-        // Ndarësi fillon raundin
         currentTurnIndex = dealerIndex;
 
         players.forEach((player, index) => {
             if (!player.eliminated) {
                 player.pointsSubmitted = false;
-                // Ndarësi (index === dealerIndex) merr 10 letra, të tjerët 9
+                // Ndarësi fillon me 10, të tjerët 9
                 let cardsToGive = (index === dealerIndex) ? 10 : 9;
                 player.hand = deck.splice(0, cardsToGive);
                 
-                // Çdo lojtar merr 1 Xhoker (★) automatikisht
+                // Shto Xhokerin (★)
                 player.hand.push({ v: '★', s: 'X', type: 'joker' }); 
                 
                 io.to(player.id).emit('receiveCards', player.hand);
             }
         });
 
-        // Jackpot (letra nën stivë)
         let jackpotCard = deck.pop();
         io.emit('gameStarted', { 
             jackpot: jackpotCard,
             dealerName: players[dealerIndex].name 
         });
 
+        console.log("Loja nisi me sukses!");
         sendGameState();
     });
 
@@ -112,16 +119,11 @@ io.on('connection', (socket) => {
         if (player && !player.pointsSubmitted) {
             player.score += data.points;
             player.pointsSubmitted = true;
-            
-            // Eliminimi mbi 71 pikë
-            if (player.score > 71) {
-                player.eliminated = true;
-            }
+            if (player.score > 71) player.eliminated = true;
         }
 
-        // Kontrolli nëse raundi u mbyll nga të gjithë
-        const activePlayers = players.filter(p => !p.eliminated);
         if (players.every(p => p.pointsSubmitted || p.eliminated)) {
+            const activePlayers = players.filter(p => !p.eliminated);
             if (activePlayers.length <= 1) {
                 io.emit('receiveMessage', { user: 'SISTEMI', text: 'Loja mbaroi! Kemi një fitues.' });
                 gameInProgress = false;
@@ -134,14 +136,12 @@ io.on('connection', (socket) => {
 
     // CHAT
     socket.on('sendMessage', (data) => {
-        io.emit('receiveMessage', {
-            user: data.user,
-            text: data.text
-        });
+        io.emit('receiveMessage', { user: data.user, text: data.text });
     });
 
     // DISCONNECT
     socket.on('disconnect', () => {
+        console.log('Lojtari u shkëput:', socket.id);
         players = players.filter(p => p.id !== socket.id);
         if (players.length < 2) gameInProgress = false;
         if (currentTurnIndex >= players.length) currentTurnIndex = 0;
@@ -150,10 +150,11 @@ io.on('connection', (socket) => {
 
     function moveToNextPlayer() {
         let attempts = 0;
+        const total = players.length;
         do {
-            currentTurnIndex = (currentTurnIndex + 1) % players.length;
+            currentTurnIndex = (currentTurnIndex + 1) % total;
             attempts++;
-        } while (players[currentTurnIndex].eliminated && attempts < players.length);
+        } while (players[currentTurnIndex].eliminated && attempts < total);
     }
 
     function prepareNextRound() {
