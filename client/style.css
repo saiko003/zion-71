@@ -91,6 +91,20 @@ body {
     transform: rotate(-5deg); /* Pak pjerrët për stil */
 }
 
+/* SHTUAR: Glow i Jackpot-it kur mund të merret */
+.glow-jackpot {
+    border: 3px solid gold !important;
+    box-shadow: 0 0 25px gold !important;
+    cursor: pointer;
+    animation: pulse-gold 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-gold {
+    0% { transform: rotate(-5deg) scale(1); box-shadow: 0 0 15px gold; }
+    50% { transform: rotate(-5deg) scale(1.1); box-shadow: 0 0 35px gold; }
+    100% { transform: rotate(-5deg) scale(1); box-shadow: 0 0 15px gold; }
+}
+
 /* Letrat Bazë */
 .card-back, .card {
     width: 75px;
