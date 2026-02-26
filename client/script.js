@@ -93,37 +93,38 @@ function renderHand() {
         div.draggable = true;
         div.dataset.index = index;
         div.innerHTML = `${card.v}<br>${card.s}`;
+        
+        // Ngjyra e kuqe për zemrat dhe kubat
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
-        // --- LOGJIKA E FILLIMIT (PC & IPHONE) ---
-        const handleStart = (e) => {
+        // --- LOGJIKA PËR PC (MOUSE) ---
+        div.addEventListener('dragstart', (e) => {
             div.classList.add('dragging');
             if (e.dataTransfer) {
                 e.dataTransfer.setData('text/plain', index);
             }
-        };
+        });
 
-        // --- LOGJIKA E MBYLLJES (PC & IPHONE) ---
-        const handleEnd = () => {
+        div.addEventListener('dragend', () => {
             div.classList.remove('dragging');
-            // Ruajmë renditjen e re në array
-            const currentCards = [...handContainer.querySelectorAll('.card')];
-            doraImeData = currentCards.map(c => {
-                const parts = c.innerHTML.split('<br>');
-                return { v: parts[0], s: parts[1] };
-            });
-            updateAsistenti();
-        };
+            resetCardStyles(div);
+            saveNewOrder();
+        });
 
-        // Eventet për Maus (PC)
-        div.addEventListener('dragstart', handleStart);
-        div.addEventListener('dragend', handleEnd);
+        // --- LOGJIKA PËR IPHONE (TOUCH) ---
+        div.addEventListener('touchstart', (e) => {
+            // Lejo dragging vetëm nëse është radha jote
+            if (!isMyTurn) return;
+            div.classList.add('dragging');
+        }, { passive: true });
 
-        // Eventet për Prekje (iPhone) - passive: true ndihmon performancën
-        div.addEventListener('touchstart', handleStart, { passive: true });
-        div.addEventListener('touchend', handleEnd, { passive: true });
+        div.addEventListener('touchend', (e) => {
+            div.classList.remove('dragging');
+            resetCardStyles(div); // Kjo e kthen letrën në kornizë
+            saveNewOrder();
+        }, { passive: true });
 
-        // Lëvizja mbi letrat e tjera (Reordering - Punon në PC)
+        // Reordering (Renditja e letrave duke i lëvizur)
         div.addEventListener('dragover', (e) => {
             e.preventDefault();
             const draggingCard = document.querySelector('.dragging');
@@ -141,6 +142,25 @@ function renderHand() {
 
         handContainer.appendChild(div);
     });
+}
+
+// Funksion ndihmës për të kthyer letrën në gjendje normale (pa position fixed)
+function resetCardStyles(el) {
+    el.style.position = '';
+    el.style.left = '';
+    el.style.top = '';
+    el.style.zIndex = '';
+    el.style.pointerEvents = 'auto';
+}
+
+// Funksion për të ruajtur rreshtimin e ri të letrave
+function saveNewOrder() {
+    const currentCards = [...handContainer.querySelectorAll('.card')];
+    doraImeData = currentCards.map(c => {
+        const parts = c.innerHTML.split('<br>');
+        return { v: parts[0], s: parts[1] };
+    });
+    updateAsistenti();
 }
 // --- ALGORITMI I KONTROLLIT ZION 71 ---
 
