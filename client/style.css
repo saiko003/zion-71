@@ -105,7 +105,6 @@ body {
     100% { transform: rotate(-5deg) scale(1); box-shadow: 0 0 15px gold; }
 }
 
-/* Letrat Bazë */
 .card-back, .card {
     width: 75px;
     height: 105px;
@@ -120,7 +119,16 @@ body {
     font-size: 1.2rem;
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    user-select: none;
+    
+    /* --- SHTESAT PËR TELEFON --- */
+    user-select: none; 
+    -webkit-user-select: none;      /* Ndalon selektimin e tekstit në iPhone */
+    touch-action: manipulation;     /* Ndalon zoom-in e panevojshëm kur klikon shpejt */
+    -webkit-tap-highlight-color: transparent; /* Heq kutinë e kaltër që del në telefon */
+    pointer-events: auto;           /* Sigurohet që letra i pranon klikimet */
+    z-index: 10;                    /* I sjell letrat para çdo gjëje tjetër */
+    /* --------------------------- */
+
     position: relative;
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -129,6 +137,7 @@ body {
     background: linear-gradient(135deg, #444, #222);
     color: white;
     border: 2px solid #fff;
+    pointer-events: auto; /* Sigurohu që edhe deku (shpinat) klikohet */
 }
 
 .active-deck {
