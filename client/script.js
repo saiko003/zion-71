@@ -398,3 +398,42 @@ function updateTurnUI() {
     if(isMyTurn && doraImeData.length === 10) jackpotElement.classList.add('glow-jackpot');
     else jackpotElement.classList.remove('glow-jackpot');
 }
+// --- LOGJIKA E CHAT-IT (SHTOJE KËTË NË FUND) ---
+
+// Këtu merr elementet nga HTML (Sigurohu që ID-të janë të sakta)
+const chatInput = document.getElementById('chat-input'); 
+const btnSendChat = document.getElementById('btn-send-chat');
+const chatMessages = document.getElementById('chat-messages');
+
+// Funksioni për dërgimin e mesazhit
+if (btnSendChat && chatInput) {
+    btnSendChat.addEventListener('click', () => {
+        const msg = chatInput.value.trim();
+        if (msg !== "") {
+            // Dërgojmë mesazhin në server
+            socket.emit('sendMessage', { name: myName, message: msg });
+            chatInput.value = ""; // Pastrojmë fushën e shkrimit
+        }
+    });
+
+    // Lejo dërgimin edhe duke shtypur butonin "Enter"
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            btnSendChat.click();
+        }
+    });
+}
+
+// Pritja e mesazheve nga lojtarët e tjerë (përfshirë veten)
+socket.on('receiveMessage', (data) => {
+    if (chatMessages) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'chat-entry'; // Mund ta stilizosh me CSS
+        msgDiv.innerHTML = `<strong>${data.name}:</strong> ${data.message}`;
+        
+        chatMessages.appendChild(msgDiv);
+        
+        // Auto-scroll për të parë gjithmonë mesazhin e fundit
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+});
