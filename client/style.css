@@ -279,6 +279,8 @@ body {
     color: white;
 }
 
+/* ... (kodet e tua ekzistuese) ... */
+
 #btn-send {
     padding: 10px 20px;
     background: #3a4a63;
@@ -287,6 +289,10 @@ body {
     border-radius: 8px;
     cursor: pointer;
 }
+
+/* ==========================
+   Visual Reveal Styles 
+========================== */
 #winner-reveal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -319,5 +325,13 @@ body {
     height: 70px;
     font-size: 0.9rem;
     cursor: default;
+    background: white; /* Sigurohemi që sfondi të jetë i bardhë si letrat tjera */
+    color: black;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-weight: bold;
     transform: none !important; /* Hiq efektet hover gjatë reveal */
 }
