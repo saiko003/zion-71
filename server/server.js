@@ -12,6 +12,7 @@ let players = [];
 let currentTurnIndex = 0;
 let deck = [];
 let lastWinnerId = null;
+let jackpotCard = null; // 1. SHTUAR: Variabli për Jackpot
 
 io.on('connection', (socket) => {
     socket.on('joinGame', (name) => {
@@ -28,13 +29,15 @@ io.on('connection', (socket) => {
     });
 
     socket.on('startGame', () => {
-        // Duhen te pakten 2 lojtare jo te eliminuar
         const activePlayers = players.filter(p => !p.eliminated);
         if (activePlayers.length < 2) return;
 
         deck = createFullDeck();
         
-        // Kush fiton raundin, nis i dyti (rregull i Zion-it) ose thjesht rradha pasardhese
+        // 2. SHTUAR: Logjika e Jackpot në momentin e nisjes
+        // Marrim letrën e fundit të mbetur në stivë si Jackpot
+        jackpotCard = deck.pop();
+        
         if (lastWinnerId) {
             let winIdx = players.findIndex(p => p.id === lastWinnerId);
             currentTurnIndex = (winIdx + 1) % players.length;
@@ -42,7 +45,6 @@ io.on('connection', (socket) => {
             currentTurnIndex = 0;
         }
 
-        // Sigurohemi qe nuk nis rradha te nje i eliminuar
         while (players[currentTurnIndex].eliminated) {
             currentTurnIndex = (currentTurnIndex + 1) % players.length;
         }
@@ -51,7 +53,7 @@ io.on('connection', (socket) => {
             if (!p.eliminated) {
                 let count = (i === currentTurnIndex) ? 10 : 9;
                 p.hand = deck.splice(0, count);
-                p.hand.push({ v: '★', s: 'X' }); // Xhokeri fillestar
+                p.hand.push({ v: '★', s: 'X' }); 
                 io.to(p.id).emit('receiveCards', p.hand);
             }
         });
@@ -73,18 +75,15 @@ io.on('connection', (socket) => {
     socket.on('playerClosed', (data) => {
         const winner = players.find(p => p.id === socket.id);
         lastWinnerId = socket.id;
-        // Dergo njoftimin nese eshte Flush (per piket 2x)
         io.emit('roundOver', { winnerName: winner.name, isFlush: data.isFlush });
     });
 
     socket.on('submitMyPoints', (data) => {
         const p = players.find(player => player.id === socket.id);
         if (p) {
-            // Nese dikush u mbyll Flush, piket tona dyfishohen
             let finalPoints = data.isFlush ? data.points * 2 : data.points;
             p.score += finalPoints;
 
-            // Rregulli i eliminimit: 71
             if (p.score > 71) {
                 p.eliminated = true;
             }
@@ -94,7 +93,6 @@ io.on('connection', (socket) => {
 
     function moveToNextPlayer() {
         currentTurnIndex = (currentTurnIndex + 1) % players.length;
-        // Kaperce lojtaret e eliminuar
         let attempts = 0;
         while (players[currentTurnIndex].eliminated && attempts < players.length) {
             currentTurnIndex = (currentTurnIndex + 1) % players.length;
@@ -111,7 +109,8 @@ io.on('connection', (socket) => {
                 eliminated: p.eliminated 
             })),
             activePlayerId: players[currentTurnIndex]?.id,
-            deckCount: deck.length
+            deckCount: deck.length,
+            jackpotCard: jackpotCard // 3. SHTUAR: Dërgimi i Jackpot te lojtarët
         });
     }
 
@@ -125,7 +124,6 @@ io.on('connection', (socket) => {
 function createFullDeck() {
     let d = [];
     const s = ['♠', '♣', '♥', '♦'], v = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-    // 2 pako letra (104 total)
     for(let i=0; i<2; i++) {
         s.forEach(sym => v.forEach(val => d.push({v: val, s: sym})));
     }
