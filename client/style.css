@@ -1,6 +1,6 @@
 /* ==========================
    Reset & Body
-========================== */
+========================= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -9,7 +9,7 @@
 }
 
 body {
-    background: #1b2a3d; /* Ngjyra e tavolinës */
+    background: #1b2a3d;
     color: #fff;
     min-height: 100vh;
     display: flex;
@@ -84,7 +84,6 @@ body {
     align-items: center;
 }
 
-/* Letrat */
 .card-back, .card {
     width: 70px;
     height: 100px;
@@ -101,6 +100,7 @@ body {
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     user-select: none;
     position: relative;
+    transition: transform 0.2s;
 }
 
 .card-back {
@@ -109,7 +109,6 @@ body {
     border: 2px solid #fff;
 }
 
-/* Kur eshte radha jote, stiva ndriçon */
 .active-deck {
     box-shadow: 0 0 15px #00ff99;
     transform: scale(1.05);
@@ -123,15 +122,49 @@ body {
 }
 
 /* ==========================
-   Player Area (Dora e Lojtarit)
+   Player Area & Asistenti
 ========================== */
 #player-area {
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
-    margin-top: 20px;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+#asistenti-container {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px 15px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #3a4a63;
+}
+
+#status-drita {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.led-red {
+    background: #ff4d4d;
+    box-shadow: 0 0 8px #ff4d4d;
+}
+
+.led-green {
+    background: #2ecc71;
+    box-shadow: 0 0 12px #2ecc71;
+    animation: pulse-green 1.5s infinite;
+}
+
+@keyframes pulse-green {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 #player-hand {
@@ -170,13 +203,22 @@ body {
 }
 
 .glow-btn {
-    background: #28a745;
-    color: white;
-    box-shadow: 0 0 15px #28a745;
+    background: #555; /* Ngjyrë e mbyllur kur nuk është gati */
+    color: #aaa;
+    border: 1px solid #777;
 }
 
-.glow-btn:hover {
-    transform: scale(1.1);
+/* Kur dora eshte gati, butoni "ndizet" */
+.glow-green-intense {
+    background: #28a745 !important;
+    color: white !important;
+    box-shadow: 0 0 20px #28a745;
+    animation: glow-pulse 1s infinite alternate;
+}
+
+@keyframes glow-pulse {
+    from { box-shadow: 0 0 10px #28a745; }
+    to { box-shadow: 0 0 25px #28a745; }
 }
 
 /* ==========================
