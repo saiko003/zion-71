@@ -12,7 +12,7 @@ let players = [];
 let currentTurnIndex = 0;
 let deck = [];
 let lastWinnerId = null;
-let jackpotCard = null; // Ruajmë letrën Jackpot që shohin të gjithë
+let jackpotCard = null; 
 
 io.on('connection', (socket) => {
     socket.on('joinGame', (name) => {
@@ -45,7 +45,6 @@ io.on('connection', (socket) => {
             currentTurnIndex = (currentTurnIndex + 1) % players.length;
         }
 
-        // Shpërndajmë letrat lojtarëve
         players.forEach((p, i) => {
             if (!p.eliminated) {
                 let count = (i === currentTurnIndex) ? 10 : 9;
@@ -55,7 +54,6 @@ io.on('connection', (socket) => {
             }
         });
 
-        // LOGJIKA E RE: Letra e Jackpot-it merret nga fundi i stivës pas shpërndarjes
         if (deck.length > 0) {
             jackpotCard = deck.pop(); 
         }
@@ -75,10 +73,16 @@ io.on('connection', (socket) => {
         sendGameState();
     });
 
+    // MODIFIKUAR: Verifikimi i dorës në Server
     socket.on('playerClosed', (data) => {
-        const winner = players.find(p => p.id === socket.id);
-        lastWinnerId = socket.id;
-        io.emit('roundOver', { winnerName: winner.name, isFlush: data.isFlush });
+        if (verifyHandOnServer(data.hand)) {
+            const winner = players.find(p => p.id === socket.id);
+            lastWinnerId = socket.id;
+            io.emit('roundOver', { winnerName: winner.name, isFlush: data.isFlush });
+        } else {
+            console.log(`Lojtari ${socket.id} tentoi mbyllje të pavlefshme!`);
+            socket.emit('error', 'Dora nuk është e vlefshme!');
+        }
     });
 
     socket.on('submitMyPoints', (data) => {
@@ -113,7 +117,7 @@ io.on('connection', (socket) => {
             })),
             activePlayerId: players[currentTurnIndex]?.id,
             deckCount: deck.length,
-            jackpotCard: jackpotCard // Kjo i tregon front-end-it çfarë të vizatojë te stiva
+            jackpotCard: jackpotCard 
         });
     }
 
@@ -123,6 +127,62 @@ io.on('connection', (socket) => {
         sendGameState();
     });
 });
+
+// LOGJIKA E VERIFIKIMIT (SHTUAR)
+function verifyHandOnServer(cards) {
+    if (!cards || (cards.length !== 10 && cards.length !== 11)) return false;
+    
+    const valMap = { '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13, 'A':14 };
+    
+    function check10(hand10) {
+        let jokers = hand10.filter(c => c.v === '★').length;
+        let normalCards = hand10.filter(c => c.v !== '★').map(c => ({
+            v: valMap[c.v],
+            s: c.s
+        })).sort((a, b) => a.v - b.v);
+
+        function solve(remaining, jLeft) {
+            if (remaining.length === 0) return true;
+            let first = remaining[0];
+            // Provo Grupet
+            for (let size = 3; size <= 4; size++) {
+                let sameVal = remaining.filter(c => c.v === first.v);
+                for (let use = 1; use <= Math.min(sameVal.length, size); use++) {
+                    let jNeeded = size - use;
+                    if (jNeeded <= jLeft) {
+                        let next = [...remaining];
+                        for(let i=0; i<use; i++) {
+                            let idx = next.findIndex(c => c.v === first.v);
+                            next.splice(idx, 1);
+                        }
+                        if (solve(next, jLeft - jNeeded)) return true;
+                    }
+                }
+            }
+            // Provo Rreshtat
+            for (let size = 3; size <= 10; size++) {
+                let currentJ = jLeft;
+                let tempNext = [...remaining];
+                let possible = true;
+                for (let v = first.v; v < first.v + size; v++) {
+                    let foundIdx = tempNext.findIndex(c => c.v === v && c.s === first.s);
+                    if (foundIdx > -1) tempNext.splice(foundIdx, 1);
+                    else if (currentJ > 0) currentJ--;
+                    else { possible = false; break; }
+                }
+                if (possible && solve(tempNext, currentJ)) return true;
+            }
+            return false;
+        }
+        return solve(normalCards, jokers);
+    }
+
+    for (let i = 0; i < cards.length; i++) {
+        let test = cards.filter((_, idx) => idx !== i);
+        if (check10(test)) return true;
+    }
+    return false;
+}
 
 function createFullDeck() {
     let d = [];
