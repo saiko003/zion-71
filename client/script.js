@@ -210,15 +210,13 @@ function updateAsistenti() {
 
 // --- EVENTET ---
 
-// RREGULLIMI I RREPTË: Klikimi i stivës nuk varet më nga variabla që mund të mbeten true/false gabimisht
 deckElement.addEventListener('click', () => {
-    // Kushti i vetëm: duhet të jetë radha jote dhe duhet të kesh saktësisht 10 letra
     if (isMyTurn && doraImeData.length === 10) {
         socket.emit('drawCard');
     }
 });
 
-// PËRDITËSUAR: Klikimi mbi Jackpot (Rregulli Flush i rreptë)
+// UPDATE: Jackpot me mbyllje automatike (Flush)
 jackpotElement.addEventListener('click', () => {
     if (!isMyTurn || doraImeData.length !== 10) {
         alert("Jackpot merret vetëm si letra e 11-të kur po mbyll lojën!");
@@ -228,13 +226,33 @@ jackpotElement.addEventListener('click', () => {
     const parts = jackpotElement.innerHTML.split('<br>');
     const jackpotCard = { v: parts[0], s: parts[1] };
 
-    // Jackpot merret VETËM nëse ke 10 letrat me të njëjtin simbol
-    const isFlushMatch = doraImeData.every(card => card.v === '★' || card.s === jackpotCard.s);
+    // Gjejmë sa letra kemi me simbolin e Jackpot (ose xhokera)
+    const matchingCards = doraImeData.filter(card => card.v === '★' || card.s === jackpotCard.s);
 
-    if (isFlushMatch) {
+    if (matchingCards.length >= 9) {
+        // Shtojmë jackpot në dorën tonë
+        doraImeData.push(jackpotCard);
+        
+        // Gjejmë letrën që prish flush-in (letrën e tepërt)
+        const discardIdx = doraImeData.findIndex(card => card.v !== '★' && card.s !== jackpotCard.s);
+        
+        let cardToDiscard;
+        if (discardIdx > -1) {
+            cardToDiscard = doraImeData.splice(discardIdx, 1)[0];
+        } else {
+            cardToDiscard = doraImeData.splice(0, 1)[0];
+        }
+
+        renderHand();
+        
+        // Emitet automatike për mbyllje
         socket.emit('drawJackpot');
+        socket.emit('cardDiscarded', cardToDiscard);
+        socket.emit('playerClosed', { isFlush: true, hand: doraImeData });
+        
+        alert("MBYLLJE FLUSH AUTOMATIKE!");
     } else {
-        alert("Jackpot-in mund ta marrësh vetëm nëse të gjitha letrat e tua kanë simbolin: " + jackpotCard.s);
+        alert("Jackpot-in mund ta marrësh vetëm nëse të gjitha letrat (përveç njërës që do hidhet) kanë simbolin: " + jackpotCard.s);
     }
 });
 
@@ -244,7 +262,6 @@ socket.on('cardDrawn', (card) => {
     checkTurnLogic();
 });
 
-// SHTUAR: Kur merret Jackpot
 socket.on('jackpotDrawn', (card) => {
     doraImeData.push(card);
     renderHand();
@@ -282,38 +299,51 @@ discardPile.addEventListener('drop', (e) => {
     }
 });
 
+// UPDATE: Butoni mbyll gjen automatikisht letrën e tepërt nëse ka Flush
 btnMbyll.addEventListener('click', () => {
     let ready = false;
     let isFlushWin = false;
+    let finalHand = [];
+    let autoDiscard = null;
     
-    // Kontrolli Flush (pa pasur nevojë për rreshta/grupe)
-    const firstSymbolCard = doraImeData.find(c => c.v !== '★');
-    if (firstSymbolCard) {
-        isFlushWin = doraImeData.every(c => c.v === '★' || c.s === firstSymbolCard.s);
-    }
-
-    if (isFlushWin) {
-        ready = true;
-    } else {
-        // Kontrolli mbylljes normale (Grupe/Rreshta)
-        for (let i = 0; i < doraImeData.length; i++) {
-            let testHand = doraImeData.filter((_, idx) => idx !== i);
-            if (validateZionHand(testHand)) {
+    // Kontrolli Flush (gjen letrën e tepërt automatikisht)
+    for (let i = 0; i < doraImeData.length; i++) {
+        let testHand = doraImeData.filter((_, idx) => idx !== i);
+        const firstSymbol = testHand.find(c => c.v !== '★');
+        if (firstSymbol) {
+            const isFlush = testHand.every(c => c.v === '★' || c.s === firstSymbol.s);
+            if (isFlush) {
+                isFlushWin = true;
                 ready = true;
+                autoDiscard = doraImeData[i];
+                finalHand = testHand;
                 break;
             }
         }
     }
 
     if (!ready) {
-        alert("Dora nuk është e vlefshme për mbyllje!");
-        return;
+        // Kontrolli mbylljes normale (Grupe/Rreshta)
+        for (let i = 0; i < doraImeData.length; i++) {
+            let testHand = doraImeData.filter((_, idx) => idx !== i);
+            if (validateZionHand(testHand)) {
+                ready = true;
+                autoDiscard = doraImeData[i];
+                finalHand = testHand;
+                break;
+            }
+        }
     }
 
-    socket.emit('playerClosed', { isFlush: isFlushWin, hand: doraImeData });
+    if (ready) {
+        // Nëse mbyllim, hedhim letrën e tepërt automatikisht në server
+        socket.emit('cardDiscarded', autoDiscard);
+        socket.emit('playerClosed', { isFlush: isFlushWin, hand: finalHand });
+    } else {
+        alert("Dora nuk është e vlefshme për mbyllje!");
+    }
 });
 
-// PËRDITËSUAR: Visual Reveal pas mbylljes
 socket.on('roundOver', (data) => {
     const winnerOverlay = document.createElement('div');
     winnerOverlay.id = "winner-reveal-overlay";
@@ -341,7 +371,6 @@ socket.on('roundOver', (data) => {
         });
     }
 
-    // UPDATE: Nëse ti je fituesi, dërgon 0 pikë automatikisht
     let p = 0;
     if (data.winnerId !== socket.id) {
         p = llogaritPiket(doraImeData);
@@ -354,21 +383,8 @@ socket.on('roundOver', (data) => {
     }, 5000);
 });
 
-// UPDATE: Funksioni llogarit vetëm ato letra që nuk bëjnë pjesë në një kombinim (Zion 71 Style)
 function llogaritPiket(cards) {
-    const valMap = { 'A': 11, 'K': 10, 'Q': 10, 'J': 10, '★': 0 };
-    
-    // Gjejmë të gjitha kombinimet e mundshme (grupet dhe rreshtat)
-    // Dhe i heqim ato nga llogaria e pikëve
-    let tempCards = [...cards];
-    
-    // Provon të heqë rreshtat dhe grupet deri sa të mos mbetet asnjë
-    // Ky është një version i thjeshtësuar që lë jashtë vetëm letrat që s'përdoren
-    // Për lojtarin, mjafton t'i ketë të renditura në dorë që kjo logjikë të funksionojë
-    
-    // Shënim: Për momentin, po mbledhim të gjitha letrat që NUK formojnë rreshta/grupe
-    // duke përdorur një logjikë mbledhjeje bazë nëse nuk mbyll dot vetë
-    return tempCards.reduce((acc, c) => {
+    return cards.reduce((acc, c) => {
         if (c.v === 'A') return acc + 11;
         if (['K', 'Q', 'J'].includes(c.v)) return acc + 10;
         if (c.v === '★') return acc + 0;
@@ -378,10 +394,8 @@ function llogaritPiket(cards) {
 
 function updateTurnUI() {
     document.body.style.boxShadow = isMyTurn ? "inset 0 0 50px #27ae60" : "none";
-    
     if(isMyTurn && doraImeData.length === 10) deckElement.classList.add('active-deck');
     else deckElement.classList.remove('active-deck');
-
     if(isMyTurn && doraImeData.length === 10) jackpotElement.classList.add('glow-jackpot');
     else jackpotElement.classList.remove('glow-jackpot');
 }
