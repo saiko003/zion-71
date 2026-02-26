@@ -111,20 +111,32 @@ function renderHand() {
         div.addEventListener('touchstart', (e) => {
             if (!isMyTurn) return;
     
-            // 1. Ndalon scroll-in e faqes që të fokusohemi te letra
+            // Ndalojmë zmadhimin/scroll-in e iPhone
             if (e.cancelable) e.preventDefault(); 
 
-            div.classList.add('dragging');
             const touch = e.touches[0];
+            const rect = div.getBoundingClientRect();
 
-            // 2. Përdor offsetWidth/Height në vend të numrave fiks (60/90)
-            // që letra të qëndrojë saktë në mes të gishtit
+            // Ruajmë distancën mes gishtit dhe cepit të letrës (offset)
+            // që letra të mos "kërcejë" në mes të gishtit
+            const offsetX = touch.clientX - rect.left;
+            const offsetY = touch.clientY - rect.top;
+
+            div.classList.add('dragging');
+
+            // Pozicionimi fillestar saktësisht ku është letra
             div.style.position = 'fixed';
             div.style.zIndex = '1000';
-            div.style.pointerEvents = 'none'; 
-            div.style.left = (touch.clientX - div.offsetWidth / 2) + 'px';
-            div.style.top = (touch.clientY - div.offsetHeight / 2) + 'px';
-        }, { passive: false }); // NDRYSHIMI: false
+            div.style.width = rect.width + 'px';  // Mbajmë madhësinë e saktë
+            div.style.height = rect.height + 'px';
+            div.style.left = rect.left + 'px';
+            div.style.top = rect.top + 'px';
+            div.style.pointerEvents = 'none';
+
+            // Ruajmë offset-et te elementi që t'i përdorim te touchmove
+            div.dataset.offsetX = offsetX;
+            div.dataset.offsetY = offsetY;
+        }, { passive: false });
 
         div.addEventListener('touchend', (e) => {
             // 1. Marrim koordinatat e fundit ku ishte gishti para se të largohej
