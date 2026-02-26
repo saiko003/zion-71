@@ -16,16 +16,13 @@ let lastWinnerId = null;
 let jackpotCard = null; 
 
 io.on('connection', (socket) => {
-    socket.on('joinGame', (name) => {
-        if (players.length < 5) {
-            players.push({ 
-                id: socket.id, 
-                name: name || `Lojtari ${players.length + 1}`, 
-                score: 0, 
-                hand: [], 
-                eliminated: false 
-            });
-            sendGameState();
+    
+    // Këtu po e shton:
+    socket.on('requestMyCards', () => {
+        const player = players.find(p => p.id === socket.id);
+        if (player) {
+            // Serveri ia dërgon prapë letrat që ka në memorien e tij
+            socket.emit('receiveCards', player.hand);
         }
     });
 
@@ -63,27 +60,20 @@ io.on('connection', (socket) => {
         sendGameState();
     });
 
-    // PËRMIRËSUAR: Siguri shtesë që lojtari nuk merr letër nëse ka 11
     socket.on('drawCard', () => {
-        const player = players[currentTurnIndex];
-        if (player?.id === socket.id) {
+    const player = players[currentTurnIndex];
+    if (player?.id === socket.id) {
+        if (deck.length > 0) {
+            const card = deck.pop();
             
-            // Kontrolli i reshuffle
-            if (deck.length === 0 && discardPile.length > 0) {
-                console.log("Deck mbaroi! Po bëj Reshuffle të discardPile...");
-                deck = [...discardPile];
-                discardPile = [];
-                deck.sort(() => Math.random() - 0.5);
-            }
+            // KJO LINJË ËSHTË SHUMË E RËNDËSISHME:
+            player.hand.push(card); // Ruaje letrën edhe në server!
 
-            if (deck.length > 0) {
-                const card = deck.pop();
-                io.to(socket.id).emit('cardDrawn', card);
-                sendGameState(); 
-            }
+            io.to(socket.id).emit('cardDrawn', card);
+            sendGameState(); 
         }
-    });
-
+    }
+});
     socket.on('drawJackpot', () => {
         const player = players[currentTurnIndex];
         if (player?.id === socket.id && jackpotCard) {
@@ -100,9 +90,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('cardDiscarded', (card) => {
-        discardPile.push(card);
-        console.log("Letra u shtua në discardPile. Total:", discardPile.length);
-    });
+    const player = players.find(p => p.id === socket.id);
+    if (player) {
+        // Heqim letrën nga dora e lojtarit në server
+        player.hand = player.hand.filter(c => !(c.v === card.v && c.s === card.s));
+    }
+    discardPile.push(card);
+});
 
     socket.on('playerClosed', (data) => {
         if (verifyHandOnServer(data.hand)) {
