@@ -210,10 +210,12 @@ function updateAsistenti() {
 
 // --- EVENTET ---
 
-// RREGULLIMI: Tërheqja nga Deck (punon pa kushte nëse është radha jote)
+// RREGULLIMI I RREPTË: Klikimi i stivës nuk varet më nga variabla që mund të mbeten true/false gabimisht
 deckElement.addEventListener('click', () => {
-    if (!isMyTurn || doraImeData.length >= 11) return;
-    socket.emit('drawCard');
+    // Kushti i vetëm: duhet të jetë radha jote dhe duhet të kesh saktësisht 10 letra
+    if (isMyTurn && doraImeData.length === 10) {
+        socket.emit('drawCard');
+    }
 });
 
 // PËRDITËSUAR: Klikimi mbi Jackpot (Rregulli Flush i rreptë)
