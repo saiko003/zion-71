@@ -109,22 +109,22 @@ io.on('connection', (socket) => {
     });
 
     // --- 6. HEDHJA E LETRES (DISCARD) ---
-socket.on('cardDiscarded', (card) => {
-    const player = players.find(p => p.id === socket.id);
-    if (player) {
-        // 1. E fshijmë letrën nga dora në server
-        player.hand = player.hand.filter(c => !(c.v === card.v && c.s === card.s));
+    socket.on('cardDiscarded', (card) => {
+        const player = players.find(p => p.id === socket.id);
+        if (player) {
+            // 1. E fshijmë letrën nga dora në server
+            player.hand = player.hand.filter(c => !(c.v === card.v && c.s === card.s));
         
-        // 2. E shtojmë te grumbulli i letrave të hedhura
-        discardPile.push(card);
+            // 2. E shtojmë te grumbulli i letrave të hedhura
+            discardPile.push(card);
         
-        // 3. I dërgojmë lojtarit dorën e tij të përditësuar (Që të zhduket letra nga ekrani i tij)
-        socket.emit('receiveCards', player.hand); 
+            // 3. I dërgojmë lojtarit dorën e tij të përditësuar (Që të zhduket letra nga ekrani i tij)
+            socket.emit('receiveCards', player.hand); 
         
-        // 4. Njoftojmë të gjithë të tjerët që letra e fundit në tavolinë ndryshoi
-        sendGameState();
-    }
-});
+            // 4. Njoftojmë të gjithë të tjerët që letra e fundit në tavolinë ndryshoi
+            sendGameState();
+        }
+    });
 
     // --- 7. FUNDI I RADHËS ---
     socket.on('endTurn', () => {
