@@ -255,6 +255,7 @@ body {
     border-radius: 12px;
     padding: 12px;
     border: 1px solid #3a4a63;
+    margin-top: 10px;
 }
 
 #chat-messages {
@@ -263,13 +264,28 @@ body {
     font-size: 0.95rem;
     margin-bottom: 12px;
     padding-right: 5px;
+    display: flex;
+    flex-direction: column;
+    color: white;
 }
 
-/* Scrollbar Style */
+/* Stili i mesazheve individuale */
+.chat-entry {
+    margin-bottom: 6px;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.chat-entry strong {
+    color: #00d2ff;
+    margin-right: 5px;
+}
+
 #chat-messages::-webkit-scrollbar { width: 5px; }
 #chat-messages::-webkit-scrollbar-thumb { background: #3a4a63; border-radius: 10px; }
 
 #chat-input-area { display: flex; gap: 8px; }
+
 #chat-input {
     flex: 1;
     padding: 10px;
@@ -277,19 +293,22 @@ body {
     border: 1px solid #3a4a63;
     background: #1b2a3d;
     color: white;
+    outline: none;
 }
 
-/* ... (kodet e tua ekzistuese) ... */
-
-#btn-send {
+#btn-send-chat {
     padding: 10px 20px;
     background: #3a4a63;
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
+    transition: 0.3s;
 }
 
+#btn-send-chat:hover {
+    background: #4e5f7a;
+}
 /* ==========================
    Visual Reveal Styles 
 ========================== */
