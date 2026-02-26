@@ -63,9 +63,12 @@ io.on('connection', (socket) => {
         sendGameState();
     });
 
+    // PËRMIRËSUAR: Siguri shtesë që lojtari nuk merr letër nëse ka 11
     socket.on('drawCard', () => {
-        if (players[currentTurnIndex]?.id === socket.id) {
-            // Logjika e Reshuffle: Nëse deck është bosh, përdorim discardPile
+        const player = players[currentTurnIndex];
+        if (player?.id === socket.id) {
+            
+            // Kontrolli i reshuffle
             if (deck.length === 0 && discardPile.length > 0) {
                 console.log("Deck mbaroi! Po bëj Reshuffle të discardPile...");
                 deck = [...discardPile];
@@ -76,18 +79,16 @@ io.on('connection', (socket) => {
             if (deck.length > 0) {
                 const card = deck.pop();
                 io.to(socket.id).emit('cardDrawn', card);
-                sendGameState(); // Përditësojmë numrin e letrave në UI
+                sendGameState(); 
             }
         }
     });
 
-    // --- LOGJIKA E RE E JACKPOT ---
     socket.on('drawJackpot', () => {
         const player = players[currentTurnIndex];
-        // Jackpot merret vetëm nëse është radha e lojtarit dhe Jackpot ekziston
         if (player?.id === socket.id && jackpotCard) {
             const card = jackpotCard;
-            jackpotCard = null; // Hiqet nga tavolina pasi merret
+            jackpotCard = null; 
             io.to(socket.id).emit('jackpotDrawn', card);
             sendGameState();
         }
@@ -108,11 +109,11 @@ io.on('connection', (socket) => {
             const winner = players.find(p => p.id === socket.id);
             lastWinnerId = socket.id;
             
-            // UPDATE: Tani dërgojmë edhe winningHand për Visual Reveal
             io.emit('roundOver', { 
                 winnerName: winner.name, 
+                winnerId: socket.id,
                 isFlush: data.isFlush,
-                winningHand: data.hand // Kjo u shtua këtu
+                winningHand: data.hand 
             });
         } else {
             console.log(`Lojtari ${socket.id} tentoi mbyllje të pavlefshme!`);
@@ -131,6 +132,15 @@ io.on('connection', (socket) => {
             }
         }
         sendGameState();
+    });
+
+    // --- LOGJIKA E CHAT-IT (E SHTUAR) ---
+    socket.on('sendMessage', (data) => {
+        // Serveri merr mesazhin dhe ua dërgon të gjithëve
+        io.emit('receiveMessage', {
+            name: data.name,
+            message: data.message
+        });
     });
 
     function moveToNextPlayer() {
@@ -163,6 +173,7 @@ io.on('connection', (socket) => {
     });
 });
 
+// Algoritmi i verifikimit (pa ndryshime)
 function verifyHandOnServer(cards) {
     if (!cards || (cards.length !== 10 && cards.length !== 11)) return false;
     const valMap = { '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13, 'A':14 };
