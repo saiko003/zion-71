@@ -110,22 +110,34 @@ function renderHand() {
         // --- LOGJIKA PËR IPHONE (TOUCH START & END) ---
         div.addEventListener('touchstart', (e) => {
             if (!isMyTurn) return;
+    
+            // 1. Ndalon scroll-in e faqes që të fokusohemi te letra
+            if (e.cancelable) e.preventDefault(); 
+
             div.classList.add('dragging');
             const touch = e.touches[0];
 
-            // Pozicionimi i menjëhershëm që të mos kërcejë
+            // 2. Përdor offsetWidth/Height në vend të numrave fiks (60/90)
+            // që letra të qëndrojë saktë në mes të gishtit
             div.style.position = 'fixed';
             div.style.zIndex = '1000';
             div.style.pointerEvents = 'none'; 
-            div.style.left = (touch.clientX - 60 / 2) + 'px'; // 60 është gjerësia mesatare e letrës
-            div.style.top = (touch.clientY - 90 / 2) + 'px';
-        }, { passive: true });
+            div.style.left = (touch.clientX - div.offsetWidth / 2) + 'px';
+            div.style.top = (touch.clientY - div.offsetHeight / 2) + 'px';
+        }, { passive: false }); // NDRYSHIMI: false
 
         div.addEventListener('touchend', (e) => {
+            // 1. Marrim koordinatat e fundit ku ishte gishti para se të largohej
+            const touch = e.changedTouches[0];
+    
+            // 2. Detyrojmë renditjen në atë pozicion
+            handleReorder(touch.clientX);
+
+            // 3. Resetojmë stilin dhe ruajmë renditjen e re në variablin doraImeData
             div.classList.remove('dragging');
             resetCardStyles(div); 
-            saveNewOrder();
-            
+            saveNewOrder(); 
+    
             discardPile.style.background = "";
             discardPile.style.transform = "";
         }, { passive: true });
@@ -500,24 +512,23 @@ discardPile.addEventListener('drop', (e) => {
     if (draggingCard) processDiscard(draggingCard);
 });
 
-// 4. LOGJIKA E LËVIZJES DHE HEDHJES (iPhone - Touch)
 document.addEventListener('touchmove', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (draggingCard) {
         if (e.cancelable) e.preventDefault();
         const touch = e.touches[0];
         
-        // 1. Lëvizja e letrës
-        draggingCard.style.position = 'fixed';
-        draggingCard.style.zIndex = '1000';
-        draggingCard.style.pointerEvents = 'none'; 
+        // 1. Lëvizja e letrës (Kjo pjesë e jote është ok)
         draggingCard.style.left = (touch.clientX - draggingCard.offsetWidth / 2) + 'px';
         draggingCard.style.top = (touch.clientY - draggingCard.offsetHeight / 2) + 'px';
 
-        // 2. KRITIKE: Lejon renditjen e letrave në dorë (Reordering)
-        handleReorder(touch.clientX); 
+        // 2. RENDITJA (Vetëm nëse gishti është poshtë te zona e letrave)
+        const handRect = handContainer.getBoundingClientRect();
+        if (touch.clientY > handRect.top - 50) { // 50px tolerancë lart
+            handleReorder(touch.clientX); 
+        }
 
-        // 3. FEEDBACK VIZUAL: Kontrollo zonën e hedhjes
+        // 3. ZONA E HEDHJES (Feedback-u yt vizual)
         const dropZone = discardPile.getBoundingClientRect();
         const isOver = (
             touch.clientX > dropZone.left && touch.clientX < dropZone.right &&
@@ -525,8 +536,8 @@ document.addEventListener('touchmove', (e) => {
         );
 
         if (isOver) {
-            discardPile.style.background = "rgba(39, 174, 96, 0.2)"; 
-            discardPile.style.transform = "scale(1.1)"; 
+            discardPile.style.background = "rgba(39, 174, 96, 0.4)"; 
+            discardPile.style.transform = "scale(1.15)";
         } else {
             discardPile.style.background = ""; 
             discardPile.style.transform = "";  
@@ -596,14 +607,16 @@ function processDiscard(draggingCard) {
     }
 }
 
-// --- FUNKSIONI NDIHMËS PËR RENDITJEN (SHËRBEJNË PËR PC DHE IPHONE) ---
 function handleReorder(clientX) {
     const draggingCard = document.querySelector('.card.dragging');
     if (!draggingCard) return;
 
     const cards = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+    
+    // Gjejmë letrën para së cilës duhet të futet letra jonë
     const nextCard = cards.find(c => {
         const box = c.getBoundingClientRect();
+        // Nëse gishti kalon mesin e letrës tjetër, ndërroji vendet
         return clientX <= box.left + box.width / 2;
     });
 
