@@ -11,31 +11,30 @@ const io = new Server(server, { cors: { origin: "*" } });
 let players = []; 
 let currentTurnIndex = 0;
 let deck = [];
-let discardPile = []; // Ruajmë letrat e hedhura këtu
+let discardPile = []; 
 let lastWinnerId = null;
 let jackpotCard = null; 
 
 io.on('connection', (socket) => {
     console.log('Një përdorues u lidh:', socket.id);
 
-    // SHTOJE KËTË NË SERVER.JS (në fillim të io.on)
-socket.on('joinGame', (name) => {
-    // Kjo shton lojtarin në listë
-    const existing = players.find(p => p.id === socket.id);
-    if (!existing) {
-        players.push({
-            id: socket.id,
-            name: name || `Lojtari ${players.length + 1}`,
-            score: 0,
-            hand: [],
-            eliminated: false
-        });
-        console.log("Lojtari u shtua:", name);
-    }
-    // Dërgojmë gjendjen e lojës që të gjithë të shohin lojtarin e ri
-    sendGameState(); 
-});
+    // --- 1. HYRJA NË LOJË ---
+    socket.on('joinGame', (name) => {
+        const existing = players.find(p => p.id === socket.id);
+        if (!existing) {
+            players.push({
+                id: socket.id,
+                name: name || `Lojtari ${players.length + 1}`,
+                score: 0,
+                hand: [],
+                eliminated: false
+            });
+            console.log("Lojtari u shtua:", name);
+        }
+        sendGameState(); 
+    });
 
+    // --- 2. KERKIMI I LETRAVE ---
     socket.on('requestMyCards', () => {
         const player = players.find(p => p.id === socket.id);
         if (player) {
@@ -43,9 +42,9 @@ socket.on('joinGame', (name) => {
         }
     });
 
+    // --- 3. NISJA E LOJËS ---
     socket.on('startGame', () => {
         const activePlayers = players.filter(p => !p.eliminated);
-        
         if (activePlayers.length < 2) {
             console.log("Nuk mund të nisë: Duhen të paktën 2 lojtarë aktivë.");
             return; 
@@ -84,6 +83,7 @@ socket.on('joinGame', (name) => {
         sendGameState();
     });
 
+    // --- 4. TERHEQJA E LETRES (DECK) ---
     socket.on('drawCard', () => {
         const player = players[currentTurnIndex];
         if (player?.id === socket.id) {
@@ -96,35 +96,88 @@ socket.on('joinGame', (name) => {
         }
     });
 
+    // --- 5. TERHEQJA E JACKPOT-IT ---
     socket.on('drawJackpot', () => {
         const player = players[currentTurnIndex];
         if (player?.id === socket.id && jackpotCard) {
             const card = jackpotCard;
-            player.hand.push(card); // SHTUAR: Ruaje në server
+            player.hand.push(card); 
             jackpotCard = null; 
             io.to(socket.id).emit('jackpotDrawn', card);
             sendGameState();
         }
     });
 
+    // --- 6. HEDHJA E LETRES (DISCARD) ---
+    socket.on('cardDiscarded', (card) => {
+        const player = players.find(p => p.id === socket.id);
+        if (player) {
+            player.hand = player.hand.filter(c => !(c.v === card.v && c.s === card.s));
+            discardPile.push(card);
+            // Këtu mund të shtosh sendGameState() nëse dëshiron që t'i përditësohet tavolina të gjithëve
+            sendGameState();
+        }
+    });
+
+    // --- 7. FUNDI I RADHËS ---
     socket.on('endTurn', () => {
         moveToNextPlayer();
         sendGameState();
     });
 
-    socket.on('cardDiscarded', (card) => {
-        const player = players.find(p => p.id === socket.id);
-        if (player) {
-            player.hand = player.hand.filter(c => !(c.v === card.v && c.s === card.s));
+    // --- 8. MBYLLJA E LOJËS (PLAYER CLOSED) ---
+    socket.on('playerClosed', (data) => {
+        const winner = players.find(p => p.id === socket.id);
+        if (winner && verifyHandOnServer(data.hand)) {
+            lastWinnerId = socket.id;
+            io.emit('roundOver', { 
+                winnerName: winner.name, 
+                winnerId: socket.id,
+                isFlush: data.isFlush,
+                winningHand: data.hand 
+            });
+            console.log(`Lojtari ${winner.name} mbylli lojën!`);
+        } else {
+            console.log(`Tentativë e pasaktë mbylljeje nga: ${socket.id}`);
+            socket.emit('error', 'Dora juaj nuk është e vlefshme për mbyllje!');
         }
-        discardPile.push(card);
     });
 
+    // --- 9. DOREZIMI I PIKËVE ---
+    socket.on('submitMyPoints', (data) => {
+        const p = players.find(player => player.id === socket.id);
+        if (p) {
+            let finalPoints = data.isFlush ? data.points * 2 : data.points;
+            p.score += finalPoints;
+            if (p.score > 71) {
+                p.eliminated = true;
+            }
+        }
+        sendGameState();
+    });
+
+    // --- 10. CHAT-I ---
     socket.on('sendMessage', (data) => {
-        io.emit('receiveMessage', data);
+        io.emit('receiveMessage', {
+            name: data.name,
+            message: data.message
+        });
     });
 
-    // Funksionet ndihmëse brenda io.on
+    // --- 11. SHKËPUTJA (DISCONNECT) ---
+    socket.on('disconnect', () => {
+        console.log('Lojtari u shkëput:', socket.id);
+        const wasActivePlayer = players[currentTurnIndex]?.id === socket.id;
+        players = players.filter(p => p.id !== socket.id);
+        
+        if (wasActivePlayer || currentTurnIndex >= players.length) {
+            moveToNextPlayer(); 
+        }
+        sendGameState();
+    });
+
+    // --- FUNKSIONET NDIHMËSE (Brenda lidhjes) ---
+
     function moveToNextPlayer() {
         if (players.length === 0) return;
         currentTurnIndex = (currentTurnIndex + 1) % players.length;
@@ -135,7 +188,6 @@ socket.on('joinGame', (name) => {
         }
     }
 
-   // 1. Funksioni për dërgimin e gjendjes (I përditësuar)
     function sendGameState() {
         io.emit('updateGameState', {
             players: players.map(p => ({ 
@@ -151,105 +203,23 @@ socket.on('joinGame', (name) => {
         });
     }
 
-    // 2. Eventi i mbylljes së lojës (ZION 71)
-    socket.on('playerClosed', (data) => {
-        const winner = players.find(p => p.id === socket.id);
-        
-        // Sigurohemi që vetëm lojtari që ka radhën mund të mbyllë (opsionale por e rekomanduar)
-        if (winner && verifyHandOnServer(data.hand)) {
-            lastWinnerId = socket.id;
-            
-            io.emit('roundOver', { 
-                winnerName: winner.name, 
-                winnerId: socket.id,
-                isFlush: data.isFlush,
-                winningHand: data.hand 
-            });
-            
-            console.log(`Lojtari ${winner.name} mbylli lojën!`);
-        } else {
-            console.log(`Tentativë e pasaktë mbylljeje nga: ${socket.id}`);
-            socket.emit('error', 'Dora juaj nuk është e vlefshme për mbyllje!');
-        }
-    });
+}); // <--- FUNDI I io.on('connection')
 
-    socket.on('disconnect', () => {
-        console.log('Lojtari u shkëput:', socket.id);
-        
-        // Gjejmë nëse lojtari që po ikën e ka radhën aktualisht
-        const wasActivePlayer = players[currentTurnIndex]?.id === socket.id;
-        
-        players = players.filter(p => p.id !== socket.id);
-        
-        if (wasActivePlayer || currentTurnIndex >= players.length) {
-            // Nëse iku ai që kishte radhën, thërrasim funksionin për të lëvizur te tjetri
-            moveToNextPlayer(); 
-        }
-        
-        sendGameState();
-    });
-    socket.on('submitMyPoints', (data) => {
-        const p = players.find(player => player.id === socket.id);
-        if (p) {
-            let finalPoints = data.isFlush ? data.points * 2 : data.points;
-            p.score += finalPoints;
+// --- LOGJIKA E VERIFIKIMIT (Jashtë lidhjes) ---
 
-            if (p.score > 71) {
-                p.eliminated = true;
-            }
-        }
-        sendGameState();
-    });
-
-    // --- LOGJIKA E CHAT-IT (E SHTUAR) ---
-    socket.on('sendMessage', (data) => {
-        // Serveri merr mesazhin dhe ua dërgon të gjithëve
-        io.emit('receiveMessage', {
-            name: data.name,
-            message: data.message
-        });
-    });
-
-    function moveToNextPlayer() {
-        currentTurnIndex = (currentTurnIndex + 1) % players.length;
-        let attempts = 0;
-        while (players[currentTurnIndex].eliminated && attempts < players.length) {
-            currentTurnIndex = (currentTurnIndex + 1) % players.length;
-            attempts++;
-        }
-    }
-
-    function sendGameState() {
-        io.emit('updateGameState', {
-            players: players.map(p => ({ 
-                name: p.name, 
-                id: p.id, 
-                score: p.score, 
-                eliminated: p.eliminated 
-            })),
-            activePlayerId: players[currentTurnIndex]?.id,
-            deckCount: deck.length,
-            jackpotCard: jackpotCard 
-        });
-    }
-
-    socket.on('disconnect', () => {
-        players = players.filter(p => p.id !== socket.id);
-        if (currentTurnIndex >= players.length) currentTurnIndex = 0;
-        sendGameState();
-    });
-});
-
-// Algoritmi i verifikimit (pa ndryshime)
 function verifyHandOnServer(cards) {
     if (!cards || (cards.length !== 10 && cards.length !== 11)) return false;
     const valMap = { '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13, 'A':14 };
+    
     function check10(hand10) {
         let jokers = hand10.filter(c => c.v === '★').length;
         let normalCards = hand10.filter(c => c.v !== '★').map(c => ({ v: valMap[c.v], s: c.s })).sort((a, b) => a.v - b.v);
+        
         function solve(remaining, jLeft) {
             if (remaining.length === 0) return true;
             let first = remaining[0];
+            
+            // Kontrollo grupet me vlerë të njëjtë
             for (let size = 3; size <= 4; size++) {
                 let sameVal = remaining.filter(c => c.v === first.v);
                 for (let use = 1; use <= Math.min(sameVal.length, size); use++) {
@@ -264,6 +234,8 @@ function verifyHandOnServer(cards) {
                     }
                 }
             }
+            
+            // Kontrollo rradhët (Sequences)
             for (let size = 3; size <= 10; size++) {
                 let currentJ = jLeft;
                 let tempNext = [...remaining];
@@ -280,6 +252,7 @@ function verifyHandOnServer(cards) {
         }
         return solve(normalCards, jokers);
     }
+
     for (let i = 0; i < cards.length; i++) {
         let test = cards.filter((_, idx) => idx !== i);
         if (check10(test)) return true;
@@ -296,4 +269,7 @@ function createFullDeck() {
     return d.sort(() => Math.random() - 0.5);
 }
 
-server.listen(process.env.PORT || 10000);
+// Nisja e serverit
+server.listen(process.env.PORT || 10000, () => {
+    console.log("Serveri po punon në portin 10000");
+});
