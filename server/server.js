@@ -124,13 +124,6 @@ socket.on('joinGame', (name) => {
         io.emit('receiveMessage', data);
     });
 
-    socket.on('disconnect', () => {
-        console.log('Lojtari u shkëput:', socket.id);
-        players = players.filter(p => p.id !== socket.id);
-        if (currentTurnIndex >= players.length) currentTurnIndex = 0;
-        sendGameState();
-    });
-
     // Funksionet ndihmëse brenda io.on
     function moveToNextPlayer() {
         if (players.length === 0) return;
@@ -142,6 +135,7 @@ socket.on('joinGame', (name) => {
         }
     }
 
+   // 1. Funksioni për dërgimin e gjendjes (I përditësuar)
     function sendGameState() {
         io.emit('updateGameState', {
             players: players.map(p => ({ 
@@ -152,13 +146,17 @@ socket.on('joinGame', (name) => {
             })),
             activePlayerId: players[currentTurnIndex]?.id,
             deckCount: deck.length,
-            jackpotCard: jackpotCard 
+            jackpotCard: jackpotCard,
+            discardPileTop: discardPile.length > 0 ? discardPile[discardPile.length - 1] : null
         });
     }
 
+    // 2. Eventi i mbylljes së lojës (ZION 71)
     socket.on('playerClosed', (data) => {
-        if (verifyHandOnServer(data.hand)) {
-            const winner = players.find(p => p.id === socket.id);
+        const winner = players.find(p => p.id === socket.id);
+        
+        // Sigurohemi që vetëm lojtari që ka radhën mund të mbyllë (opsionale por e rekomanduar)
+        if (winner && verifyHandOnServer(data.hand)) {
             lastWinnerId = socket.id;
             
             io.emit('roundOver', { 
@@ -167,12 +165,29 @@ socket.on('joinGame', (name) => {
                 isFlush: data.isFlush,
                 winningHand: data.hand 
             });
+            
+            console.log(`Lojtari ${winner.name} mbylli lojën!`);
         } else {
-            console.log(`Lojtari ${socket.id} tentoi mbyllje të pavlefshme!`);
-            socket.emit('error', 'Dora nuk është e vlefshme!');
+            console.log(`Tentativë e pasaktë mbylljeje nga: ${socket.id}`);
+            socket.emit('error', 'Dora juaj nuk është e vlefshme për mbyllje!');
         }
     });
 
+    socket.on('disconnect', () => {
+        console.log('Lojtari u shkëput:', socket.id);
+        
+        // Gjejmë nëse lojtari që po ikën e ka radhën aktualisht
+        const wasActivePlayer = players[currentTurnIndex]?.id === socket.id;
+        
+        players = players.filter(p => p.id !== socket.id);
+        
+        if (wasActivePlayer || currentTurnIndex >= players.length) {
+            // Nëse iku ai që kishte radhën, thërrasim funksionin për të lëvizur te tjetri
+            moveToNextPlayer(); 
+        }
+        
+        sendGameState();
+    });
     socket.on('submitMyPoints', (data) => {
         const p = players.find(player => player.id === socket.id);
         if (p) {
