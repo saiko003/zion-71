@@ -26,39 +26,56 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('startGame', () => {
-        const activePlayers = players.filter(p => !p.eliminated);
-        if (activePlayers.length < 2) return;
+   socket.on('startGame', () => {
+    const activePlayers = players.filter(p => !p.eliminated);
+    
+    // Kontrolli 1: Duhen 2 lojtarë
+    if (activePlayers.length < 2) {
+        console.log("Nuk mund të nisë: Duhen të paktën 2 lojtarë.");
+        return; 
+    }
 
-        deck = createFullDeck();
-        discardPile = []; // Resetojmë letrat e hedhura në fillim të lojës
-        
-        if (lastWinnerId) {
-            let winIdx = players.findIndex(p => p.id === lastWinnerId);
-            currentTurnIndex = (winIdx + 1) % players.length;
-        } else {
-            currentTurnIndex = 0;
+    deck = createFullDeck();
+    discardPile = [];
+    
+    // Kontrolli 2: Përcaktimi i radhës (Turn)
+    let startIndex = 0;
+    if (lastWinnerId) {
+        let winIdx = players.findIndex(p => p.id === lastWinnerId);
+        // Nëse fituesi i fundit ekziston akoma, nis pas tij, përndryshe nis nga 0
+        startIndex = (winIdx !== -1) ? (winIdx + 1) % players.length : 0;
+    }
+
+    currentTurnIndex = startIndex;
+
+    // Sigurohemi që lojtari që e ka radhën nuk është i eliminuar
+    let safetyCounter = 0;
+    while (players[currentTurnIndex].eliminated && safetyCounter < players.length) {
+        currentTurnIndex = (currentTurnIndex + 1) % players.length;
+        safetyCounter++;
+    }
+
+    // Shpërndarja e letrave
+    players.forEach((p, i) => {
+        if (!p.eliminated) {
+            // Lojtari që ka radhën merr 10 letra (+1 xhoker = 11), të tjerët 9 (+1 xhoker = 10)
+            let count = (i === currentTurnIndex) ? 10 : 9;
+            p.hand = deck.splice(0, count);
+            p.hand.push({ v: '★', s: 'X' }); 
+            
+            // Dërgojmë letrat te lojtari specifik
+            io.to(p.id).emit('receiveCards', p.hand);
         }
-
-        while (players[currentTurnIndex].eliminated) {
-            currentTurnIndex = (currentTurnIndex + 1) % players.length;
-        }
-
-        players.forEach((p, i) => {
-            if (!p.eliminated) {
-                let count = (i === currentTurnIndex) ? 10 : 9;
-                p.hand = deck.splice(0, count);
-                p.hand.push({ v: '★', s: 'X' }); 
-                io.to(p.id).emit('receiveCards', p.hand);
-            }
-        });
-
-        if (deck.length > 0) {
-            jackpotCard = deck.pop(); 
-        }
-
-        sendGameState();
     });
+
+    // Jackpot Card
+    if (deck.length > 0) {
+        jackpotCard = deck.pop(); 
+    }
+
+    console.log("Loja nisi! Radhën e ka:", players[currentTurnIndex].name);
+    sendGameState();
+});
 
     socket.on('drawCard', () => {
     const player = players[currentTurnIndex];
