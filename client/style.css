@@ -136,7 +136,34 @@ body {
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     position: relative;
+    /* Tranzicioni ekzistues */
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    /* --- SHTESAT PËR IPHONE & DRAG --- */
+    
+    /* Ndalon Safari-n të provojë ta bëjë "drag" letrën si imazh (e bllokon kodin tënd) */
+    -webkit-user-drag: none; 
+    
+    /* Ndalon markimin e tekstit kur e mban shtypur */
+    -webkit-user-select: none;
+    user-select: none;
+
+    /* I thotë browser-it: "Mos bëj scroll kur e prek këtë, lëre lojën ta lëvizë" */
+    touch-action: none !important;
+
+    /* Siguron që letra të jetë mbi çdo gjë tjetër kur e lëviz */
+    z-index: 5;
+    
+    /* Përmirëson performancën e lëvizjes në telefon */
+    will-change: transform;
+}
+
+/* Kur letra është duke u tërhequr (opsionale, shtoje nëse dëshiron efekt) */
+.card.dragging {
+    opacity: 0.8;
+    transform: scale(1.1) rotate(2deg);
+    z-index: 1000;
+}
 
     /* --- MBROJTJA SPECIALE PËR TELEFON (Zgjidhja e problemit tënd) --- */
     
@@ -419,21 +446,25 @@ body {
     #game-container { display: none !important; }
 }
 
-/* 1. RREGULLIMI PËR LANDSCAPE (TELEFON & KOMPJUTER) */
-/* 1. RREGULLIMI PËR LANDSCAPE (OPTIMIZUAR PËR PC & IPHONE) */
+
 @media screen and (orientation: landscape) {
     body {
-        margin: 0;
-        padding: 0;
-        /* Ndalon lëvizjen e faqes, por lejon ndërveprimin me maus */
-        overflow: hidden; 
-        height: 100lvh;
-        width: 100vw;
+        margin: 0 !important;
+        padding: 0 !important;
+        /* Ndalon lëvizjen e faqes (scroll), por lejon klikimet dhe drag-in */
+        overflow: hidden !important; 
+        height: 100lvh !important;
+        width: 100vw !important;
         display: flex;
         justify-content: center;
         align-items: center;
-        /* Kjo parandalon konfliktet e prekjes me mausin */
-        touch-action: none; 
+        /* KRITIKE: Ndalon Safari-n të bllokojë tërheqjen e letrave (drag) */
+        touch-action: none !important; 
+        /* Ndalon selektimin e tekstit kur e mban letrën shtypur */
+        -webkit-user-select: none;
+        user-select: none;
+        /* Siguron që faqja të jetë e "ngulur" dhe mos të ikë poshtë shiritave */
+        position: fixed;
     }
 
     #game-container {
