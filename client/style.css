@@ -135,18 +135,30 @@ body {
     font-size: 1.2rem;
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    
-    /* --- SHTESAT PËR TELEFON --- */
-    user-select: none; 
-    -webkit-user-select: none;      /* Ndalon selektimin e tekstit në iPhone */
-    touch-action: manipulation;     /* Ndalon zoom-in e panevojshëm kur klikon shpejt */
-    -webkit-tap-highlight-color: transparent; /* Heq kutinë e kaltër që del në telefon */
-    pointer-events: auto;           /* Sigurohet që letra i pranon klikimet */
-    z-index: 10;                    /* I sjell letrat para çdo gjëje tjetër */
-    /* --------------------------- */
-
     position: relative;
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    /* --- MBROJTJA SPECIALE PËR TELEFON (Zgjidhja e problemit tënd) --- */
+    
+    /* 1. Ndalon menunë që shfaqet kur e mbajmë shtypur (Plus-in dhe Google Search) */
+    -webkit-touch-callout: none; 
+    
+    /* 2. Ndalon plotësisht selektimin e tekstit */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+
+    /* 3. Ndalon telefonin të provojë ta bëjë "drag" letrën si imazh */
+    -webkit-user-drag: none;
+    
+    /* 4. Ndalon çdo veprim automatik të browser-it (Zoom, Swipe, etj.) */
+    touch-action: none; 
+
+    /* 5. Estetika në telefon */
+    -webkit-tap-highlight-color: transparent; /* Heq kutinë e kaltër */
+    pointer-events: auto;
+    z-index: 10;
 }
 
 .card-back {
