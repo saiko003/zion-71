@@ -155,7 +155,6 @@ socket.on('joinGame', (name) => {
             jackpotCard: jackpotCard 
         });
     }
-});
 
     socket.on('playerClosed', (data) => {
         if (verifyHandOnServer(data.hand)) {
