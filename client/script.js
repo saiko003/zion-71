@@ -148,7 +148,6 @@ function validateZionHand(cards) {
         }
 
         // 2. Provo RRESHT
-        let sameSuit = remaining.filter(c => c.s === first.s);
         for (let size = 3; size <= 10; size++) {
             let currentJ = jLeft;
             let tempNext = [...remaining];
@@ -219,9 +218,28 @@ discardPile.addEventListener('drop', () => {
     }
 });
 
+// MODIFIKUAR: Shtohet verifikimi para mbylljes
 btnMbyll.addEventListener('click', () => {
+    let ready = false;
+    let handToVerify = [];
+    
+    // Verifikojmë cilën letër po hedhim për mbyllje
+    for (let i = 0; i < doraImeData.length; i++) {
+        let testHand = doraImeData.filter((_, idx) => idx !== i);
+        if (validateZionHand(testHand)) {
+            ready = true;
+            handToVerify = doraImeData; // Dërgojmë gjithë dorën (11 letra) për serverin
+            break;
+        }
+    }
+
+    if (!ready) {
+        alert("Dora nuk është e vlefshme për mbyllje!");
+        return;
+    }
+
     let isFlush = confirm("A është mbyllje FLUSH?");
-    socket.emit('playerClosed', { isFlush });
+    socket.emit('playerClosed', { isFlush, hand: handToVerify });
 });
 
 socket.on('roundOver', (data) => {
