@@ -18,22 +18,23 @@ let jackpotCard = null;
 io.on('connection', (socket) => {
     console.log('Një përdorues u lidh:', socket.id);
 
-    // 1. KJO MUNGONTE: Pranon lojtarin dhe e shton në listë
-    socket.on('joinGame', (name) => {
-        // Kontrollojmë nëse lojtari është rregjistruar njëherë
-        const existing = players.find(p => p.id === socket.id);
-        if (!existing) {
-            players.push({
-                id: socket.id,
-                name: name || `Lojtari ${players.length + 1}`,
-                score: 0,
-                hand: [],
-                eliminated: false
-            });
-            console.log(`${name} u shtua në lojë.`);
-        }
-        sendGameState(); // Njoftojmë të tjerët
-    });
+    // SHTOJE KËTË NË SERVER.JS (në fillim të io.on)
+socket.on('joinGame', (name) => {
+    // Kjo shton lojtarin në listë
+    const existing = players.find(p => p.id === socket.id);
+    if (!existing) {
+        players.push({
+            id: socket.id,
+            name: name || `Lojtari ${players.length + 1}`,
+            score: 0,
+            hand: [],
+            eliminated: false
+        });
+        console.log("Lojtari u shtua:", name);
+    }
+    // Dërgojmë gjendjen e lojës që të gjithë të shohin lojtarin e ri
+    sendGameState(); 
+});
 
     socket.on('requestMyCards', () => {
         const player = players.find(p => p.id === socket.id);
