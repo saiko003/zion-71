@@ -396,7 +396,7 @@ body {
 }
 /* ... kodet e mëparshme për .card, #player-hand, etj ... */
 
-/* 1. MËNYRA DHE PARALAJMËRIMI I ORIENTIMIT */
+/* 1. PARALAJMËRIMI I ORIENTIMIT */
 #orientation-warning {
     display: none;
     position: fixed;
@@ -404,7 +404,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: #1b2a3d; /* Ngjyra jote aktuale */
+    background: #1b2a3d;
     z-index: 9999;
     flex-direction: column;
     justify-content: center;
@@ -417,30 +417,89 @@ body {
 /* Kur telefoni mbahet drejt (Portrait) */
 @media screen and (orientation: portrait) {
     #orientation-warning {
-        display: flex; /* Shfaq mesazhin */
+        display: flex;
     }
     #game-container {
-        display: none; /* Fsheh lojën */
+        display: none !important;
     }
 }
 
-/* Kur telefoni mbahet shtrirë (Landscape) */
+/* 2. RREGULLIMI KOMPLET PËR LANDSCAPE (UPDATE) */
 @media screen and (orientation: landscape) {
     #orientation-warning {
-        display: none; /* Fsheh mesazhin */
+        display: none;
     }
+
     #game-container {
         display: flex;
-        flex-direction: column; /* Mbaje column nëse dëshiron që elementet të rrinë njëri nën tjetrin edhe në landscape */
-        justify-content: space-around;
+        flex-direction: row; /* Ndajmë ekranin majtas dhe djathtas */
+        justify-content: space-between;
+        align-items: center;
         height: 100vh;
         width: 100vw;
+        padding: 5px;
+        gap: 10px;
+        overflow: hidden; /* Ndalon daljen jashtë ekranit */
+    }
+
+    /* Tabelën e pikëve e bëjmë më të vogël dhe anash */
+    #scoreboard-container {
+        width: 150px; 
+        max-height: 90vh;
+        font-size: 0.7rem;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 5px;
+        border-radius: 8px;
+    }
+
+    #score-table th, #score-table td {
+        padding: 2px 5px;
+    }
+
+    /* Pjesa qendrore ku është stiva dhe letrat */
+    #table-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    /* Zvogëlojmë pak stivën në landscape */
+    #deck-area {
+        transform: scale(0.8); 
+        margin-bottom: 10px;
+    }
+
+    /* Letrat e dorës - I ngrisim lart që të mos i mbulojë asgjë */
+    #player-area {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: auto; /* I shtyn në fund të hapësirës së vet */
+    }
+
+    #player-hand {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        transform: scale(0.9); /* I zvogëlojmë pak që të zënë vend */
+    }
+
+    /* FSHEHIM CHAT-IN PLOTËSISHT NË LANDSCAPE */
+    /* Në telefon nuk ka vend për tastierë, chat dhe letra njëkohësisht */
+    #chat-container {
+        display: none !important;
     }
 }
 
-/* 2. RREGULLI PËR TASTIERËN (Që shtuam më herët) */
-@media (max-height: 500px) {
-    #chat-container {
-        display: none; 
+/* 3. NËSE EKRANI ËSHTË SHUMË I VOGËL */
+@media (max-height: 400px) {
+    .card, .card-back {
+        width: 55px;  /* Zvogëlojmë përmasat e letrave */
+        height: 80px;
+        font-size: 0.9rem;
     }
 }
