@@ -194,10 +194,32 @@ body {
 }
 
 #discard-pile {
-    border: 2px dashed #fff;
+    width: 140px;         /* E bëjmë më të gjerë */
+    height: 190px;        /* E bëjmë më të lartë */
+    border: 3px dashed rgba(255, 255, 255, 0.3); /* Kornizë e dukshme */
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.05);
-    color: #fff;
-    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+    margin: 10px auto;    /* E centrojmë */
+}
+
+/* Ky stil shtohet kur afron letrën (vjen nga JS-i që kemi shkruar) */
+#discard-pile[style*="background"] {
+    border-color: #27ae60;
+    transform: scale(1.05); /* Zmadhohet pak kur gati për lëshim */
+}
+
+/* Shto një tekst brenda pilës që të duket ku duhet lëshuar */
+#discard-pile::after {
+    content: "HEDH KËTU";
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+    position: absolute;
+    bottom: 10px;
 }
 
 /* ==========================
