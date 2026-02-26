@@ -424,82 +424,111 @@ body {
     }
 }
 
-/* 2. RREGULLIMI KOMPLET PËR LANDSCAPE (UPDATE) */
+/* 2. RREGULLIMI KOMPLET PËR LANDSCAPE (FULL SCREEN FIX) */
 @media screen and (orientation: landscape) {
     #orientation-warning {
         display: none;
     }
 
-    #game-container {
-        display: flex;
-        flex-direction: row; /* Ndajmë ekranin majtas dhe djathtas */
-        justify-content: space-between;
-        align-items: center;
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Ndalon scroll-in që të mos priten letrat */
         height: 100vh;
         width: 100vw;
-        padding: 5px;
+    }
+
+    #game-container {
+        display: grid;
+        /* Ndajmë ekranin: 180px për pikët majtas, pjesa tjetër për lojën */
+        grid-template-columns: 180px 1fr; 
+        /* Ndajmë lartësinë: pjesa e sipërme për stivën, pjesa e poshtme për letrat */
+        grid-template-rows: 1fr auto; 
+        height: 100vh;
+        width: 100vw;
+        padding: 10px;
         gap: 10px;
-        overflow: hidden; /* Ndalon daljen jashtë ekranit */
+        box-sizing: border-box;
     }
 
-    /* Tabelën e pikëve e bëjmë më të vogël dhe anash */
+    /* Tabelën e pikëve e vendosim në kolonën e parë majtas */
     #scoreboard-container {
-        width: 150px; 
-        max-height: 90vh;
-        font-size: 0.7rem;
-        background: rgba(0, 0, 0, 0.2);
-        padding: 5px;
-        border-radius: 8px;
+        grid-column: 1;
+        grid-row: 1 / 3; /* Zë gjithë lartësinë nga lart poshtë */
+        width: 100%;
+        max-height: 95vh;
+        font-size: 0.75rem;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 8px;
+        border-radius: 10px;
+        overflow-y: auto;
+        border: 1px solid rgba(255,255,255,0.1);
     }
 
-    #score-table th, #score-table td {
-        padding: 2px 5px;
+    #score-table {
+        width: 100%;
     }
 
-    /* Pjesa qendrore ku është stiva dhe letrat */
+    /* Zona e tavolinës (Stiva dhe Jackpot) */
     #table-area {
-        flex: 1;
+        grid-column: 2;
+        grid-row: 1;
         display: flex;
-        flex-direction: column;
+        flex-direction: row; /* I rreshtojmë horizontalisht */
         justify-content: center;
         align-items: center;
-        height: 100%;
+        gap: 20px;
     }
 
-    /* Zvogëlojmë pak stivën në landscape */
-    #deck-area {
-        transform: scale(0.8); 
-        margin-bottom: 10px;
-    }
-
-    /* Letrat e dorës - I ngrisim lart që të mos i mbulojë asgjë */
+    /* Zona e lojtarit (Letrat në dorë) */
     #player-area {
-        width: 100%;
+        grid-column: 2;
+        grid-row: 2;
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-top: auto; /* I shtyn në fund të hapësirës së vet */
+        justify-content: flex-end;
+        padding-bottom: 5px;
     }
 
     #player-hand {
         display: flex;
-        gap: 5px;
+        gap: 4px;
         justify-content: center;
-        transform: scale(0.9); /* I zvogëlojmë pak që të zënë vend */
+        width: 100%;
+        /* Ky shkallëzim siguron që letrat të mos priten në lartësi */
+        transform: scale(0.85); 
+        transform-origin: bottom center;
     }
 
-    /* FSHEHIM CHAT-IN PLOTËSISHT NË LANDSCAPE */
-    /* Në telefon nuk ka vend për tastierë, chat dhe letra njëkohësisht */
-    #chat-container {
+    /* Përmasat e letrave specifike për landscape që të nxënë vend */
+    .card, .card-back {
+        width: 58px !important;
+        height: 82px !important;
+        font-size: 1rem !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+
+    /* Fshehim elementet e panevojshme që vjedhin hapësirë */
+    #chat-container, h3, #asistenti-container span:last-child {
         display: none !important;
+    }
+    
+    /* Butoni Start dhe Mbyll të jenë më kompaktë */
+    .start-btn, .glow-btn {
+        padding: 8px 15px;
+        font-size: 0.8rem;
     }
 }
 
-/* 3. NËSE EKRANI ËSHTË SHUMË I VOGËL */
-@media (max-height: 400px) {
+/* 3. FIX PËR TELEFONAT SHUMË TË SHKURTËR */
+@media screen and (orientation: landscape) and (max-height: 380px) {
     .card, .card-back {
-        width: 55px;  /* Zvogëlojmë përmasat e letrave */
-        height: 80px;
-        font-size: 0.9rem;
+        width: 50px !important;
+        height: 70px !important;
+        font-size: 0.8rem !important;
+    }
+    #player-hand {
+        transform: scale(0.8);
     }
 }
