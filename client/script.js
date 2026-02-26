@@ -509,11 +509,28 @@ document.addEventListener('touchmove', (e) => {
     if (draggingCard) {
         if (e.cancelable) e.preventDefault();
         const touch = e.touches[0];
+        
+        // Lëvizja e letrës
         draggingCard.style.position = 'fixed';
         draggingCard.style.zIndex = '1000';
         draggingCard.style.pointerEvents = 'none'; 
         draggingCard.style.left = (touch.clientX - draggingCard.offsetWidth / 2) + 'px';
         draggingCard.style.top = (touch.clientY - draggingCard.offsetHeight / 2) + 'px';
+
+        // FEEDBACK VIZUAL: Kontrollo nëse jemi mbi zonën e hedhjes
+        const dropZone = discardPile.getBoundingClientRect();
+        const isOver = (
+            touch.clientX > dropZone.left && touch.clientX < dropZone.right &&
+            touch.clientY > dropZone.top && touch.clientY < dropZone.bottom
+        );
+
+        if (isOver) {
+            discardPile.style.background = "rgba(39, 174, 96, 0.2)"; // Ndizet jeshil
+            discardPile.style.transform = "scale(1.1)"; // Zmadhohet pak
+        } else {
+            discardPile.style.background = ""; // Fiket
+            discardPile.style.transform = "";  // Kthehet në madhësi normale
+        }
     }
 }, { passive: false });
 
