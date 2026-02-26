@@ -216,7 +216,7 @@ deckElement.addEventListener('click', () => {
     }
 });
 
-// UPDATE: Jackpot me mbyllje automatike (Flush)
+// UPDATE: Jackpot me mbyllje automatike (Flush) + FIX TIMEOUT
 jackpotElement.addEventListener('click', () => {
     if (!isMyTurn || doraImeData.length !== 10) {
         alert("Jackpot merret vetëm si letra e 11-të kur po mbyll lojën!");
@@ -226,14 +226,11 @@ jackpotElement.addEventListener('click', () => {
     const parts = jackpotElement.innerHTML.split('<br>');
     const jackpotCard = { v: parts[0], s: parts[1] };
 
-    // Gjejmë sa letra kemi me simbolin e Jackpot (ose xhokera)
     const matchingCards = doraImeData.filter(card => card.v === '★' || card.s === jackpotCard.s);
 
     if (matchingCards.length >= 9) {
-        // Shtojmë jackpot në dorën tonë
         doraImeData.push(jackpotCard);
         
-        // Gjejmë letrën që prish flush-in (letrën e tepërt)
         const discardIdx = doraImeData.findIndex(card => card.v !== '★' && card.s !== jackpotCard.s);
         
         let cardToDiscard;
@@ -245,10 +242,12 @@ jackpotElement.addEventListener('click', () => {
 
         renderHand();
         
-        // Emitet automatike për mbyllje
         socket.emit('drawJackpot');
-        socket.emit('cardDiscarded', cardToDiscard);
-        socket.emit('playerClosed', { isFlush: true, hand: doraImeData });
+        // Shtojmë vonesë të vogël që serveri të procesojë rradhën para mbylljes
+        setTimeout(() => {
+            socket.emit('cardDiscarded', cardToDiscard);
+            socket.emit('playerClosed', { isFlush: true, hand: doraImeData });
+        }, 100);
         
         alert("MBYLLJE FLUSH AUTOMATIKE!");
     } else {
@@ -299,14 +298,13 @@ discardPile.addEventListener('drop', (e) => {
     }
 });
 
-// UPDATE: Butoni mbyll gjen automatikisht letrën e tepërt nëse ka Flush
+// UPDATE: Butoni mbyll me FIX TIMEOUT
 btnMbyll.addEventListener('click', () => {
     let ready = false;
     let isFlushWin = false;
     let finalHand = [];
     let autoDiscard = null;
     
-    // Kontrolli Flush (gjen letrën e tepërt automatikisht)
     for (let i = 0; i < doraImeData.length; i++) {
         let testHand = doraImeData.filter((_, idx) => idx !== i);
         const firstSymbol = testHand.find(c => c.v !== '★');
@@ -323,7 +321,6 @@ btnMbyll.addEventListener('click', () => {
     }
 
     if (!ready) {
-        // Kontrolli mbylljes normale (Grupe/Rreshta)
         for (let i = 0; i < doraImeData.length; i++) {
             let testHand = doraImeData.filter((_, idx) => idx !== i);
             if (validateZionHand(testHand)) {
@@ -336,9 +333,11 @@ btnMbyll.addEventListener('click', () => {
     }
 
     if (ready) {
-        // Nëse mbyllim, hedhim letrën e tepërt automatikisht në server
         socket.emit('cardDiscarded', autoDiscard);
-        socket.emit('playerClosed', { isFlush: isFlushWin, hand: finalHand });
+        // Shtojmë vonesë që serveri të pranojë letrën e hedhur para se të mbyllë dhomën
+        setTimeout(() => {
+            socket.emit('playerClosed', { isFlush: isFlushWin, hand: finalHand });
+        }, 100);
     } else {
         alert("Dora nuk është e vlefshme për mbyllje!");
     }
