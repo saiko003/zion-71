@@ -1,5 +1,6 @@
 // 1. Inicializimi dhe Lidhja
-const socket = io('https://zion-71-server.onrender.com'); // Sigurohu që kjo lidhet me serverin tënd
+const socket = io('https://zion-71-server.onrender.com'); 
+
 const handContainer = document.getElementById('player-hand');
 const discardPile = document.getElementById('discard-pile');
 const deckElement = document.getElementById('deck');
@@ -11,21 +12,40 @@ let isMyTurn = false;
 let hasDrawnCard = false; 
 let doraImeData = []; 
 
-// Ruajtja e emrit
+// Ruajtja e emrit dhe dërgimi te serveri
 let myName = localStorage.getItem('zion_player_name');
 if (!myName) {
     myName = prompt("Shkruaj emrin tënd:");
     if (myName) localStorage.setItem('zion_player_name', myName);
 }
-socket.emit('joinGame', myName);
+
+// Funksioni që njofton serverin kur lidhemi
+socket.on('connect', () => {
+    console.log("U lidha me serverin!");
+    if (myName) {
+        socket.emit('joinGame', myName);
+    }
+});
 
 // 2. Logjika e Fillimit të Lojës
 btnStart.addEventListener('click', () => {
+    // Kontrollo vizualisht nëse ka lojtarë të tjerë në tabelë
+    const lojtaretNeTabele = document.querySelectorAll('#score-body tr').length;
+    
+    if (lojtaretNeTabele < 2) {
+        alert("Duhen të paktën 2 lojtarë të lidhur që loja të nisë! Hape lojën edhe në një dritare tjetër.");
+        return;
+    }
+
+    console.log("Po dërgoj kërkesën startGame...");
     socket.emit('startGame');
 });
 
 socket.on('receiveCards', (cards) => {
-    document.getElementById('lobby-controls').style.display = 'none';
+    // Fsheh butonin Start dhe lobby kur loja nis
+    const lobby = document.getElementById('lobby-controls');
+    if (lobby) lobby.style.display = 'none';
+    
     handContainer.innerHTML = '';
     doraImeData = cards; 
     
@@ -63,7 +83,7 @@ socket.on('updateGameState', (data) => {
     isMyTurn = (data.activePlayerId === socket.id);
     
     if (isMyTurn) {
-        // Rregulli: Nëse ke 11 letra në fillim, je ndarësi që duhet të hedhë një letër
+        // Nëse ke 11 letra (ndarësi), konsiderohet sikur e ke marrë letrën
         hasDrawnCard = (doraImeData.length === 11);
     }
     
@@ -83,8 +103,8 @@ function updateTurnUI() {
 
 // 4. Marrja e Letrës
 deckElement.addEventListener('click', () => {
-    if (!isMyTurn) return alert("Nuk është radha jote!");
-    if (hasDrawnCard) return alert("E more një letër, tani duhet të hedhësh një ose të mbyllësh!");
+    if (!isMyTurn) return;
+    if (hasDrawnCard) return alert("E more një letër, hidh një tjetër!");
     socket.emit('drawCard');
 });
 
@@ -93,7 +113,6 @@ socket.on('cardDrawn', (card) => {
     doraImeData.push(card);
     const newCard = createCard(card.v, card.s);
     handContainer.appendChild(newCard);
-    newCard.style.animation = "pullCard 0.5s ease-out";
     checkMbylljaButton();
 });
 
@@ -121,23 +140,19 @@ handContainer.addEventListener('dragover', e => {
     else handContainer.insertBefore(draggingCard, afterElement);
 });
 
-// Hedhja e letrës (Discard)
 discardPile.addEventListener('dragover', e => e.preventDefault());
 discardPile.addEventListener('drop', () => {
-    if (!isMyTurn) return alert("Nuk është radha jote!");
-    if (!hasDrawnCard) return alert("Duhet të marrësh një letër te stiva para se të hedhësh!");
+    if (!isMyTurn || !hasDrawnCard) return;
 
     const draggingCard = document.querySelector('.dragging');
     const v = draggingCard.dataset.v;
     const s = draggingCard.dataset.s;
 
-    if (v === '★') return alert("Xhokeri nuk mund të hidhet!");
+    if (v === '★') return alert("Xhokeri nuk hidhet!");
 
-    // Hiq letrën nga dora (logjika)
     const index = doraImeData.findIndex(c => c.v === v && c.s === s);
     if (index > -1) doraImeData.splice(index, 1);
 
-    // Vizuale
     const randomRotate = Math.floor(Math.random() * 40) - 20;
     draggingCard.style.transform = `rotate(${randomRotate}deg)`;
     discardPile.appendChild(draggingCard);
@@ -148,12 +163,11 @@ discardPile.addEventListener('drop', () => {
     socket.emit('endTurn'); 
 });
 
-// 6. Logjika e Butonit Mbyll (Sipas Rregullit 7)
+// 6. Logjika e Butonit Mbyll
 function checkMbylljaButton() {
-    // Shfaqet vetëm nëse ke 11 letra (9 + Xhoker + 1 për të hedhur)
     if (isMyTurn && doraImeData.length === 11) {
         btnMbyll.style.display = 'block';
-        btnMbyll.classList.add('glow-green'); // Rregulluar bug-u btnMall
+        btnMbyll.classList.add('glow-green');
     } else {
         btnMbyll.style.display = 'none';
         btnMbyll.classList.remove('glow-green');
@@ -161,35 +175,31 @@ function checkMbylljaButton() {
 }
 
 btnMbyll.addEventListener('click', () => {
-    if (!isMyTurn) return alert("Nuk mund të mbyllësh lojën jashtë rradhës!");
-    if (doraImeData.length < 11) return alert("Duhet të kesh 11 letra për të mbyllur!");
+    if (!isMyTurn || doraImeData.length < 11) return;
     
-    let isFlush = confirm("A është kjo mbyllje FLUSH (2x pikë për të tjerët)?");
+    let isFlush = confirm("A është mbyllje FLUSH (Pikë x2)?");
     socket.emit('playerClosed', { isFlush: isFlush });
     btnMbyll.style.display = 'none';
 });
 
 socket.on('roundOver', (data) => {
     let piket = llogaritPiket(doraImeData);
-    // Nëse dikush tjetër mbylli me FLUSH, pikët e mia dyfishohen
     if (data.isFlush && data.winnerId !== socket.id) {
         piket *= 2;
     }
-    
     socket.emit('submitMyPoints', { points: piket });
     alert(`Raundi mbaroi! Fituesi: ${data.winnerName}. More ${piket} pikë.`);
 });
 
-// 8. Logjika e Pikëve (Sipas Rregullit 8)
 function llogaritPiket(cards) {
     return cards.reduce((acc, card) => {
-        if (card.v === '★' || card.v === 'X') return acc + 0; // Xhokeri 0 pikë
-        if (['10', 'J', 'Q', 'K', 'A'].includes(card.v)) return acc + 10; // Figurat dhe 10-shi vlen 10
-        return acc + parseInt(card.v); // 2-9 sipas vlerës
+        if (card.v === '★' || card.v === 'X') return acc + 0;
+        if (['10', 'J', 'Q', 'K', 'A'].includes(card.v)) return acc + 10;
+        return acc + parseInt(card.v);
     }, 0);
 }
 
-// Chat
+// 7. Chat dhe Misc
 const chatInput = document.getElementById('chat-input');
 const btnSend = document.getElementById('btn-send');
 const chatMessages = document.getElementById('chat-messages');
