@@ -420,30 +420,36 @@ body {
 }
 
 /* 1. RREGULLIMI PËR LANDSCAPE (TELEFON & KOMPJUTER) */
+/* 1. RREGULLIMI PËR LANDSCAPE (OPTIMIZUAR PËR PC & IPHONE) */
 @media screen and (orientation: landscape) {
     body {
         margin: 0;
         padding: 0;
-        overflow: hidden;
+        /* Ndalon lëvizjen e faqes, por lejon ndërveprimin me maus */
+        overflow: hidden; 
         height: 100lvh;
         width: 100vw;
         display: flex;
         justify-content: center;
         align-items: center;
+        /* Kjo parandalon konfliktet e prekjes me mausin */
+        touch-action: none; 
     }
 
     #game-container {
         display: grid;
-        /* Rritim hapësirën për letrat: 1fr për tavolinën, 140px për dorën */
+        /* Rritim hapësirën për letrat: 140px fiks për dorën poshtë */
         grid-template-columns: 140px 1fr;
         grid-template-rows: 1fr 140px; 
         height: 100lvh;
         width: 100vw;
         padding: 10px;
         /* Shtohet hapësirë nga fundi që mos t'i mbulojë shiriti i iPhone */
-        padding-bottom: calc(15px + env(safe-area-inset-bottom));
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
         box-sizing: border-box;
         gap: 10px;
+        /* Sigurohemi që klikimet kalojnë te elementet */
+        pointer-events: auto;
     }
 
     /* Tabelën e pikëve e mbajmë majtas */
@@ -455,6 +461,7 @@ body {
         border-radius: 10px;
         padding: 8px;
         font-size: 0.75rem;
+        overflow-y: auto;
     }
 
     /* Pjesa e mesit (Tavolina) */
@@ -463,16 +470,17 @@ body {
         grid-row: 1;
         display: flex;
         justify-content: center;
-        align-items: center; /* I mban në qendër të zonës së mbetur */
+        align-items: center;
     }
 
-    /* Letrat e tua - I ngrisim më lart */
+    /* Letrat e tua - I ngrisim më lart nga fundi i xhamit */
     #player-area {
         grid-column: 2;
         grid-row: 2;
         display: flex;
         flex-direction: column;
-        justify-content: center; /* I mban në mes të zonës 140px */
+        /* I detyrojmë letrat të qëndrojnë në fillim të zonës së tyre (më lart) */
+        justify-content: flex-start; 
         align-items: center;
     }
 
@@ -480,20 +488,21 @@ body {
         display: flex;
         gap: 5px;
         justify-content: center;
-        /* Rritim përmasat e dorës */
+        /* Madhësia 100% që të jenë të lexueshme */
         transform: scale(1); 
         width: 100%;
     }
 
-    /* Përmasat e letrave që të duken mirë në të dyja pajisjet */
+    /* Përmasat e letrave që të jenë të klikueshme lehtë */
     .card, .card-back {
         width: 65px !important;
         height: 90px !important;
         font-size: 1.1rem !important;
         box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        cursor: pointer; /* Indikator për mausin në PC */
     }
 
-    /* Asistenti (Drita) - E zhvendosim pak që mos të pengojë */
+    /* Asistenti (Drita) - E zhvendosim pak */
     #asistenti-container {
         margin-bottom: 10px;
     }
@@ -502,11 +511,17 @@ body {
 /* 2. FIX SHTESË PËR EKRANET E VOGLA (IPHONE) */
 @media screen and (orientation: landscape) and (max-height: 450px) {
     #game-container {
-        grid-template-rows: 1fr 110px; /* Pak më pak hapësirë në telefonat e vegj */
+        /* Në iPhone ulim pak lartësinë e dorës që të mos zërë krejt ekranin */
+        grid-template-rows: 1fr 110px; 
     }
     
     .card, .card-back {
         width: 55px !important;
         height: 80px !important;
+    }
+
+    #player-hand {
+        /* Zvogëlojmë pak dorën në telefonat e vegj */
+        transform: scale(0.9);
     }
 }
