@@ -212,10 +212,17 @@ function updateAsistenti() {
 
 // UPDATE: Kontrolli i fortë për stivën (Deck)
 deckElement.addEventListener('click', () => {
-    if (isMyTurn && doraImeData.length === 10) {
+    if (!isMyTurn) return;
+
+    // Nëse ke 10 letra, merr letrën normalisht
+    if (doraImeData.length === 10) {
         socket.emit('drawCard');
-    } else if (isMyTurn && doraImeData.length >= 11) {
-        alert("Ti tashmë e ke marrë letrën! Hidhe njërën në tokë.");
+    } 
+    // NËSE MBETESH I BLLOKUAR (p.sh. ke 11 ose më pak se 10 gabimisht)
+    else {
+        console.log("Sync error: Ti ke " + doraImeData.length + " letra.");
+        // Kjo i thotë serverit: "Më dërgo prapë letrat e mia se jam bllokuar"
+        socket.emit('requestMyCards'); 
     }
 });
 
