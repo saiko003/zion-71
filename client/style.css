@@ -17,6 +17,7 @@ body {
     align-items: flex-start;
     padding: 20px;
     transition: box-shadow 0.3s ease;
+    overflow-x: hidden;
 }
 
 /* ==========================
@@ -64,7 +65,7 @@ body {
 }
 
 /* ==========================
-   Table Area
+   Table Area & Jackpot
 ========================== */
 #table-area {
     width: 100%;
@@ -80,13 +81,20 @@ body {
 
 #deck-area {
     display: flex;
-    gap: 20px;
+    gap: 30px;
     align-items: center;
 }
 
+#jackpot {
+    border: 2px solid #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    transform: rotate(-5deg); /* Pak pjerrët për stil */
+}
+
+/* Letrat Bazë */
 .card-back, .card {
-    width: 70px;
-    height: 100px;
+    width: 75px;
+    height: 105px;
     border-radius: 8px;
     background: white;
     color: black;
@@ -100,7 +108,7 @@ body {
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     user-select: none;
     position: relative;
-    transition: transform 0.2s;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .card-back {
@@ -110,15 +118,15 @@ body {
 }
 
 .active-deck {
-    box-shadow: 0 0 15px #00ff99;
-    transform: scale(1.05);
+    box-shadow: 0 0 20px #00ff99;
+    transform: scale(1.05) translateY(-5px);
 }
 
 #discard-pile {
     border: 2px dashed #fff;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
     color: #fff;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
 
 /* ==========================
@@ -134,63 +142,64 @@ body {
 }
 
 #asistenti-container {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 8px 15px;
-    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px 20px;
+    border-radius: 30px;
     display: flex;
     align-items: center;
-    border: 1px solid #3a4a63;
+    border: 1px solid #444;
 }
 
 #status-drita {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    margin-right: 10px;
-    display: inline-block;
+    margin-right: 12px;
 }
 
-.led-red {
-    background: #ff4d4d;
-    box-shadow: 0 0 8px #ff4d4d;
-}
-
-.led-green {
-    background: #2ecc71;
-    box-shadow: 0 0 12px #2ecc71;
-    animation: pulse-green 1.5s infinite;
+.led-red { background: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; }
+.led-green { 
+    background: #2ecc71; 
+    box-shadow: 0 0 15px #2ecc71; 
+    animation: pulse-green 1.5s infinite; 
 }
 
 @keyframes pulse-green {
     0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.2); opacity: 0.7; }
+    50% { transform: scale(1.3); opacity: 0.8; }
     100% { transform: scale(1); opacity: 1; }
 }
 
+/* RENDITJA (REORDERING) STYLE */
 #player-hand {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px;
-    padding: 10px;
+    gap: 12px;
+    padding: 20px;
+    min-height: 150px;
+    width: 100%;
 }
 
 .card:hover {
-    transform: translateY(-10px);
-    z-index: 10;
+    transform: translateY(-15px) scale(1.05);
+    z-index: 50;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
 
 .dragging {
-    opacity: 0.5;
+    opacity: 0.3;
+    transform: scale(0.9) rotate(0deg);
+    cursor: grabbing;
 }
 
 /* ==========================
    Buttons
 ========================== */
 .start-btn, .glow-btn {
-    padding: 12px 24px;
+    padding: 14px 28px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: bold;
     cursor: pointer;
     text-transform: uppercase;
@@ -200,25 +209,27 @@ body {
 .start-btn {
     background: #007bff;
     color: white;
+    box-shadow: 0 4px 0 #0056b3;
 }
+
+.start-btn:active { transform: translateY(2px); box-shadow: none; }
 
 .glow-btn {
-    background: #555; /* Ngjyrë e mbyllur kur nuk është gati */
-    color: #aaa;
-    border: 1px solid #777;
+    background: #444;
+    color: #888;
+    border: 1px solid #555;
 }
 
-/* Kur dora eshte gati, butoni "ndizet" */
 .glow-green-intense {
-    background: #28a745 !important;
+    background: #2ecc71 !important;
     color: white !important;
-    box-shadow: 0 0 20px #28a745;
+    box-shadow: 0 0 25px #2ecc71;
     animation: glow-pulse 1s infinite alternate;
 }
 
 @keyframes glow-pulse {
-    from { box-shadow: 0 0 10px #28a745; }
-    to { box-shadow: 0 0 25px #28a745; }
+    from { box-shadow: 0 0 10px rgba(46, 204, 113, 0.6); }
+    to { box-shadow: 0 0 30px rgba(46, 204, 113, 1); }
 }
 
 /* ==========================
@@ -227,34 +238,38 @@ body {
 #chat-container {
     width: 100%;
     background: #223047;
-    border-radius: 10px;
-    padding: 10px;
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #3a4a63;
 }
 
 #chat-messages {
-    height: 100px;
+    height: 120px;
     overflow-y: auto;
-    font-size: 0.9rem;
-    margin-bottom: 10px;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    padding-right: 5px;
 }
 
-#chat-input-area {
-    display: flex;
-    gap: 5px;
-}
+/* Scrollbar Style */
+#chat-messages::-webkit-scrollbar { width: 5px; }
+#chat-messages::-webkit-scrollbar-thumb { background: #3a4a63; border-radius: 10px; }
 
+#chat-input-area { display: flex; gap: 8px; }
 #chat-input {
     flex: 1;
-    padding: 8px;
-    border-radius: 5px;
-    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #3a4a63;
+    background: #1b2a3d;
+    color: white;
 }
 
 #btn-send {
-    padding: 8px 15px;
-    background: #555;
+    padding: 10px 20px;
+    background: #3a4a63;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
 }
