@@ -541,7 +541,7 @@ document.addEventListener('touchend', (e) => {
     const touch = e.changedTouches[0];
     const dropZone = discardPile.getBoundingClientRect();
     
-    // SHTOJMË TOLERANCË: E bëjmë zonën e pranimit 50px më të madhe në çdo anë
+    // SHTOJMË TOLERANCË: E bëjmë zonën e pranimit 50px më të madhe
     const tolerance = 50; 
 
     const isOverDiscard = (
@@ -555,13 +555,17 @@ document.addEventListener('touchend', (e) => {
         processDiscard(draggingCard);
     }
 
-    // RESET: Ktheje letrën në vendin e saj nëse nuk u hodh
+    // RESET: Ktheje letrën në vendin e saj
     draggingCard.style.position = '';
     draggingCard.style.left = '';
     draggingCard.style.top = '';
     draggingCard.style.zIndex = '';
     draggingCard.style.pointerEvents = 'auto';
     draggingCard.classList.remove('dragging');
+
+    // --- KËTO DY RRESHTA I SHTOVA QË TË FIKET DRITA ---
+    discardPile.style.background = ""; 
+    discardPile.style.transform = "";  
 }, { passive: false });
 
 // 5. FUNKSIONI QË KRYEN HEDHJEN (PËRBASHKËT)
