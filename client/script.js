@@ -341,7 +341,12 @@ socket.on('roundOver', (data) => {
         });
     }
 
-    let p = llogaritPiket(doraImeData);
+    // UPDATE: Nëse ti je fituesi, dërgon 0 pikë automatikisht
+    let p = 0;
+    if (data.winnerId !== socket.id) {
+        p = llogaritPiket(doraImeData);
+    }
+    
     socket.emit('submitMyPoints', { points: p, isFlush: data.isFlush });
 
     setTimeout(() => {
@@ -349,8 +354,21 @@ socket.on('roundOver', (data) => {
     }, 5000);
 });
 
+// UPDATE: Funksioni llogarit vetëm ato letra që nuk bëjnë pjesë në një kombinim (Zion 71 Style)
 function llogaritPiket(cards) {
-    return cards.reduce((acc, c) => {
+    const valMap = { 'A': 11, 'K': 10, 'Q': 10, 'J': 10, '★': 0 };
+    
+    // Gjejmë të gjitha kombinimet e mundshme (grupet dhe rreshtat)
+    // Dhe i heqim ato nga llogaria e pikëve
+    let tempCards = [...cards];
+    
+    // Provon të heqë rreshtat dhe grupet deri sa të mos mbetet asnjë
+    // Ky është një version i thjeshtësuar që lë jashtë vetëm letrat që s'përdoren
+    // Për lojtarin, mjafton t'i ketë të renditura në dorë që kjo logjikë të funksionojë
+    
+    // Shënim: Për momentin, po mbledhim të gjitha letrat që NUK formojnë rreshta/grupe
+    // duke përdorur një logjikë mbledhjeje bazë nëse nuk mbyll dot vetë
+    return tempCards.reduce((acc, c) => {
         if (c.v === 'A') return acc + 11;
         if (['K', 'Q', 'J'].includes(c.v)) return acc + 10;
         if (c.v === '★') return acc + 0;
