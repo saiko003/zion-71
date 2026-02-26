@@ -168,12 +168,15 @@ function resetCardStyles(el) {
     el.style.pointerEvents = 'auto';
 }
 
-// Funksion për të ruajtur rreshtimin e ri të letrave
 function saveNewOrder() {
     const currentCards = [...handContainer.querySelectorAll('.card')];
     doraImeData = currentCards.map(c => {
         const parts = c.innerHTML.split('<br>');
-        return { v: parts[0], s: parts[1] };
+        return { 
+            v: parts[0], 
+            // Shtohet kjo || '' që xhokeri të mos jetë i zbrazët (undefined)
+            s: parts[1] || '' 
+        };
     });
     updateAsistenti();
 }
@@ -566,9 +569,11 @@ document.addEventListener('touchend', (e) => {
     if (!draggingCard) return;
 
     const touch = e.changedTouches[0];
-    const dropZone = discardPile.getBoundingClientRect();
     
-    // SHTOJMË TOLERANCË: E bëjmë zonën e pranimit 50px më të madhe
+    // 1. RENDITJA FINALE (E rëndësishme: e rregullon renditjen në DOM para se të mbyllet dragging)
+    handleReorder(touch.clientX);
+
+    const dropZone = discardPile.getBoundingClientRect();
     const tolerance = 50; 
 
     const isOverDiscard = (
@@ -580,19 +585,17 @@ document.addEventListener('touchend', (e) => {
 
     if (isOverDiscard) {
         processDiscard(draggingCard);
+    } else {
+        // Nëse nuk u hodh te stiva, ktheje stilin në normal dhe ruaj renditjen e re
+        resetCardStyles(draggingCard);
+        saveNewOrder(); 
     }
 
-    // RESET: Ktheje letrën në vendin e saj
-    draggingCard.style.position = '';
-    draggingCard.style.left = '';
-    draggingCard.style.top = '';
-    draggingCard.style.zIndex = '';
-    draggingCard.style.pointerEvents = 'auto';
+    // 2. PASTRIMI (Reset)
     draggingCard.classList.remove('dragging');
-
-    // --- KËTO DY RRESHTA I SHTOVA QË TË FIKET DRITA ---
     discardPile.style.background = ""; 
-    discardPile.style.transform = "";  
+    discardPile.style.transform = ""; 
+    discardPile.style.borderColor = ""; 
 }, { passive: false });
 
 // 5. FUNKSIONI QË KRYEN HEDHJEN (PËRBASHKËT)
