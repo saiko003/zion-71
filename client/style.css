@@ -153,15 +153,21 @@ body {
     will-change: transform, left, top;
 }
 
-/* 2. KUR LETRA ËSHTË NË GISHT (DRAGGING) */
 .card.dragging {
-    opacity: 0.9 !important;
-    transform: scale(1.15) rotate(3deg) !important;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.5) !important;
+    opacity: 0.6 !important;
+    transform: scale(1.1) rotate(3deg) !important;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.4) !important;
     z-index: 1000 !important;
+    transition: none !important;
     
-    /* KRITIKE: Ky duhet të jetë NONE që letra të ndjekë gishtin pa vonesë */
-    transition: none !important; 
+    /* LEJO PC-në ta mbajë letrën me maus */
+    pointer-events: auto !important; 
+}
+
+/* Vetëm kur letra është në lëvizje në iPhone (kur ka style fixed) */
+.card.dragging[style*="fixed"] {
+    /* Kjo parandalon që letra të bllokojë 'drop zone' në iPhone */
+    pointer-events: none !important; 
 }
   
     
