@@ -11,6 +11,7 @@ const io = new Server(server, { cors: { origin: "*" } });
 let players = []; 
 let currentTurnIndex = 0;
 let deck = [];
+let discardPile = []; // Ruajmë letrat e hedhura këtu
 let lastWinnerId = null;
 let jackpotCard = null; 
 
@@ -33,6 +34,7 @@ io.on('connection', (socket) => {
         if (activePlayers.length < 2) return;
 
         deck = createFullDeck();
+        discardPile = []; // Resetojmë letrat e hedhura në fillim të lojës
         
         if (lastWinnerId) {
             let winIdx = players.findIndex(p => p.id === lastWinnerId);
@@ -62,18 +64,36 @@ io.on('connection', (socket) => {
     });
 
     socket.on('drawCard', () => {
-        if (players[currentTurnIndex]?.id === socket.id && deck.length > 0) {
-            const card = deck.pop();
-            io.to(socket.id).emit('cardDrawn', card);
+        if (players[currentTurnIndex]?.id === socket.id) {
+            // Logjika e Reshuffle: Nëse deck është bosh, përdorim discardPile
+            if (deck.length === 0 && discardPile.length > 0) {
+                console.log("Deck mbaroi! Po bëj Reshuffle të discardPile...");
+                deck = [...discardPile];
+                discardPile = [];
+                deck.sort(() => Math.random() - 0.5);
+            }
+
+            if (deck.length > 0) {
+                const card = deck.pop();
+                io.to(socket.id).emit('cardDrawn', card);
+                sendGameState(); // Përditësojmë numrin e letrave në UI
+            }
         }
     });
 
     socket.on('endTurn', () => {
+        // Shënim: Letra që lojtari hedh shtohet te discardPile përmes një njoftimi nga front-end
+        // ose mund ta shtoni këtu nëse dërgoni objektin e letrës te endTurn.
         moveToNextPlayer();
         sendGameState();
     });
 
-    // MODIFIKUAR: Verifikimi i dorës në Server
+    // SHTUAR: Kur lojtari hedh një letër, serveri e shton te discardPile
+    socket.on('cardDiscarded', (card) => {
+        discardPile.push(card);
+        console.log("Letra u shtua në discardPile. Total:", discardPile.length);
+    });
+
     socket.on('playerClosed', (data) => {
         if (verifyHandOnServer(data.hand)) {
             const winner = players.find(p => p.id === socket.id);
@@ -128,23 +148,15 @@ io.on('connection', (socket) => {
     });
 });
 
-// LOGJIKA E VERIFIKIMIT (SHTUAR)
 function verifyHandOnServer(cards) {
     if (!cards || (cards.length !== 10 && cards.length !== 11)) return false;
-    
     const valMap = { '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13, 'A':14 };
-    
     function check10(hand10) {
         let jokers = hand10.filter(c => c.v === '★').length;
-        let normalCards = hand10.filter(c => c.v !== '★').map(c => ({
-            v: valMap[c.v],
-            s: c.s
-        })).sort((a, b) => a.v - b.v);
-
+        let normalCards = hand10.filter(c => c.v !== '★').map(c => ({ v: valMap[c.v], s: c.s })).sort((a, b) => a.v - b.v);
         function solve(remaining, jLeft) {
             if (remaining.length === 0) return true;
             let first = remaining[0];
-            // Provo Grupet
             for (let size = 3; size <= 4; size++) {
                 let sameVal = remaining.filter(c => c.v === first.v);
                 for (let use = 1; use <= Math.min(sameVal.length, size); use++) {
@@ -159,7 +171,6 @@ function verifyHandOnServer(cards) {
                     }
                 }
             }
-            // Provo Rreshtat
             for (let size = 3; size <= 10; size++) {
                 let currentJ = jLeft;
                 let tempNext = [...remaining];
@@ -176,7 +187,6 @@ function verifyHandOnServer(cards) {
         }
         return solve(normalCards, jokers);
     }
-
     for (let i = 0; i < cards.length; i++) {
         let test = cards.filter((_, idx) => idx !== i);
         if (check10(test)) return true;
