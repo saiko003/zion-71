@@ -60,8 +60,15 @@ socket.on('updateGameState', (data) => {
     updateTurnUI();
 });
 
+// PËRMIRËSUAR: Logjika e kontrollit të letrave
 function checkTurnLogic() {
-    hasDrawnCard = (doraImeData.length === 11);
+    // Nëse dora ka 10 letra, do të thotë nuk kemi tërhequr akoma për këtë radhë
+    if (doraImeData.length <= 10) {
+        hasDrawnCard = false;
+    } else {
+        hasDrawnCard = true;
+    }
+
     btnMbyll.style.display = (isMyTurn && doraImeData.length === 11) ? 'block' : 'none';
     updateAsistenti();
 }
@@ -192,7 +199,8 @@ function updateAsistenti() {
 // --- EVENTET ---
 
 deckElement.addEventListener('click', () => {
-    if (!isMyTurn || hasDrawnCard) return;
+    // PËRMIRËSUAR: Kontroll i rreptë që lejon tërheqjen vetëm nëse ke 10 letra
+    if (!isMyTurn || doraImeData.length >= 11) return;
     socket.emit('drawCard');
 });
 
@@ -204,7 +212,7 @@ socket.on('cardDrawn', (card) => {
 
 discardPile.addEventListener('dragover', e => e.preventDefault());
 discardPile.addEventListener('drop', () => {
-    if (!isMyTurn || !hasDrawnCard) return;
+    if (!isMyTurn || doraImeData.length < 11) return;
     const draggingCard = document.querySelector('.dragging');
     const parts = draggingCard.innerHTML.split('<br>');
     if (parts[0] === '★') return alert("Xhokeri nuk hidhet!");
@@ -213,22 +221,22 @@ discardPile.addEventListener('drop', () => {
     if (idx > -1) {
         doraImeData.splice(idx, 1);
         renderHand();
+        // PËRMIRËSUAR: Resetojmë gjendjen menjëherë pas hedhjes
         isMyTurn = false;
+        hasDrawnCard = false;
         socket.emit('endTurn');
     }
 });
 
-// MODIFIKUAR: Shtohet verifikimi para mbylljes
 btnMbyll.addEventListener('click', () => {
     let ready = false;
     let handToVerify = [];
     
-    // Verifikojmë cilën letër po hedhim për mbyllje
     for (let i = 0; i < doraImeData.length; i++) {
         let testHand = doraImeData.filter((_, idx) => idx !== i);
         if (validateZionHand(testHand)) {
             ready = true;
-            handToVerify = doraImeData; // Dërgojmë gjithë dorën (11 letra) për serverin
+            handToVerify = doraImeData; 
             break;
         }
     }
@@ -259,6 +267,6 @@ function llogaritPiket(cards) {
 
 function updateTurnUI() {
     document.body.style.boxShadow = isMyTurn ? "inset 0 0 50px #27ae60" : "none";
-    if(isMyTurn) deckElement.classList.add('active-deck');
+    if(isMyTurn && !hasDrawnCard) deckElement.classList.add('active-deck');
     else deckElement.classList.remove('active-deck');
 }
