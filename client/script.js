@@ -95,13 +95,35 @@ function renderHand() {
         div.innerHTML = `${card.v}<br>${card.s}`;
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
-        // Fillimi i tërheqjes
-        div.addEventListener('dragstart', (e) => {
+        // --- LOGJIKA E FILLIMIT (PC & IPHONE) ---
+        const handleStart = (e) => {
             div.classList.add('dragging');
-            e.dataTransfer.setData('text/plain', index);
-        });
+            if (e.dataTransfer) {
+                e.dataTransfer.setData('text/plain', index);
+            }
+        };
 
-        // Lëvizja mbi letrat e tjera (Reordering)
+        // --- LOGJIKA E MBYLLJES (PC & IPHONE) ---
+        const handleEnd = () => {
+            div.classList.remove('dragging');
+            // Ruajmë renditjen e re në array
+            const currentCards = [...handContainer.querySelectorAll('.card')];
+            doraImeData = currentCards.map(c => {
+                const parts = c.innerHTML.split('<br>');
+                return { v: parts[0], s: parts[1] };
+            });
+            updateAsistenti();
+        };
+
+        // Eventet për Maus (PC)
+        div.addEventListener('dragstart', handleStart);
+        div.addEventListener('dragend', handleEnd);
+
+        // Eventet për Prekje (iPhone) - passive: true ndihmon performancën
+        div.addEventListener('touchstart', handleStart, { passive: true });
+        div.addEventListener('touchend', handleEnd, { passive: true });
+
+        // Lëvizja mbi letrat e tjera (Reordering - Punon në PC)
         div.addEventListener('dragover', (e) => {
             e.preventDefault();
             const draggingCard = document.querySelector('.dragging');
@@ -117,22 +139,9 @@ function renderHand() {
             else handContainer.appendChild(draggingCard);
         });
 
-        // Lëshimi i letrës
-        div.addEventListener('dragend', () => {
-            div.classList.remove('dragging');
-            // Ruajmë renditjen e re në array
-            const currentCards = [...handContainer.querySelectorAll('.card')];
-            doraImeData = currentCards.map(c => {
-                const parts = c.innerHTML.split('<br>');
-                return { v: parts[0], s: parts[1] };
-            });
-            updateAsistenti();
-        });
-
         handContainer.appendChild(div);
     });
 }
-
 // --- ALGORITMI I KONTROLLIT ZION 71 ---
 
 function validateZionHand(cards) {
@@ -503,4 +512,38 @@ if (playerHand) {
 // ==========================================
 window.addEventListener('scroll', () => {
     window.scrollTo(0, 0);
+}, { passive: false });
+
+// Kjo detyron letrën të ndjekë gishtin në iPhone
+document.addEventListener('touchmove', (e) => {
+    const draggingCard = document.querySelector('.card.dragging');
+    if (draggingCard) {
+        if (e.cancelable) e.preventDefault(); // Ndalo scroll-in e faqes
+        const touch = e.touches[0];
+        
+        draggingCard.style.position = 'fixed';
+        draggingCard.style.zIndex = '1000';
+        draggingCard.style.left = (touch.clientX - draggingCard.offsetWidth / 2) + 'px';
+        draggingCard.style.top = (touch.clientY - draggingCard.offsetHeight / 2) + 'px';
+    }
+}, { passive: false });
+
+// Logjika për lëshimin e letrës (Drop) në iPhone
+document.addEventListener('touchend', (e) => {
+    const draggingCard = document.querySelector('.card.dragging');
+    if (!draggingCard) return;
+
+    const dropZone = discardPile.getBoundingClientRect();
+    const touch = e.changedTouches[0];
+
+    // Kontrollo nëse gishti u lëshua mbi zonën e hedhjes (Discard Pile)
+    if (touch.clientX > dropZone.left && touch.clientX < dropZone.right &&
+        touch.clientY > dropZone.top && touch.clientY < dropZone.bottom) {
+        
+        // Këtu shto logjikën tënde të hedhjes (socket.emit etj.)
+        console.log("Letra u hodh me sukses nga iPhone!");
+    }
+    
+    draggingCard.style.position = ''; // Ktheje letrën në vendin e vet nëse nuk u hodh
+    draggingCard.classList.remove('dragging');
 }, { passive: false });
