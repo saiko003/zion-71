@@ -523,16 +523,22 @@ document.addEventListener('touchend', (e) => {
 
     const touch = e.changedTouches[0];
     const dropZone = discardPile.getBoundingClientRect();
+    
+    // SHTOJMË TOLERANCË: E bëjmë zonën e pranimit 50px më të madhe në çdo anë
+    const tolerance = 50; 
+
     const isOverDiscard = (
-        touch.clientX > dropZone.left && touch.clientX < dropZone.right &&
-        touch.clientY > dropZone.top && touch.clientY < dropZone.bottom
+        touch.clientX > (dropZone.left - tolerance) && 
+        touch.clientX < (dropZone.right + tolerance) &&
+        touch.clientY > (dropZone.top - tolerance) && 
+        touch.clientY < (dropZone.bottom + tolerance)
     );
 
     if (isOverDiscard) {
         processDiscard(draggingCard);
     }
 
-    // RESET: Kjo e kthen letrën te dora dhe e fut brenda kornizës
+    // RESET: Ktheje letrën në vendin e saj nëse nuk u hodh
     draggingCard.style.position = '';
     draggingCard.style.left = '';
     draggingCard.style.top = '';
