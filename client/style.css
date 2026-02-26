@@ -193,35 +193,53 @@ body {
     transform: scale(1.05) translateY(-5px);
 }
 
+/* ZONA E HEDHJES - E PËRMIRËSUAR */
 #discard-pile {
-    width: 140px;         /* E bëjmë më të gjerë */
-    height: 190px;        /* E bëjmë më të lartë */
-    border: 3px dashed rgba(255, 255, 255, 0.3); /* Kornizë e dukshme */
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.05);
+    width: 140px;
+    height: 190px;
+    border: 3px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.03);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    transition: all 0.3s ease;
-    margin: 10px auto;    /* E centrojmë */
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin: 20px auto;
 }
 
-/* Ky stil shtohet kur afron letrën (vjen nga JS-i që kemi shkruar) */
-#discard-pile[style*="background"] {
-    border-color: #27ae60;
-    transform: scale(1.05); /* Zmadhohet pak kur gati për lëshim */
-}
-
-/* Shto një tekst brenda pilës që të duket ku duhet lëshuar */
+/* Teksti udhëzues që rri gjithmonë brenda */
 #discard-pile::after {
     content: "HEDH KËTU";
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.3);
     position: absolute;
-    bottom: 10px;
+    bottom: 15px;
+    letter-spacing: 1px;
 }
 
+/* Ikona me shigjetë në qendër */
+#discard-pile::before {
+    content: "↓";
+    font-size: 2.5rem;
+    color: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* EFEKTI KUR AFRON LETRËN (Triggered by JS) */
+#discard-pile[style*="background"] {
+    border-color: #27ae60 !important;
+    background: rgba(39, 174, 96, 0.2) !important;
+    transform: scale(1.1); /* Zmadhohet pak */
+    box-shadow: 0 0 30px rgba(39, 174, 96, 0.4);
+}
+
+/* Kur afron letrën, shigjeta ndizet */
+#discard-pile[style*="background"]::before {
+    color: #27ae60;
+    transform: translateY(5px);
+}
 /* ==========================
    Player Area & Asistenti
 ========================== */
