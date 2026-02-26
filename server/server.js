@@ -107,17 +107,18 @@ io.on('connection', (socket) => {
         if (verifyHandOnServer(data.hand)) {
             const winner = players.find(p => p.id === socket.id);
             lastWinnerId = socket.id;
-        
-            // Dërgojmë emrin, nëse është flush, dhe dorën fituese
+            
+            // UPDATE: Tani dërgojmë edhe winningHand për Visual Reveal
             io.emit('roundOver', { 
                 winnerName: winner.name, 
-                isFlush: data.isFlush, 
-                winningHand: data.hand // Kjo shtohet
+                isFlush: data.isFlush,
+                winningHand: data.hand // Kjo u shtua këtu
             });
         } else {
+            console.log(`Lojtari ${socket.id} tentoi mbyllje të pavlefshme!`);
             socket.emit('error', 'Dora nuk është e vlefshme!');
         }
-        });
+    });
 
     socket.on('submitMyPoints', (data) => {
         const p = players.find(player => player.id === socket.id);
