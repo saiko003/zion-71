@@ -2,6 +2,7 @@ const socket = io('https://zion-71.onrender.com');
 const handContainer = document.getElementById('player-hand');
 const discardPile = document.getElementById('discard-pile');
 const deckElement = document.getElementById('deck');
+const jackpotElement = document.getElementById('jackpot');
 const btnMbyll = document.getElementById('btn-mbyll');
 const scoreBody = document.getElementById('score-body');
 const asistentiContainer = document.getElementById('asistenti-container');
@@ -34,6 +35,7 @@ socket.on('receiveCards', (cards) => {
 });
 
 socket.on('updateGameState', (data) => {
+    // Përditëso Scoreboard
     scoreBody.innerHTML = '';
     data.players.forEach(player => {
         const row = document.createElement('tr');
@@ -46,6 +48,13 @@ socket.on('updateGameState', (data) => {
         scoreBody.appendChild(row);
     });
 
+    // Përditëso Jackpot-in vizualisht nëse ka ardhur nga serveri
+    if (data.jackpotCard) {
+        jackpotElement.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
+        if (['♥', '♦'].includes(data.jackpotCard.s)) jackpotElement.style.color = 'red';
+        else jackpotElement.style.color = 'black';
+    }
+
     isMyTurn = (data.activePlayerId === socket.id);
     checkTurnLogic();
     updateTurnUI();
@@ -57,20 +66,51 @@ function checkTurnLogic() {
     updateAsistenti();
 }
 
+// RENDITJA DHE RREGULLIMI I LETRAVE (UPDATE 18)
 function renderHand() {
     handContainer.innerHTML = '';
-    doraImeData.forEach(card => {
+    doraImeData.forEach((card, index) => {
         const div = document.createElement('div');
         div.className = 'card';
         div.draggable = true;
+        div.dataset.index = index;
         div.innerHTML = `${card.v}<br>${card.s}`;
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
-        div.addEventListener('dragstart', () => div.classList.add('dragging'));
+        // Fillimi i tërheqjes
+        div.addEventListener('dragstart', (e) => {
+            div.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', index);
+        });
+
+        // Lëvizja mbi letrat e tjera (Reordering)
+        div.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const draggingCard = document.querySelector('.dragging');
+            if (!draggingCard || draggingCard.parentElement !== handContainer) return;
+
+            const cards = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+            const nextCard = cards.find(c => {
+                const box = c.getBoundingClientRect();
+                return e.clientX <= box.left + box.width / 2;
+            });
+
+            if (nextCard) handContainer.insertBefore(draggingCard, nextCard);
+            else handContainer.appendChild(draggingCard);
+        });
+
+        // Lëshimi i letrës
         div.addEventListener('dragend', () => {
             div.classList.remove('dragging');
-            updateAsistenti(); // Kontrollo kur lojtari i rregullon letrat
+            // Ruajmë renditjen e re në array
+            const currentCards = [...handContainer.querySelectorAll('.card')];
+            doraImeData = currentCards.map(c => {
+                const parts = c.innerHTML.split('<br>');
+                return { v: parts[0], s: parts[1] };
+            });
+            updateAsistenti();
         });
+
         handContainer.appendChild(div);
     });
 }
@@ -89,10 +129,9 @@ function validateZionHand(cards) {
 
     function solve(remaining, jLeft) {
         if (remaining.length === 0) return true;
-
         let first = remaining[0];
 
-        // 1. Provo GRUP (Vlera e njejte)
+        // 1. Provo GRUP
         for (let size = 3; size <= 4; size++) {
             let sameVal = remaining.filter(c => c.v === first.v);
             for (let use = 1; use <= Math.min(sameVal.length, size); use++) {
@@ -108,27 +147,20 @@ function validateZionHand(cards) {
             }
         }
 
-        // 2. Provo RRESHT (Sekuence)
+        // 2. Provo RRESHT
         let sameSuit = remaining.filter(c => c.s === first.s);
-        if (sameSuit.length >= 1) {
-            for (let size = 3; size <= 10; size++) {
-                let sequence = [];
-                let currentJ = jLeft;
-                let tempNext = [...remaining];
-                
-                // Provo te ndertosh rresht duke nisur nga 'first'
-                for (let v = first.v; v < first.v + size; v++) {
-                    let foundIdx = tempNext.findIndex(c => c.v === v && c.s === first.s);
-                    if (foundIdx > -1) {
-                        tempNext.splice(foundIdx, 1);
-                    } else if (currentJ > 0) {
-                        currentJ--;
-                    } else {
-                        sequence = null; break;
-                    }
-                }
-                if (sequence !== null && solve(tempNext, currentJ)) return true;
+        for (let size = 3; size <= 10; size++) {
+            let currentJ = jLeft;
+            let tempNext = [...remaining];
+            let possible = true;
+            
+            for (let v = first.v; v < first.v + size; v++) {
+                let foundIdx = tempNext.findIndex(c => c.v === v && c.s === first.s);
+                if (foundIdx > -1) tempNext.splice(foundIdx, 1);
+                else if (currentJ > 0) currentJ--;
+                else { possible = false; break; }
             }
+            if (possible && solve(tempNext, currentJ)) return true;
         }
         return false;
     }
@@ -138,7 +170,6 @@ function validateZionHand(cards) {
 function updateAsistenti() {
     let ready = false;
     if (doraImeData.length === 11) {
-        // Shikon nese hedhja e ndonje letre lene 10 letra te rregullta
         for (let i = 0; i < doraImeData.length; i++) {
             let testHand = doraImeData.filter((_, idx) => idx !== i);
             if (validateZionHand(testHand)) {
@@ -176,10 +207,10 @@ discardPile.addEventListener('dragover', e => e.preventDefault());
 discardPile.addEventListener('drop', () => {
     if (!isMyTurn || !hasDrawnCard) return;
     const draggingCard = document.querySelector('.dragging');
-    const content = draggingCard.innerHTML.split('<br>');
-    if (content[0] === '★') return alert("Xhokeri nuk hidhet!");
+    const parts = draggingCard.innerHTML.split('<br>');
+    if (parts[0] === '★') return alert("Xhokeri nuk hidhet!");
 
-    const idx = doraImeData.findIndex(c => c.v === content[0] && c.s === content[1]);
+    const idx = doraImeData.findIndex(c => c.v === parts[0] && c.s === parts[1]);
     if (idx > -1) {
         doraImeData.splice(idx, 1);
         renderHand();
@@ -195,7 +226,7 @@ btnMbyll.addEventListener('click', () => {
 
 socket.on('roundOver', (data) => {
     let p = llogaritPiket(doraImeData);
-    socket.emit('submitMyPoints', { points: p });
+    socket.emit('submitMyPoints', { points: p, isFlush: data.isFlush });
     alert(`Raundi u mbyll nga ${data.winnerName}!`);
 });
 
@@ -210,4 +241,6 @@ function llogaritPiket(cards) {
 
 function updateTurnUI() {
     document.body.style.boxShadow = isMyTurn ? "inset 0 0 50px #27ae60" : "none";
+    if(isMyTurn) deckElement.classList.add('active-deck');
+    else deckElement.classList.remove('active-deck');
 }
