@@ -99,6 +99,8 @@ function renderHand() {
         // --- LOGJIKA PËR PC (MOUSE) ---
         div.addEventListener('dragstart', (e) => {
             div.classList.add('dragging');
+            // Kjo i thotë browser-it që po lëvizim një element
+            e.dataTransfer.setData('text/plain', div.dataset.index);
         });
 
         div.addEventListener('dragend', () => {
@@ -566,11 +568,12 @@ document.addEventListener('touchmove', (e) => {
 
 document.addEventListener('touchend', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
-    if (!draggingCard) return;
+    // Nëse nuk ka letër që po lëvizet me TOUCH, mos bëj asgjë
+    if (!draggingCard || !e.changedTouches) return;
 
     const touch = e.changedTouches[0];
     
-    // 1. RENDITJA FINALE (E rëndësishme: e rregullon renditjen në DOM para se të mbyllet dragging)
+    // 1. Renditja për iPhone
     handleReorder(touch.clientX);
 
     const dropZone = discardPile.getBoundingClientRect();
@@ -586,16 +589,13 @@ document.addEventListener('touchend', (e) => {
     if (isOverDiscard) {
         processDiscard(draggingCard);
     } else {
-        // Nëse nuk u hodh te stiva, ktheje stilin në normal dhe ruaj renditjen e re
         resetCardStyles(draggingCard);
         saveNewOrder(); 
     }
 
-    // 2. PASTRIMI (Reset)
     draggingCard.classList.remove('dragging');
     discardPile.style.background = ""; 
     discardPile.style.transform = ""; 
-    discardPile.style.borderColor = ""; 
 }, { passive: false });
 
 // 5. FUNKSIONI QË KRYEN HEDHJEN (PËRBASHKËT)
