@@ -21,8 +21,15 @@ if (!myName) {
 }
 socket.emit('joinGame', myName);
 
-// Fillimi i lojes
+// ZËVENDËSOJE ME KËTË:
 document.getElementById('btn-start').addEventListener('click', () => {
+    // Kjo kërkon që ekrani të bëhet Fullscreen (Heq shiritat e browser-it)
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) { /* Për iPhone/Safari */
+        document.documentElement.webkitRequestFullscreen();
+    }
+    
     socket.emit('startGame');
 });
 
