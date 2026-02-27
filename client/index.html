@@ -25,7 +25,7 @@
                 <thead>
                     <tr>
                         <th>Lojtari</th>
-                        <th>Total</th>
+                        <th>Raundet (Historia)</th> <th>Total</th>
                     </tr>
                 </thead>
                 <tbody id="score-body">
@@ -46,7 +46,7 @@
             <div id="asistenti-info">
                 <span id="status-teksti">Duke pritur...</span>
             </div>
-            <button id="btn-mbyll" style="display: none;">MBYLL LOJËN (ZION)</button>
+            <<button id="btn-mbyll" class="zion-button" style="display: none;">MBYLL LOJËN (ZION)</button>
         </div>
 
         <div id="player-hand" class="hand-area">
@@ -54,6 +54,12 @@
 
     </div>
 
+    </div> <div id="round-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; color: white; text-align: center; padding-top: 50px;">
+        <h1 id="round-winner-text" style="color: gold;">MBYLLJE ZION!</h1>
+        <div id="round-results-list" style="font-size: 20px; margin: 20px;"></div>
+        <p>Loja e radhës fillon së shpejti...</p>
+    </div>
+    
     <script src="script.js"></script>
 </body>
 </html>
