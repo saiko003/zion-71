@@ -85,6 +85,9 @@ function checkTurnLogic() {
 }
 
 // RENDITJA DHE RREGULLIMI I LETRAVE (UPDATE 18)
+// ==========================================
+// 1. RENDITJA DHE RREGULLIMI I LETRAVE
+// ==========================================
 function renderHand() {
     handContainer.innerHTML = '';
     doraImeData.forEach((card, index) => {
@@ -96,135 +99,183 @@ function renderHand() {
         
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
+        // --- LOGJIKA PËR PC (MAUSIN) ---
         div.addEventListener('dragstart', (e) => {
-            // 1. Mos e lejo kapjen e letrës nëse nuk është radha e lojtarit
             if (!isMyTurn) {
                 e.preventDefault();
                 return;
             }
-
             div.classList.add('dragging');
-
-            // 2. Ruajmë indeksin e letrës
             e.dataTransfer.setData('text/plain', index);
-
-            // 3. Përmirësimi i setDragImage: 
-            // Në vend të numrave fiks (37, 52), përdorim gjysmën e gjerësisë/lartësisë 
-            // që mausi të jetë fiks në mes të letrës
+            
             const rect = div.getBoundingClientRect();
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-    
             if (e.dataTransfer.setDragImage) {
-                e.dataTransfer.setDragImage(div, centerX, centerY);
+                e.dataTransfer.setDragImage(div, rect.width / 2, rect.height / 2);
             }
-
-    // 4. Efekti vizual në PC
-    e.dataTransfer.dropEffect = "move";
-});
+            e.dataTransfer.dropEffect = "move";
+        });
 
         div.addEventListener('dragend', () => {
-            // I japim 100ms kohë që të përfundojë eventi 'drop' në stivë
-            setTimeout(() => {
             div.classList.remove('dragging');
             resetCardStyles(div);
             saveNewOrder();
-        }, 100);
-    });
-
-        
-        // --- LOGJIKA PËR IPHONE & TOUCH (Zëvendësimi) ---
-div.addEventListener('touchstart', (e) => {
-    if (!isMyTurn) return;
-    
-    // E rëndësishme: preventDefault ndalon "ghost clicks" dhe scroll-in e padëshiruar
-    if (e.cancelable) e.preventDefault(); 
-
-    const touch = e.touches[0];
-    const rect = div.getBoundingClientRect();
-
-    // Ruajmë distancën ekzakte ku e preke letrën
-    const offsetX = touch.clientX - rect.left;
-    const offsetY = touch.clientY - rect.top;
-
-    div.classList.add('dragging');
-
-    // I japim dimensionet dhe pozicionin fiks menjëherë që të mos "kërcejë"
-    div.style.width = rect.width + 'px';
-    div.style.height = rect.height + 'px';
-    div.style.left = rect.left + 'px';
-    div.style.top = rect.top + 'px';
-    div.style.position = 'fixed';
-    div.style.zIndex = '1000';
-    div.style.pointerEvents = 'none'; // Lejon gishtin të "prekë" elementet poshtë letrës
-
-    div.dataset.offsetX = offsetX;
-    div.dataset.offsetY = offsetY;
-}, { passive: false });
-
-div.addEventListener('touchend', (e) => {
-    const touch = e.changedTouches[0];
-    const tableArea = document.getElementById('table-area');
-    const draggingCard = document.querySelector('.card.dragging');
-    
-    // Sigurohemi që kemi një letër duke u lëvizur
-    if (!draggingCard) return;
-
-    const tableRect = tableArea.getBoundingClientRect();
-    const discardRect = discardPile.getBoundingClientRect();
-    
-    // Tolerance e bën zonën pak më të gjerë që të kapet më lehtë
-    const tolerance = 50;
-
-    // LOGJIKA E ZONËS: Nga cepi i majtë i stivës (discardPile) deri në fund të tavolinës djathtas
-    const isOverDiscardZone = (
-        touch.clientX > (discardRect.left - 20) && // Pak më majtas se stiva
-        touch.clientX < (tableRect.right + tolerance) && 
-        touch.clientY > (tableRect.top - tolerance) && 
-        touch.clientY < (tableRect.bottom + tolerance)
-    );
-
-    // Kontrolli nëse është Xhoker
-    const isJoker = draggingCard.innerHTML.includes('★');
-
-    if (isOverDiscardZone && isMyTurn && doraImeData.length === 11 && !isJoker) {
-        processDiscard(draggingCard);
-    } else {
-        // Nëse nuk hidhet (ose është Xhoker), kthehet në dorë dhe renditet
-        handleReorder(touch.clientX);
-        
-        if (isJoker && isOverDiscardZone) {
-            console.log("Xhokeri nuk mund të hidhet!");
-        }
-    }
-
-    // RESETI I STILEVE (Kritike për të dyja platformat)
-    draggingCard.classList.remove('dragging');
-    resetCardStyles(draggingCard);
-    saveNewOrder();
-
-    // Fikim efektet vizuale të tavolinës
-    tableArea.classList.remove('discard-zone-active');
-    discardPile.style.background = "";
-    
-}, { passive: false });
-        
-        // Ky dragover duhet vetëm për PC
-        div.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            const draggingCard = document.querySelector('.dragging');
-            if (!draggingCard) return;
-            handleReorder(e.clientX);
         });
+
+        // --- LOGJIKA PËR IPHONE (TOUCH) ---
+        div.addEventListener('touchstart', (e) => {
+            if (!isMyTurn) return;
+            if (e.cancelable) e.preventDefault(); 
+
+            const touch = e.touches[0];
+            const rect = div.getBoundingClientRect();
+
+            div.dataset.offsetX = touch.clientX - rect.left;
+            div.dataset.offsetY = touch.clientY - rect.top;
+            div.classList.add('dragging');
+
+            div.style.width = rect.width + 'px';
+            div.style.height = rect.height + 'px';
+            div.style.position = 'fixed';
+            div.style.left = rect.left + 'px';
+            div.style.top = rect.top + 'px';
+            div.style.zIndex = '1000';
+            div.style.pointerEvents = 'none'; 
+        }, { passive: false });
 
         handContainer.appendChild(div);
     });
 }
-// Funksion ndihmës për të kthyer letrën në gjendje normale (pa position fixed)
+
+// ==========================================
+// 2. KONTROLLI GLOBAL I LËVIZJES (TOUCH & DRAG)
+// ==========================================
+
+// PËR IPHONE (TOUCHMOVE DHE TOUCHEND)
+document.addEventListener('touchmove', (e) => {
+    const draggingCard = document.querySelector('.card.dragging');
+    if (!draggingCard) return;
+
+    const touch = e.touches[0];
+    const offX = parseFloat(draggingCard.dataset.offsetX) || 0;
+    const offY = parseFloat(draggingCard.dataset.offsetY) || 0;
+
+    draggingCard.style.left = (touch.clientX - offX) + 'px';
+    draggingCard.style.top = (touch.clientY - offY) + 'px';
+
+    // Feedback vizual për tavolinën (gjysma e djathtë)
+    const tableArea = document.getElementById('table-area');
+    const tableRect = tableArea.getBoundingClientRect();
+    const discardRect = discardPile.getBoundingClientRect();
+
+    if (touch.clientX > discardRect.left - 20 && touch.clientX < tableRect.right + 50) {
+        tableArea.classList.add('discard-zone-active');
+    } else {
+        tableArea.classList.remove('discard-zone-active');
+    }
+
+    // Renditja në dorë
+    const handRect = handContainer.getBoundingClientRect();
+    if (touch.clientY > handRect.top - 100) {
+        handleReorder(touch.clientX);
+    }
+}, { passive: false });
+
+document.addEventListener('touchend', (e) => {
+    const draggingCard = document.querySelector('.card.dragging');
+    if (!draggingCard) return;
+
+    const touch = e.changedTouches[0];
+    const tableArea = document.getElementById('table-area');
+    const discardRect = discardPile.getBoundingClientRect();
+
+    // Kontrolli i zonës së hedhjes
+    if (touch.clientX > discardRect.left - 20 && isMyTurn && doraImeData.length === 11) {
+        processDiscard(draggingCard);
+    } else {
+        handleReorder(touch.clientX);
+    }
+
+    draggingCard.classList.remove('dragging');
+    resetCardStyles(draggingCard);
+    saveNewOrder();
+    tableArea.classList.remove('discard-zone-active');
+}, { passive: false });
+
+// PËR PC (DROP NË TAVOLINË)
+const tableArea = document.getElementById('table-area');
+tableArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const discardRect = discardPile.getBoundingClientRect();
+    if (e.clientX > discardRect.left - 20) {
+        tableArea.classList.add('discard-zone-active');
+    }
+});
+
+tableArea.addEventListener('dragleave', () => {
+    tableArea.classList.remove('discard-zone-active');
+});
+
+tableArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    tableArea.classList.remove('discard-zone-active');
+    const draggingCard = document.querySelector('.card.dragging');
+    const discardRect = discardPile.getBoundingClientRect();
+
+    if (draggingCard && isMyTurn && doraImeData.length === 11 && e.clientX > discardRect.left - 20) {
+        processDiscard(draggingCard);
+    }
+});
+
+// ==========================================
+// 3. FUNKSIONET NDIHMËSE
+// ==========================================
+function processDiscard(draggingCard) {
+    if (!isMyTurn || doraImeData.length < 11) return;
+
+    const parts = draggingCard.innerHTML.split('<br>');
+    const val = parts[0];
+    const suit = parts[1] || '';
+
+    if (val === '★') {
+        alert("Xhokeri nuk hidhet!");
+        return;
+    }
+
+    const idx = doraImeData.findIndex(c => c.v === val && c.s === suit);
+    if (idx > -1) {
+        const cardDiscarded = { v: val, s: suit };
+        doraImeData.splice(idx, 1);
+        renderHand();
+        
+        isMyTurn = false;
+        socket.emit('cardDiscarded', cardDiscarded);
+        socket.emit('endTurn');
+        
+        updateTurnUI();
+        checkTurnLogic();
+    }
+}
+
+function handleReorder(clientX) {
+    const draggingCard = document.querySelector('.card.dragging');
+    if (!draggingCard) return;
+
+    const cards = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+    const nextCard = cards.find(c => {
+        const box = c.getBoundingClientRect();
+        return clientX <= box.left + box.width / 2;
+    });
+
+    if (nextCard) handContainer.insertBefore(draggingCard, nextCard);
+    else handContainer.appendChild(draggingCard);
+}
+
 function resetCardStyles(el) {
     el.style.position = '';
     el.style.left = '';
     el.style.top = '';
+    el.style.width = '';
+    el.style.height = '';
     el.style.zIndex = '';
     el.style.pointerEvents = 'auto';
 }
