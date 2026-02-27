@@ -97,10 +97,31 @@ function renderHand() {
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
         div.addEventListener('dragstart', (e) => {
+            // 1. Mos e lejo kapjen e letrës nëse nuk është radha e lojtarit
+            if (!isMyTurn) {
+                e.preventDefault();
+                return;
+            }
+
             div.classList.add('dragging');
+
+            // 2. Ruajmë indeksin e letrës
             e.dataTransfer.setData('text/plain', index);
-            e.dataTransfer.setDragImage(div, 37, 52); // Siguron që letra shihet gjatë lëvizjes
-        });
+
+            // 3. Përmirësimi i setDragImage: 
+            // Në vend të numrave fiks (37, 52), përdorim gjysmën e gjerësisë/lartësisë 
+            // që mausi të jetë fiks në mes të letrës
+            const rect = div.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+    
+            if (e.dataTransfer.setDragImage) {
+                e.dataTransfer.setDragImage(div, centerX, centerY);
+            }
+
+    // 4. Efekti vizual në PC
+    e.dataTransfer.dropEffect = "move";
+});
 
         div.addEventListener('dragend', () => {
             // I japim 100ms kohë që të përfundojë eventi 'drop' në stivë
