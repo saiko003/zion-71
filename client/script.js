@@ -140,60 +140,67 @@ function renderHand() {
         
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
-        // Drag for PC
+        // PC: DRAG START
         div.addEventListener('dragstart', (e) => {
             div.classList.add('dragging');
             e.dataTransfer.setData('text/plain', index);
+            // Kjo e ndihmon PC-në të kuptojë që po lëvizim një objekt
+            e.dataTransfer.effectAllowed = 'move';
         });
 
         div.addEventListener('dragend', () => {
             div.classList.remove('dragging');
             resetCardStyles(div);
-            saveNewOrder();
         });
 
-        // Touch for Mobile
+        // MOBILE: TOUCH START (Rregullimi i "kërcimit")
         div.addEventListener('touchstart', (e) => {
             if (e.cancelable) e.preventDefault(); 
             const touch = e.touches[0];
             const rect = div.getBoundingClientRect();
+
+            // Ruajmë saktë ku e kemi prekur letrën (brenda katrorit të saj)
             div.dataset.offsetX = touch.clientX - rect.left;
             div.dataset.offsetY = touch.clientY - rect.top;
+
             div.classList.add('dragging');
+            
+            // I japim koordinatat e sakta menjëherë që të mos "këcejë"
+            div.style.position = 'fixed';
             div.style.width = rect.width + 'px';
             div.style.height = rect.height + 'px';
-            div.style.position = 'fixed';
             div.style.left = rect.left + 'px';
             div.style.top = rect.top + 'px';
             div.style.zIndex = '1000';
             div.style.pointerEvents = 'none'; 
         }, { passive: false });
 
-        // KJO MUNGOI TE TI:
-        handContainer.appendChild(div); 
+        handContainer.appendChild(div);
     });
 }
-    
-// ==========================================
-// 2. KONTROLLI GLOBAL I LËVIZJES (TOUCH & DRAG)
-// ==========================================
 
+// KONTROLLI GLOBAL (TOUCHMOVE) - I rregulluar për koordinatat
 document.addEventListener('touchmove', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
-    if (draggingCard) {
-        const touch = e.touches[0]; // Kjo duhet të jetë këtu!
-        
-        const offsetX = parseFloat(draggingCard.dataset.offsetX) || draggingCard.offsetWidth / 2;
-        const offsetY = parseFloat(draggingCard.dataset.offsetY) || draggingCard.offsetHeight / 2;
+    if (!draggingCard) return;
 
-        draggingCard.style.left = (touch.clientX - offsetX) + 'px';
-        draggingCard.style.top = (touch.clientY - offsetY) + 'px';
+    const touch = e.touches[0];
+    const offsetX = parseFloat(draggingCard.dataset.offsetX) || 0;
+    const offsetY = parseFloat(draggingCard.dataset.offsetY) || 0;
 
-        // Pjesa tjetër e renditjes...
-        const handRect = handContainer.getBoundingClientRect();
-        if (touch.clientY > handRect.top - 100) { 
-            handleReorder(touch.clientX); 
-        }
+    // Vendosja e letrës fiks nën gisht
+    draggingCard.style.left = (touch.pageX - offsetX) + 'px';
+    draggingCard.style.top = (touch.pageY - offsetY) + 'px';
+
+    // Shfaqja e zonës së hedhjes kur afrohemi
+    const discardPile = document.getElementById('discard-pile');
+    const discardRect = discardPile.getBoundingClientRect();
+    
+    if (touch.clientX > discardRect.left && touch.clientX < discardRect.right &&
+        touch.clientY > discardRect.top && touch.clientY < discardRect.bottom) {
+        discardPile.style.background = "rgba(39, 174, 96, 0.3)";
+    } else {
+        discardPile.style.background = "transparent";
     }
 }, { passive: false });
 
@@ -781,3 +788,34 @@ function handleReorder(clientX) {
         handContainer.appendChild(draggingCard);
     }
 }
+// Gjejmë elementin e stivës së hedhjes
+const discardPileElement = document.getElementById('discard-pile');
+
+// 1. Kur letra qëndron SIPËR zonës së hedhjes
+discardPileElement.addEventListener('dragover', (e) => {
+    e.preventDefault(); // E detyrueshme: Lejon lëshimin e letrës
+    e.dataTransfer.dropEffect = 'move';
+    
+    // I japim një efekt vizual që lojtari ta dijë se është në vendin e duhur
+    discardPileElement.style.background = "rgba(39, 174, 96, 0.3)";
+    discardPileElement.style.borderColor = "#2ecc71";
+});
+
+// 2. Kur letra largohet nga zona pa u lëshuar
+discardPileElement.addEventListener('dragleave', () => {
+    discardPileElement.style.background = "transparent";
+    discardPileElement.style.borderColor = "rgba(255, 255, 255, 0.2)";
+});
+
+// 3. Kur lëshojmë letrën (Drop)
+discardPileElement.addEventListener('drop', (e) => {
+    e.preventDefault(); // Ndalon hapjen e ndonjë linku ose imazhi
+    discardPileElement.style.background = "transparent";
+    discardPileElement.style.borderColor = "rgba(255, 255, 255, 0.2)";
+
+    const draggingCard = document.querySelector('.card.dragging');
+    if (draggingCard) {
+        // Këtu ekzekutohet hedhja e letrës në lojë
+        processDiscard(draggingCard);
+    }
+});
