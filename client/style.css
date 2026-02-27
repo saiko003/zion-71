@@ -140,8 +140,9 @@ body {
 
 /* 1. MBRROJTJA DHE STILI BAZË I LETRËS */
 .card, .card-back {
-    width: 75px;
-    height: 105px;
+    /* Përmasat e optimizuara për Mobile & PC */
+    width: 65px; 
+    height: 95px; 
     border-radius: 8px;
     background: white;
     color: black;
@@ -150,16 +151,22 @@ body {
     align-items: center;
     text-align: center;
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: 1.1rem; /* Pak më i vogël që të nxërë numrat */
     cursor: grab;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     position: relative;
     z-index: 10;
+    
+    /* Lejon Drag-un */
     -webkit-user-drag: element !important; 
     user-select: none;
     -webkit-user-select: none;
+    
+    /* Animacionet */
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
     will-change: transform;
+    
+    /* KRITIKE PËR IPHONE */
     touch-action: none !important; 
     -webkit-tap-highlight-color: transparent;
     pointer-events: auto !important;
@@ -197,17 +204,15 @@ body {
 
 /* ZONA E HEDHJES - E PËRMIRËSUAR */
 #discard-pile {
-    width: 140px;
-    height: 190px;
-    border: 3px dashed rgba(255, 255, 255, 0.2);
+    width: 150px; /* E bëjmë më realiste si madhësi stive */
+    height: 200px;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
     border-radius: 15px;
-    background: rgba(255, 255, 255, 0.03);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    margin: 20px auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1; /* Duhet të jetë poshtë letrës që lëvizet */
 }
 
 /* Teksti udhëzues që rri gjithmonë brenda */
@@ -285,15 +290,18 @@ body {
 
 /* RENDITJA (REORDERING) STYLE */
 #player-hand {
+    position: fixed;
+    bottom: 10px;
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
-    gap: 12px;
-    padding: 20px;
-    min-height: 150px;
-    width: 100%;
+    gap: 5px; /* Pak më ngushtë për mobile */
+    padding: 10px;
+    width: 95%; /* Mos e lë 100% që të mos prekë anët */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    pointer-events: auto; /* Sigurohet që klikimet punojnë */
 }
-
 .card:hover {
     transform: translateY(-15px) scale(1.05);
     z-index: 50;
@@ -301,9 +309,10 @@ body {
 }
 
 .dragging {
-    opacity: 0.3;
-    transform: scale(0.9) rotate(0deg);
-    cursor: grabbing;
+    opacity: 0.7 !important;
+    transform: scale(1.1) !important;
+    pointer-events: none !important; /* Lejon që discard-pile të ndiejë letrën përmbi */
+    z-index: 9999 !important;
 }
 
 /* ==========================
