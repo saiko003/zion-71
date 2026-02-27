@@ -162,7 +162,15 @@ body {
     /* PËR PC: Lejon mausin ta mbajë letrën gjatë drag-it */
     pointer-events: auto !important; 
 }
+.card-discarded {
 
+    transform: translate(var(--x), var(--y)) rotate(var(--r));
+
+    opacity: 0.8;
+
+    pointer-events: none;
+
+}
 /* KJO ËSHTË ZGJIDHJA: */
 /* Kur letra lëvizet në iPhone (JS i shton style position: fixed), 
    ia heqim pointer-events që stiva e hedhjes të jetë "e prekshme" poshtë saj */
