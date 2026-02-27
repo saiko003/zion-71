@@ -29,11 +29,14 @@ function getCoords(e) {
     return { x: e.clientX, y: e.clientY };
 }
 
-// ZËVENDËSOJE ME KËTË:
+
 document.getElementById('btn-start').addEventListener('click', () => {
     console.log("Kllienti: Butoni START u shtyp!");
 
-    // 1. Provo të bësh Fullscreen (opsionale, nuk e bllokon nisjen)
+    // KJO ËSHTË SHTESA: Fsheh kutinë e butonit sapo e shtyp
+    document.getElementById('lobby-controls').classList.add('hidden');
+
+    // 1. Provo të bësh Fullscreen
     try {
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen();
@@ -41,10 +44,10 @@ document.getElementById('btn-start').addEventListener('click', () => {
             document.documentElement.webkitRequestFullscreen();
         }
     } catch (err) {
-        console.log("Fullscreen nuk u lejua, por loja vazhdon.");
+        console.log("Fullscreen nuk u lejua.");
     }
 
-    // 2. DËRGIMI I SINJALIT TE SERVERI (Kjo është kryesorja)
+    // 2. DËRGIMI I SINJALIT TE SERVERI
     socket.emit('startGame');
 });
 
