@@ -117,6 +117,7 @@ socket.on('startGame', () => {
 
     // 4. Shpërndarja e letrave
     players.forEach((p, i) => {
+        p.hand = [];
         if (!p.eliminated) {
             // Dealer-i (currentDealerIndex) merr 10 letra + 1 Xhoker = 11
             // Të tjerët marrin 9 letra + 1 Xhoker = 10
