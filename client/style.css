@@ -173,11 +173,10 @@ body {
 
 /* Kur letra është duke u lëvizur (si në iPhone ashtu edhe në PC) */
 .card.dragging {
-    opacity: 0.7 !important;
-    z-index: 2000 !important;
+    opacity: 0.8 !important;
+    z-index: 9999 !important;
     transition: none !important;
-    
-    /* Kjo lejon që 'discard-pile' të kuptojë që diçka po i vjen sipër */
+    /* Në Safari, kjo duhet të jetë none që gishtin ta ndjejë discard-pile */
     pointer-events: none !important; 
 }
 .card-discarded {
