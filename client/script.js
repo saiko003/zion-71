@@ -134,11 +134,36 @@ document.getElementById('btn-start').addEventListener('click', () => {
     document.getElementById('lobby-controls').style.display = 'none';
     document.getElementById('game-table').style.display = 'block';
 });
+
+// 1. Dëgjojmë për letrat që dërgon serveri
+socket.on('receiveCards', (cards) => {
+    console.log("Letrat u pranuan:", cards);
+    
+    // Ruajmë letrat në variablën tonë globale
+    doraImeData = cards;
+    
+    // Thërrasim funksionin që i vizaton ato në HTML
+    renderHand();
+    
+    // Shfaqim tavolinën dhe fshehim lobby-n
+    document.getElementById('lobby-controls').style.display = 'none';
+    document.getElementById('game-table').style.display = 'block';
+});
+
+// 2. Sigurohu që ke edhe këtë për letrat që do tërheqësh gjatë lojës
+socket.on('cardDrawn', (newCard) => {
+    doraImeData.push(newCard);
+    renderHand();
+});
+
 // ==========================================
 // 3. RENDER HAND (Pika 18 - Renditja Interaktive)
 // ==========================================
 function renderHand() {
-    handContainer.innerHTML = ''; // Pastrojmë dorën e vjetër
+    const handContainer = document.getElementById('player-hand');
+    if (!handContainer) return;
+    
+    handContainer.innerHTML = ''; 
 
     doraImeData.forEach((card, index) => {
         const div = document.createElement('div');
@@ -148,32 +173,44 @@ function renderHand() {
         div.dataset.v = card.v;
         div.dataset.s = card.s;
         
-        // Ngjyra e kuqe për zemrat dhe diamantet
         if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
-        
         div.innerHTML = `${card.v}<br>${card.s}`;
 
-        // --- MOBILE: TOUCH START ---
+        // --- MOBILE: TOUCH HANDLING ---
         div.addEventListener('touchstart', (e) => {
-            if (e.cancelable) e.preventDefault();
             const touch = e.touches[0];
             const rect = div.getBoundingClientRect();
-
             div.dataset.offsetX = touch.clientX - rect.left;
             div.dataset.offsetY = touch.clientY - rect.top;
             div.classList.add('dragging');
-
-            // I japim stilin "floating" që të lëvizë lirshëm
+            
             Object.assign(div.style, {
                 position: 'fixed',
-                width: rect.width + 'px',
-                height: rect.height + 'px',
-                left: rect.left + 'px',
-                top: rect.top + 'px',
                 zIndex: '1000',
                 pointerEvents: 'none'
             });
-        }, { passive: false });
+        }, { passive: true });
+
+        div.addEventListener('touchmove', (e) => {
+            if (!div.classList.contains('dragging')) return;
+            const touch = e.touches[0];
+            div.style.left = (touch.clientX - parseFloat(div.dataset.offsetX)) + 'px';
+            div.style.top = (touch.clientY - parseFloat(div.dataset.offsetY)) + 'px';
+        }, { passive: true });
+
+        div.addEventListener('touchend', (e) => {
+            div.classList.remove('dragging');
+            const touch = e.changedTouches[0];
+            const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Kontrollojmë nëse e lëshuam mbi zonën e hedhjes (Discard Pile)
+            const pile = document.getElementById('discard-pile');
+            if (dropTarget && (dropTarget === pile || pile.contains(dropTarget))) {
+                processDiscard(div); // Funksioni që e hedh letrën
+            } else {
+                renderHand(); // Nëse nuk e qëlloi vendin, ktheje letrën në dorë
+            }
+        });
 
         handContainer.appendChild(div);
     });
