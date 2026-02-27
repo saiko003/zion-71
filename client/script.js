@@ -1,12 +1,14 @@
-// SIGUROHU QË KËTO JANË NË FILLIM TË SCRIPT.JS
-const handContainer = document.getElementById('player-hand');
-const deckElement = document.getElementById('deck'); // KËTU ISHTE GABIMI
-const jackpotElement = document.getElementById('jackpot');
-const discardPile = document.getElementById('discard-pile');
-const btnMbyll = document.getElementById('btn-mbyll');
 const socket = io('https://zion-71.onrender.com', {
     transports: ['polling', 'websocket']
 });
+const handContainer = document.getElementById('player-hand');
+const deckElement = document.getElementById('deck');
+const jackpotElement = document.getElementById('jackpot');
+const discardPile = document.getElementById('discard-pile');
+const btnMbyll = document.getElementById('btn-mbyll');
+const statusDrita = document.getElementById('status-drita');
+const statusTeksti = document.getElementById('status-teksti');
+
 
 // Ruajtja e emrit dhe identifikimi
 let myName = localStorage.getItem('zion_player_name') || prompt("Shkruaj emrin tënd:");
