@@ -29,23 +29,29 @@ const cardValues = {
 io.on('connection', (socket) => {
     console.log('Një përdorues u lidh:', socket.id);
 
-    // --- 1. JOIN GAME ---
-    socket.on('joinGame', (name) => {
-        if (gamePhase !== "waiting") {
-            socket.emit('error', 'Loja ka nisur.');
+    // --- RREGULLIMI KËTU (Hoqëm s-në e tepërt te socket) ---
+    socket.on('cardDiscarded', (card) => {
+        if (gamePhase !== "playing") return;
+        const player = players[currentTurnIndex];
+        if (!player || player.id !== socket.id) return;
+        if (!hasDrawnThisTurn) return;
+
+        if (card.v === '★') {
+            socket.emit('error', 'Nuk mund ta hedhësh Xhokerin!');
             return;
         }
-        const existing = players.find(p => p.id === socket.id);
-        if (existing) return;
 
-        players.push({
-            id: socket.id,
-            name: name?.trim() || `Lojtari ${players.length + 1}`,
-            score: 0,
-            history: [], // Për të ruajtur pikët R1, R2, R3... dhe "X"
-            hand: [],
-            eliminated: false
-        });
+        const index = player.hand.findIndex(c => c.v === card.v && c.s === card.s);
+        if (index === -1) return;
+
+        const removed = player.hand.splice(index, 1)[0];
+        discardPile.push(removed);
+        
+        socket.broadcast.emit('opponentDiscarded', removed); 
+
+        hasDrawnThisTurn = false;
+        socket.emit('receiveCards', player.hand);
+        moveToNextPlayer(); 
         sendGameState();
     });
 
@@ -180,7 +186,7 @@ socket.on('startGame', () => {
     });
 
     // --- 6. CARD DISCARDED (Me bllokim Xhokeri) ---
-    ssocket.on('cardDiscarded', (card) => {
+    socket.on('cardDiscarded', (card) => {
     if (gamePhase !== "playing") return;
     const player = players[currentTurnIndex];
     if (!player || player.id !== socket.id) return;
