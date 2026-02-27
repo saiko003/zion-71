@@ -46,9 +46,12 @@ if (btnMbyll) {
     });
 }
 
-// ==========================================
-// 2. SCOREBOARD DINAMIK (Pika 17)
-// ==========================================
+socket.on('yourCards', (cards) => {
+    console.log("Mora letrat e mia nga serveri:", cards);
+    doraImeData = cards; // Përditësojmë dorën tonë lokale
+    renderHand();        // I vizatojmë letrat në ekran
+});
+
 socket.on('updateGameState', (data) => {
     // 1. Kontrolli i Lobby-t (Përdorim getElementById direkt që të jemi 100% të sigurt)
     const lobby = document.getElementById('lobby-controls');
