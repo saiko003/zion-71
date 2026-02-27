@@ -2,63 +2,55 @@
 <html lang="sq">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ZION 71 - Loja e Letrave</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZION 71 - Multiplayer</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://zion-71-server.onrender.com/socket.io/socket.io.js"></script>
 </head>
 <body>
-    
-    <div id="orientation-warning">
-        <div style="font-size: 60px; margin-bottom: 20px;">🔄</div>
-        <h2 style="color: white; font-family: sans-serif;">Kthejeni telefonin horizontalisht</h2>
-        <p style="color: #ccc;">Loja luhet vetëm në Landscape mode.</p>
+
+    <div id="lobby-controls">
+        <h1>ZION 71</h1>
+        <div class="input-group">
+            <button id="btn-start">NIS LOJËN (START)</button>
+        </div>
+        <p>Prit lojtarët e tjerë të futen...</p>
     </div>
-    
-    <div id="game-container">
+
+    <div id="game-table">
+        
         <div id="scoreboard-container">
-            <h3>Pikët (ZION 71)</h3>
-            <table id="score-table"> 
+            <table id="score-table">
                 <thead>
                     <tr>
                         <th>Lojtari</th>
-                        <th>Pikët</th>
-                        <th>Rradha</th>
+                        <th>Total</th>
                     </tr>
                 </thead>
-                <tbody id="score-body"></tbody>
+                <tbody id="score-body">
+                    </tbody>
             </table>
         </div>
 
-        <div id="table-area">
-            <div id="deck-area">
-                <div id="deck" class="card-back">STIVA</div>
-                <div id="jackpot" class="card">?</div>
-                <div id="discard-pile" class="card-slot card">HEDH KËTU</div>
-            </div>
-            
-            <div id="lobby-controls">
-                <button id="btn-start" class="start-btn">NIS LOJËN</button>
+        <div class="center-area">
+            <div id="deck" class="card-stack">ZION</div>
+            <div id="jackpot" class="card" style="display: none;"></div>
+            <div id="discard-pile" class="drop-zone">
+                <span class="label">HEDH KËTU</span>
             </div>
         </div>
 
-        <div id="player-area">
-            <div id="asistenti-container" style="margin-bottom: 10px; display: none;">
-                <span id="status-drita" class="led-red"></span>
-                <span id="status-teksti">Dora nuk është gati</span>
+        <div id="asistenti-container" style="display: none;">
+            <div id="status-drita" class="led-red"></div>
+            <div id="asistenti-info">
+                <span id="status-teksti">Duke pritur...</span>
             </div>
-            
-            <div id="player-hand"></div>
-            <button id="btn-mbyll" class="glow-btn" style="display: none;">MBYLL LOJËN</button>
+            <button id="btn-mbyll" style="display: none;">MBYLL LOJËN (ZION)</button>
         </div>
 
-        <div id="chat-container">
-            <div id="chat-messages"></div>
-            <div id="chat-input-area">
-                <input type="text" id="chat-input" placeholder="Shkruaj një mesazh...">
-                <button id="btn-send-chat">Dërgo</button>
+        <div id="player-hand" class="hand-area">
             </div>
-        </div>
+
     </div>
 
     <script src="script.js"></script>
