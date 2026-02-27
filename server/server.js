@@ -152,35 +152,70 @@ socket.on('cardDiscarded', (card) => {
     broadcastState();
 });
 
-    // MBYLLJA (ZION! - Pika 7, 8)
-    socket.on('playerClose', (finalHand) => {
-        const winner = players.find(p => p.id === socket.id);
-        
-        // Llogarit pikët e të tjerëve (Pika 17)
-        players.forEach(p => {
-            if (p.id !== winner.id) {
-                let roundPoints = calculatePoints(p.cards);
-                p.score += roundPoints;
-                p.history.push(roundPoints);
-            } else {
-                p.history.push("X"); // Fituesi
-            }
-        });
+    // MBYLLJA (ZION!)
+socket.on('playerClosed', (data) => {
+    const winner = players.find(p => p.id === socket.id);
+    if (!winner) return;
 
-        io.emit('roundOver', {
-            winnerName: winner.name,
-            updatedPlayers: players
-        });
+    console.log(`${winner.name} ka bërë ZION!`);
+
+    // Llogarit pikët e të tjerëve
+    players.forEach(p => {
+        if (p.id !== winner.id) {
+            // Përdorim calculateScore që është më i saktë për Zion
+            let roundPoints = calculateScore(p.cards); 
+            p.score += roundPoints;
+            p.history.push(roundPoints);
+        } else {
+            p.history.push("X"); // Fituesi merr X
+        }
     });
 
-    socket.on('disconnect', () => {
-        players = players.filter(p => p.id !== socket.id);
-        broadcastState();
+    // Dërgojmë sinjalin te të gjithë që raundi mbaroi
+    io.emit('roundOver', {
+        winnerName: winner.name,
+        updatedPlayers: players.map(p => ({
+            id: p.id,
+            name: p.name,
+            score: p.score,
+            history: p.history,
+            isOut: p.score >= 71 
+        }))
     });
 });
 
-// Funksioni që njofton të gjithë për gjendjen e lojës
-function broadcastState() {
+    ssocket.on('disconnect', () => {
+    players = players.filter(p => p.id !== socket.id);
+    broadcastState();
+});
+
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Serveri po punon në portën ${PORT}`));
+
+// server.js
+
+// Ky funksion do të përdoret kur dikush thërret "ZION"
+function calculateScore(cards) {
+    let score = 0;
+    if (!cards) return 0;
+
+    cards.forEach(card => {
+        // Xhokeri nuk llogaritet (0 pikë)
+        if (card.v === '★' || card.v === 'Xhoker' || card.s === 'Joker') return;
+
+        // Nëse është 10, J, Q, K ose A, shto 10 pikë
+        if (['10', 'J', 'Q', 'K', 'A'].includes(card.v)) {
+            score += 10;
+        } else {
+            // Për letrat 2-9, shto vlerën e tyre numerike
+            let val = parseInt(card.v);
+            if (!isNaN(val)) score += val;
+        }
+    });
+    return score;
+}
+    function broadcastState() {
     io.emit('updateGameState', {
         players: players.map(p => ({ id: p.id, name: p.name, score: p.score, history: p.history })),
         activePlayerId: players[activePlayerIndex]?.id,
@@ -188,17 +223,3 @@ function broadcastState() {
         jackpotCard: jackpotCard
     });
 }
-
-// Llogaritja e pikëve (Pika 8)
-function calculatePoints(cards) {
-    let sum = 0;
-    cards.forEach(c => {
-        if (['10', 'J', 'Q', 'K', 'A'].includes(c.v)) sum += 10;
-        else if (c.v === '★') sum += 0;
-        else sum += parseInt(c.v);
-    });
-    return sum;
-}
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Serveri po punon në portën ${PORT}`));
