@@ -190,34 +190,39 @@ function checkTurnLogic() {
 // RENDITJA DHE RREGULLIMI I LETRAVE (UNIFIKUAR)
 // ==========================================
 function renderHand() {
-    handContainer.innerHTML = '';
+    // 1. Përdorim ID-në që ke ti në HTML
+    const handContainer = document.getElementById('player-hand');
+    
+    if (!handContainer) {
+        console.error("GABIM: Nuk u gjet 'player-hand' në HTML!");
+        return;
+    }
+
+    handContainer.innerHTML = ''; // Pastrojmë dorën e vjetër
+
     doraImeData.forEach((card, index) => {
         const div = document.createElement('div');
         div.className = 'card';
-        div.draggable = true;
+        div.draggable = true; // E rëndësishme për PC
         div.dataset.index = index;
+        div.dataset.v = card.v;
+        div.dataset.s = card.s;
         div.innerHTML = `${card.v}<br>${card.s}`;
         
-        // FORCIMI I KLIKIMIT NË PC
-        div.style.pointerEvents = 'auto'; 
-        div.style.cursor = 'grab';
-
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
-        // PC: DRAG START (Mausi)
+        // --- PC: DRAG START ---
         div.addEventListener('dragstart', (e) => {
-            // Sigurohu që lojtari nuk mund të lëvizë letrat nëse nuk është radha e tij 
-            // ose nëse nuk ka 11 letra (varet nga rregulli yt)
             div.classList.add('dragging');
             e.dataTransfer.setData('text/plain', index);
         });
 
         div.addEventListener('dragend', () => {
             div.classList.remove('dragging');
-            resetCardStyles(div);
+            if (typeof resetCardStyles === "function") resetCardStyles(div);
         });
 
-        // MOBILE: TOUCH START
+        // --- MOBILE: TOUCH START ---
         div.addEventListener('touchstart', (e) => {
             if (e.cancelable) e.preventDefault(); 
             const touch = e.touches[0];
@@ -225,7 +230,6 @@ function renderHand() {
 
             div.dataset.offsetX = touch.clientX - rect.left;
             div.dataset.offsetY = touch.clientY - rect.top;
-
             div.classList.add('dragging');
 
             Object.assign(div.style, {
@@ -235,7 +239,7 @@ function renderHand() {
                 left: rect.left + 'px',
                 top: rect.top + 'px',
                 zIndex: '9999',
-                pointerEvents: 'none' // KRITIKE: Lejon gishtin të ndjejë zonën poshtë
+                pointerEvents: 'none'
             });
         }, { passive: false });
 
