@@ -20,7 +20,7 @@ let discardPile = [];
 let jackpotCard = null;
 let activePlayerIndex = 0;
 let gameStarted = false;
-
+let gameDeck = [];
 let dealerIndex = 0; // Kush e nis lojën
 
 function endRound(winnerId, allPlayersCards) {
@@ -66,37 +66,47 @@ function createDeck() {
     return newDeck.sort(() => Math.random() - 0.5);
 }
 function startNewRound() {
-    let deck = createDeck(); 
-    shuffle(deck);
+    // 1. Krijojmë dhe përziejmë dekun (Përdorim variablën globale gameDeck direkt)
+    gameDeck = createDeck(); 
+    shuffle(gameDeck);
+    discardPile = []; // Pastrojmë letrat në tokë
 
-    // Sigurohemi që DealerIndex ekziston, nëse jo e nisim nga i pari
+    // Sigurohemi që DealerIndex ekziston (Përdorim emrin që ke në variablat globale)
     if (typeof currentDealerIndex === 'undefined' || currentDealerIndex === null) {
         currentDealerIndex = 0;
     }
 
     players.forEach((player, index) => {
-        // 1. Krijohet Xhokeri i ri për çdo lojtar
+        // RESET: Fshijmë letrat e vjetra para se të japim të rejat
+        player.cards = []; 
+
+        // 2. KRIJOJME XHOKERIN (VETËM 1 për çdo lojtar)
         const myJoker = { v: '★', s: 'Xhoker' };
 
-        // 2. Dealer-i merr 10 nga deçka (total 11), të tjerët 9 (total 10)
+        // 3. SHPËRNDARJA: Dealer-i (ai që ka radhën) merr 10 nga deku, tjetri 9
         let sasiaNgaDeck = (index === currentDealerIndex) ? 10 : 9;
-        let letratNgaDeck = deck.splice(0, sasiaNgaDeck);
+        
+        // Marrim letrat nga gameDeck
+        let letratNgaDeck = gameDeck.splice(0, sasiaNgaDeck);
 
-        // 3. Bashkimi i sigurt: Xhokeri + letrat e reja
-        player.cards = [myJoker].concat(letratNgaDeck);
+        // 4. BASHKIMI: Xhokeri + letrat e deçkës (Garanton 11 për Dealer, 10 për të tjerët)
+        player.cards = [myJoker, ...letratNgaDeck];
 
-        console.log(`DEBUG: ${player.name} (Index: ${index}) mori Xhokerin + ${letratNgaDeck.length} letra.`);
+        console.log(`DEBUG: ${player.name} (Index: ${index}) - Mori: ${player.cards.length} letra.`);
     });
 
-    gameDeck = deck;
-    discardPile = [];
+    // 5. JACKPOT: Letra e parë që mbetet në deçkë
+    jackpotCard = gameDeck.pop();
     
-    // 4. Kush e ka radhën? Ai që ka 11 letra (Dealer-i)
-    activePlayerId = players[currentDealerIndex].id; 
+    // 6. KUSH E KA RADHËN? Ai që ka 11 letra (Dealer-i aktual)
     activePlayerIndex = currentDealerIndex;
+    if (players[activePlayerIndex]) {
+        activePlayerId = players[activePlayerIndex].id;
+    }
 
-    // 5. ROTACIONI: Hera tjetër do jetë radha e lojtarit tjetër të jetë Dealer
-    currentDealerIndex = (currentDealerIndex + 1) % players.length;
+    // KUJDES: Rotacioni (currentDealerIndex = ...) 
+    // DUHET të bëhet te funksioni 'playerClosed' (kur mbaron raundi), 
+    // JO këtu, sepse i ngatërron radhët e shpërndarjes tani.
 
     broadcastState(); 
 }
@@ -271,10 +281,23 @@ function calculateScore(cards) {
     return score;
 }
     function broadcastState() {
+    // 1. NJOFTIMI GJERË (Për të gjithë: Kush e ka radhën, çfarë ka në tokë)
     io.emit('updateGameState', {
-        players: players.map(p => ({ id: p.id, name: p.name, score: p.score, history: p.history })),
+        players: players.map(p => ({ 
+            id: p.id, 
+            name: p.name, 
+            score: p.score, 
+            history: p.history,
+            cardCount: p.cards.length // E dërgojmë sa letra kanë (pa treguar cilat janë)
+        })),
         activePlayerId: players[activePlayerIndex]?.id,
         discardPileTop: discardPile[discardPile.length - 1],
         jackpotCard: jackpotCard
+    });
+
+    // 2. NJOFTIMI PRIVAT (Kritike për Xhokerin!)
+    // Dërgojmë letrat specifike te secili lojtar në kanalin e tij "yourCards"
+    players.forEach(player => {
+        io.to(player.id).emit('yourCards', player.cards);
     });
 }
