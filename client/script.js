@@ -205,9 +205,11 @@ function renderHand() {
         
         // --- VETËM KJO PJESË NDRYSHON PËR JOKERIN ---
         if (card.v === '★') {
-            div.style.color = 'gold'; // Ngjyra e xhokerit
-            div.innerHTML = `★<br>ZION`;
+            div.classList.add('joker');
+            div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
+            div.style.color = 'gold'; // Ta bëjmë xhokerin të dallohet
         } else {
+            // Letrat normale
             if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
             div.innerHTML = `${card.v}<br>${card.s}`;
         }
