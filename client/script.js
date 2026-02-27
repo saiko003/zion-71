@@ -197,18 +197,25 @@ function renderHand() {
     handContainer.innerHTML = ''; 
 
     doraImeData.forEach((card, index) => {
-        const div = document.createElement('div'); // KORRIGJUAR: ishte ddiv
+        const div = document.createElement('div'); 
         div.className = 'card';
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
         
-        if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
-        div.innerHTML = `${card.v}<br>${card.s}`;
+        // --- VETËM KJO PJESË NDRYSHON PËR JOKERIN ---
+        if (card.v === '★') {
+            div.style.color = 'gold'; // Ngjyra e xhokerit
+            div.innerHTML = `★<br>ZION`;
+        } else {
+            if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
+            div.innerHTML = `${card.v}<br>${card.s}`;
+        }
+        // -------------------------------------------
 
         // TOUCH START
         div.addEventListener('touchstart', (e) => {
-            const t = e.touches[0]; // Marrim touch-in e parë
+            const t = e.touches[0]; 
             const rect = div.getBoundingClientRect();
             div.dataset.offsetX = t.clientX - rect.left;
             div.dataset.offsetY = t.clientY - rect.top;
@@ -235,18 +242,21 @@ function renderHand() {
             const touch = e.changedTouches[0];
             const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
             
-            // Kontrollojmë nëse e lëshuam mbi zonën e hedhjes (Discard Pile)
             const pile = document.getElementById('discard-pile');
             if (dropTarget && (dropTarget === pile || pile.contains(dropTarget))) {
-                processDiscard(div); // Funksioni që e hedh letrën
+                processDiscard(div); 
             } else {
-                renderHand(); // Nëse nuk e qëlloi vendin, ktheje letrën në dorë
+                renderHand(); 
             }
         });
 
         handContainer.appendChild(div);
-        checkZionCondition();
     });
+
+    // E zhvendosa këtë jashtë loop-it (forEach) që të mos thirret 11 herë
+    if (typeof checkZionCondition === "function") {
+        checkZionCondition();
+    }
 }
 
 // --- KONTROLLI GLOBAL I LËVIZJES (TouchMove) ---
