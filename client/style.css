@@ -145,20 +145,39 @@ body {
 .hand-area {
     position: fixed;
     bottom: 20px;
-    width: 90%;
-    height: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    height: 150px;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-end;
+    background: rgba(0,0,0,0.2);
+    border-radius: 20px;
     padding: 10px;
+    z-index: 100;
 }
 
 .card {
-    margin-left: -20px; /* Hapja automatike/mbulimi i letrave */
-    box-shadow: -5px 0 10px rgba(0,0,0,0.3);
-    transition: transform 0.2s, margin 0.2s;
-    background: #fff;
+    width: 70px;
+    height: 110px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #999;
+    margin-left: -25px; /* Kjo bën që letrat të hapen si "lepe-lepe" */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 5px;
+    box-shadow: -3px 0 10px rgba(0,0,0,0.4);
+    font-weight: bold;
     cursor: grab;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-30px);
+    z-index: 200;
 }
 
 .card:first-child { margin-left: 0; }
