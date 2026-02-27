@@ -11,12 +11,19 @@ const io = new Server(server, { cors: { origin: "*" } });
 // --- GLOBALS ---
 let players = [];
 let currentTurnIndex = 0;
+let currentDealerIndex = 0; // Kush shpërndan këtë raund
+let roundCount = 0;
 let deck = [];
 let discardPile = [];
 let lastWinnerId = null;
 let jackpotCard = null;
 let gamePhase = "waiting"; // waiting | playing | roundOver
 let hasDrawnThisTurn = false;
+
+const cardValues = { 
+    '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, 
+    '10':10, 'J':10, 'Q':10, 'K':10, 'A':10, '★':0 
+};
 
 // --- SOCKET CONNECTION ---
 io.on('connection', (socket) => {
@@ -28,7 +35,6 @@ io.on('connection', (socket) => {
             socket.emit('error', 'Loja ka nisur.');
             return;
         }
-
         const existing = players.find(p => p.id === socket.id);
         if (existing) return;
 
@@ -36,10 +42,10 @@ io.on('connection', (socket) => {
             id: socket.id,
             name: name?.trim() || `Lojtari ${players.length + 1}`,
             score: 0,
+            history: [], // Për të ruajtur pikët R1, R2, R3... dhe "X"
             hand: [],
             eliminated: false
         });
-
         sendGameState();
     });
 
@@ -50,41 +56,46 @@ io.on('connection', (socket) => {
         socket.emit('receiveCards', [...player.hand]);
     });
 
-    // --- 3. START GAME ---
+    // --- 3. START GAME (Me logjikën e Dealer-it) ---
     socket.on('startGame', () => {
-        if (gamePhase !== "waiting") return;
+        // Lejohet fillimi nëse jemi në lobby ose raundi ka mbaruar
+        if (gamePhase !== "waiting" && gamePhase !== "roundOver") return;
 
         const activePlayers = players.filter(p => !p.eliminated);
         if (activePlayers.length < 2) {
-            socket.emit('error', 'Duhen të paktën 2 lojtarë.');
+            socket.emit('error', 'Duhen të paktën 2 lojtarë aktivë.');
             return;
         }
 
         gamePhase = "playing";
-        hasDrawnThisTurn = false;
+        roundCount++;
         deck = createFullDeck();
         discardPile = [];
+        hasDrawnThisTurn = false;
 
-        let startIndex = 0;
-        if (lastWinnerId) {
-            let winIdx = players.findIndex(p => p.id === lastWinnerId);
-            startIndex = (winIdx !== -1) ? (winIdx + 1) % players.length : 0;
+        // Gjejmë Dealer-in e radhës që nuk është i eliminuar
+        if (roundCount > 1) {
+            do {
+                currentDealerIndex = (currentDealerIndex + 1) % players.length;
+            } while (players[currentDealerIndex].eliminated);
         }
 
-        currentTurnIndex = startIndex;
-        while (players[currentTurnIndex]?.eliminated) {
-            currentTurnIndex = (currentTurnIndex + 1) % players.length;
-        }
+        currentTurnIndex = currentDealerIndex;
 
         players.forEach((p, i) => {
             if (!p.eliminated) {
-                let count = (i === currentTurnIndex) ? 10 : 9;
+                // Dealer-i merr 10 letra, të tjerët 9
+                let count = (i === currentDealerIndex) ? 10 : 9;
                 p.hand = deck.splice(0, count);
-                p.hand.push({ v: '★', s: 'X' }); // joker
+                p.hand.push({ v: '★', s: 'X' }); // Xhoker i detyrueshëm
                 io.to(p.id).emit('receiveCards', p.hand);
+            } else {
+                p.hand = []; // Të eliminuarit s'kanë letra
             }
         });
 
+        // Dealer-i i ka 11 letra, nuk ka nevojë të tërheqë letër (hasDrawn = true)
+        hasDrawnThisTurn = true;
         jackpotCard = deck.pop() || null;
 
         sendGameState();
@@ -96,7 +107,14 @@ io.on('connection', (socket) => {
         const player = players[currentTurnIndex];
         if (!player || player.id !== socket.id) return;
         if (hasDrawnThisTurn) return;
-        if (deck.length === 0) return;
+        if (deck.length === 0) {
+            // Logjika nëse mbaron deku (Riorganizimi i discardPile)
+            if (discardPile.length > 1) {
+                const topCard = discardPile.pop();
+                deck = discardPile.sort(() => Math.random() - 0.5);
+                discardPile = [topCard];
+            } else return;
+        }
 
         const card = deck.pop();
         player.hand.push(card);
@@ -120,12 +138,18 @@ io.on('connection', (socket) => {
         sendGameState();
     });
 
-    // --- 6. CARD DISCARDED ---
+    // --- 6. CARD DISCARDED (Me bllokim Xhokeri) ---
     socket.on('cardDiscarded', (card) => {
         if (gamePhase !== "playing") return;
         const player = players[currentTurnIndex];
         if (!player || player.id !== socket.id) return;
         if (!hasDrawnThisTurn) return;
+
+        // RREGULLI: Xhokeri nuk hidhet në tokë!
+        if (card.v === '★') {
+            socket.emit('error', 'Nuk mund ta hedhësh Xhokerin!');
+            return;
+        }
 
         const index = player.hand.findIndex(c => c.v === card.v && c.s === card.s);
         if (index === -1) return;
@@ -135,79 +159,70 @@ io.on('connection', (socket) => {
         hasDrawnThisTurn = false;
 
         socket.emit('receiveCards', player.hand);
+        moveToNextPlayer(); // Pas hedhjes radha kalon automatikisht
         sendGameState();
     });
 
-    // --- 7. END TURN ---
-    socket.on('endTurn', () => {
-        if (gamePhase !== "playing") return;
-        const player = players[currentTurnIndex];
-        if (!player || player.id !== socket.id) return;
-        if (hasDrawnThisTurn) return;
-
-        moveToNextPlayer();
-        sendGameState();
-    });
-
-    // --- 8. PLAYER CLOSED ---
+    // --- 7. PLAYER CLOSED (Llogaritja me X) ---
     socket.on('playerClosed', () => {
         if (gamePhase !== "playing") return;
         const player = players[currentTurnIndex];
         if (!player || player.id !== socket.id) return;
 
+        // Verifikimi i dorës (Funksioni yt origjinal)
         if (!verifyHandOnServer(player.hand)) {
-            socket.emit('error', 'Dora nuk është e vlefshme.');
+            socket.emit('error', 'Dora nuk është valid për mbyllje.');
             return;
         }
 
         gamePhase = "roundOver";
         lastWinnerId = socket.id;
 
+        // Shpërndajmë pikët për të gjithë
+        players.forEach(p => {
+            if (p.eliminated) return;
+            if (p.id === socket.id) {
+                p.history.push("X"); // Fituesi merr X
+            } else {
+                let roundPoints = p.hand.reduce((total, c) => total + (cardValues[c.v] || 0), 0);
+                p.score += roundPoints;
+                p.history.push(roundPoints);
+                if (p.score > 71) p.eliminated = true;
+            }
+        });
+
         io.emit('roundOver', {
             winnerName: player.name,
             winnerId: socket.id,
-            winningHand: player.hand
+            players: players,
+            roundCount: roundCount
         });
     });
 
-    // --- 9. CHAT ---
-    socket.on('sendMessage', (data) => {
-        if (!data?.message?.trim()) return;
-
-        io.emit('receiveMessage', {
-            name: players.find(p => p.id === socket.id)?.name || "Anonim",
-            message: data.message.slice(0, 200)
-        });
-    });
-
-    // --- 10. DISCONNECT ---
+    // --- 8. DISCONNECT ---
     socket.on('disconnect', () => {
         const wasActive = players[currentTurnIndex]?.id === socket.id;
         players = players.filter(p => p.id !== socket.id);
-
         if (players.length === 0) {
             gamePhase = "waiting";
             currentTurnIndex = 0;
-            return;
-        }
-
-        if (wasActive) {
+            currentDealerIndex = 0;
+            roundCount = 0;
+        } else if (wasActive) {
             hasDrawnThisTurn = false;
             moveToNextPlayer();
         }
-
         sendGameState();
     });
 
     // --- HELPERS ---
     function moveToNextPlayer() {
         if (players.length === 0) return;
-        currentTurnIndex = (currentTurnIndex + 1) % players.length;
         let attempts = 0;
-        while (players[currentTurnIndex]?.eliminated && attempts < players.length) {
+        do {
             currentTurnIndex = (currentTurnIndex + 1) % players.length;
             attempts++;
-        }
+        } while (players[currentTurnIndex]?.eliminated && attempts < players.length);
     }
 
     function sendGameState() {
@@ -216,17 +231,20 @@ io.on('connection', (socket) => {
                 name: p.name,
                 id: p.id,
                 score: p.score,
-                eliminated: p.eliminated
+                eliminated: p.eliminated,
+                history: p.history
             })),
             activePlayerId: players[currentTurnIndex]?.id,
+            currentDealerId: players[currentDealerIndex]?.id,
             deckCount: deck.length,
             jackpotCard: jackpotCard,
-            discardPileTop: discardPile.length > 0 ? discardPile[discardPile.length - 1] : null
+            discardPileTop: discardPile.length > 0 ? discardPile[discardPile.length - 1] : null,
+            gamePhase: gamePhase
         });
     }
 });
 
-// --- HAND VERIFICATION ---
+// --- VERIFY HAND (Logjika jote origjinale e paprekur) ---
 function verifyHandOnServer(cards) {
     if (!cards || (cards.length !== 10 && cards.length !== 11)) return false;
     const valMap = { '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13, 'A':14 };
@@ -235,59 +253,58 @@ function verifyHandOnServer(cards) {
         let jokers = hand10.filter(c => c.v === '★').length;
         let normalCards = hand10.filter(c => c.v !== '★').map(c => ({ v: valMap[c.v], s: c.s })).sort((a,b)=>a.v-b.v);
         
-        function solve(remaining,jLeft){
-            if(remaining.length===0) return true;
-            let first=remaining[0];
-            // Same value sets
-            for(let size=3;size<=4;size++){
-                let sameVal=remaining.filter(c=>c.v===first.v);
-                for(let use=1;use<=Math.min(sameVal.length,size);use++){
-                    let jNeeded=size-use;
-                    if(jNeeded<=jLeft){
-                        let next=[...remaining];
-                        for(let i=0;i<use;i++){
-                            let idx=next.findIndex(c=>c.v===first.v);
-                            next.splice(idx,1);
+        function solve(remaining, jLeft) {
+            if (remaining.length === 0) return true;
+            let first = remaining[0];
+            // Same value sets (3-4 cards)
+            for (let size = 3; size <= 4; size++) {
+                let sameVal = remaining.filter(c => c.v === first.v);
+                for (let use = 1; use <= Math.min(sameVal.length, size); use++) {
+                    let jNeeded = size - use;
+                    if (jNeeded <= jLeft) {
+                        let next = [...remaining];
+                        for (let i = 0; i < use; i++) {
+                            let idx = next.findIndex(c => c.v === first.v);
+                            next.splice(idx, 1);
                         }
-                        if(solve(next,jLeft-jNeeded)) return true;
+                        if (solve(next, jLeft - jNeeded)) return true;
                     }
                 }
             }
-            // Sequences
-            for(let size=3;size<=10;size++){
-                let currentJ=jLeft;
-                let tempNext=[...remaining];
-                let possible=true;
-                for(let v=first.v;v<first.v+size;v++){
-                    let foundIdx=tempNext.findIndex(c=>c.v===v&&c.s===first.s);
-                    if(foundIdx>-1) tempNext.splice(foundIdx,1);
-                    else if(currentJ>0) currentJ--;
-                    else {possible=false;break;}
+            // Sequences (3-10 cards)
+            for (let size = 3; size <= 10; size++) {
+                let currentJ = jLeft;
+                let tempNext = [...remaining];
+                let possible = true;
+                for (let v = first.v; v < first.v + size; v++) {
+                    let foundIdx = tempNext.findIndex(c => c.v === v && c.s === first.s);
+                    if (foundIdx > -1) tempNext.splice(foundIdx, 1);
+                    else if (currentJ > 0) currentJ--;
+                    else { possible = false; break; }
                 }
-                if(possible&&solve(tempNext,currentJ)) return true;
+                if (possible && solve(tempNext, currentJ)) return true;
             }
             return false;
         }
-        return solve(normalCards,jokers);
+        return solve(normalCards, jokers);
     }
 
-    for(let i=0;i<cards.length;i++){
-        let test=cards.filter((_,idx)=>idx!==i);
-        if(check10(test)) return true;
+    for (let i = 0; i < cards.length; i++) {
+        let test = cards.filter((_, idx) => idx !== i);
+        if (check10(test)) return true;
     }
     return false;
 }
 
-function createFullDeck(){
-    let d=[];
-    const s=['♠','♣','♥','♦'],v=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-    for(let i=0;i<2;i++){
-        s.forEach(sym=>v.forEach(val=>d.push({v:val,s:sym})));
+function createFullDeck() {
+    let d = [];
+    const s = ['♠','♣','♥','♦'], v = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+    for (let i = 0; i < 2; i++) {
+        s.forEach(sym => v.forEach(val => d.push({ v: val, s: sym })));
     }
-    return d.sort(()=>Math.random()-0.5);
+    return d.sort(() => Math.random() - 0.5);
 }
 
-// --- START SERVER ---
-server.listen(process.env.PORT || 10000, ()=>{
-    console.log("Serveri po punon në portin 10000");
+server.listen(process.env.PORT || 10000, () => {
+    console.log("Serveri i ZION 71 po punon në portin 10000");
 });
