@@ -42,8 +42,15 @@ document.getElementById('btn-start').addEventListener('click', () => {
 });
 
 socket.on('receiveCards', (cards) => {
+    // 1. Fshih kontrollet e lobit dhe shfaq asistentin
     document.getElementById('lobby-controls').style.display = 'none';
     asistentiContainer.style.display = 'flex';
+
+    // 2. PASTRO dorën e vjetër vizualisht (shumë e rëndësishme)
+    const cardsContainer = document.getElementById('cards-container');
+    if (cardsContainer) cardsContainer.innerHTML = ""; 
+
+    // 3. Përditëso të dhënat dhe vizato letrat e reja
     doraImeData = cards;
     renderHand();
     checkTurnLogic();
