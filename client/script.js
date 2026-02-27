@@ -167,44 +167,48 @@ div.addEventListener('touchend', (e) => {
     const tableArea = document.getElementById('table-area');
     const draggingCard = document.querySelector('.card.dragging');
     
+    // Sigurohemi që kemi një letër duke u lëvizur
     if (!draggingCard) return;
 
     const tableRect = tableArea.getBoundingClientRect();
     const discardRect = discardPile.getBoundingClientRect();
+    
+    // Tolerance e bën zonën pak më të gjerë që të kapet më lehtë
     const tolerance = 50;
 
-    // ZONA: Nga stiva e hedhjes deri ne fund te tavolines djathtas
+    // LOGJIKA E ZONËS: Nga cepi i majtë i stivës (discardPile) deri në fund të tavolinës djathtas
     const isOverDiscardZone = (
-        touch.clientX > discardRect.left && 
+        touch.clientX > (discardRect.left - 20) && // Pak më majtas se stiva
         touch.clientX < (tableRect.right + tolerance) && 
         touch.clientY > (tableRect.top - tolerance) && 
         touch.clientY < (tableRect.bottom + tolerance)
     );
 
-    // Kontrollojme nese letra eshte Xhoker (Vlera ★)
+    // Kontrolli nëse është Xhoker
     const isJoker = draggingCard.innerHTML.includes('★');
 
     if (isOverDiscardZone && isMyTurn && doraImeData.length === 11 && !isJoker) {
         processDiscard(draggingCard);
     } else {
-        // Nese nuk hidhet, e rendit ne dore bazuar ne pozicionin horizontal te gishtit
+        // Nëse nuk hidhet (ose është Xhoker), kthehet në dorë dhe renditet
         handleReorder(touch.clientX);
         
         if (isJoker && isOverDiscardZone) {
-            alert("Xhokeri nuk mund të hidhet!");
+            console.log("Xhokeri nuk mund të hidhet!");
         }
     }
 
-    // Resetimi i plote i stileve
+    // RESETI I STILEVE (Kritike për të dyja platformat)
     draggingCard.classList.remove('dragging');
     resetCardStyles(draggingCard);
     saveNewOrder();
 
-    // Pastrimi i efekteve vizuale te tavolines
-    if (tableArea) tableArea.classList.remove('discard-zone-active');
+    // Fikim efektet vizuale të tavolinës
+    tableArea.classList.remove('discard-zone-active');
     discardPile.style.background = "";
-    discardPile.style.transform = "";
+    
 }, { passive: false });
+        
         // Ky dragover duhet vetëm për PC
         div.addEventListener('dragover', (e) => {
             e.preventDefault();
