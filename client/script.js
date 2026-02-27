@@ -50,18 +50,59 @@ socket.on('receiveCards', (cards) => {
 });
 
 socket.on('updateGameState', (data) => {
-    // Përditëso Scoreboard
+    // 1. Përditëso Tabelën e Pikëve (Scoreboard Kumulativ)
+    const scoreHeader = document.querySelector('#score-table thead tr');
+    const scoreBody = document.querySelector('#score-table tbody');
+    
+    // Gjejmë numrin maksimal të raundeve që janë luajtur deri tani
+    const maxRounds = data.players.reduce((max, p) => Math.max(max, (p.history ? p.history.length : 0)), 0);
+
+    // Rregullojmë kokën e tabelës (Header)
+    let headerHTML = `<th>Lojtari</th>`;
+    for (let i = 1; i <= maxRounds; i++) {
+        headerHTML += `<th>R${i}</th>`;
+    }
+    headerHTML += `<th>Total</th>`;
+    scoreHeader.innerHTML = headerHTML;
+
+    // Mbushim trupin e tabelës (Body)
     scoreBody.innerHTML = '';
     data.players.forEach(player => {
         const row = document.createElement('tr');
-        if (player.id === data.activePlayerId) row.className = 'active-row';
-        row.innerHTML = `
-            <td>${player.name} ${player.id === socket.id ? '(Ti)' : ''}</td>
-            <td>${player.score}</td>
-            <td>${player.id === data.activePlayerId ? '●' : ''}</td>
-        `;
+        
+        // Stilimi: Nëse lojtari e ka radhën ose është eliminuar
+        if (player.id === data.activePlayerId) row.classList.add('active-row');
+        if (player.eliminated) row.classList.add('player-eliminated');
+
+        // Emri + Ikona e Dealer (🃏)
+        let nameCell = `<td>
+            ${player.id === data.currentDealerId ? '<span class="dealer-badge">🃏</span>' : ''} 
+            ${player.name} ${player.id === socket.id ? '<b>(Ti)</b>' : ''}
+            ${player.eliminated ? '💀' : ''}
+        </td>`;
+
+        // Pikët e raundeve (X ose Numër)
+        let historyCells = '';
+        for (let i = 0; i < maxRounds; i++) {
+            let val = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
+            let cellClass = val === 'X' ? 'cell-x' : '';
+            historyCells += `<td class="${cellClass}">${val}</td>`;
+        }
+
+        // Totali
+        let totalCell = `<td><strong>${player.score}</strong></td>`;
+
+        row.innerHTML = nameCell + historyCells + totalCell;
         scoreBody.appendChild(row);
     });
+
+    // 2. Indikatori Vizual i Rradhës (Glow ne tavolinë)
+    if (data.activePlayerId === socket.id) {
+        document.body.classList.add('my-turn-glow'); // Shton një dritë jeshile në ekran
+    } else {
+        document.body.classList.remove('my-turn-glow');
+    }
+});
 
     // Përditëso Jackpot-in vizualisht nëse ka ardhur nga serveri
     if (data.jackpotCard) {
