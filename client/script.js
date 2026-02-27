@@ -828,3 +828,26 @@ discardPileElement.addEventListener('drop', (e) => {
         processDiscard(draggingCard);
     }
 });
+// Sigurohu që emri 'discard-pile' është i njëjtë me ID-në në HTML
+const zonaHedhjes = document.getElementById('discard-pile');
+
+if (zonaHedhjes) {
+    zonaHedhjes.addEventListener('dragover', (e) => {
+        e.preventDefault(); // KRITIKE: Pa këtë, PC nuk e lejon DROP
+        zonaHedhjes.style.background = "rgba(46, 204, 113, 0.2)";
+    });
+
+    zonaHedhjes.addEventListener('dragleave', () => {
+        zonaHedhjes.style.background = "transparent";
+    });
+
+    zonaHedhjes.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zonaHedhjes.style.background = "transparent";
+        
+        const letraQEpoLeviz = document.querySelector('.card.dragging');
+        if (letraQEpoLeviz) {
+            processDiscard(letraQEpoLeviz);
+        }
+    });
+}
