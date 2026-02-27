@@ -66,23 +66,26 @@ function createDeck() {
     return newDeck.sort(() => Math.random() - 0.5);
 }
 function startNewRound() {
-    let deck = createDeck(); // Këtu deçka ka 104 letra, 0 xhokera
+    let deck = createDeck(); // Krijon 104 letra (0 xhokera)
+    shuffle(deck);
 
     players.forEach((player, index) => {
-        // Çdo lojtar merr xhokerin e tij personal (jashtë stivës)
+        // 1. Krijojmë xhokerin "special"
         const myJoker = { v: '★', s: 'Xhoker' };
 
-        // Shpërndajmë letrat e tjera nga stiva
-        // Dealer-i (index 0) merr 10 letra + xhokerin = 11
-        // Të tjerët marrin 9 letra + xhokerin = 10
-        const extraCardsCount = (index === currentDealerIndex) ? 10 : 9;
-        const extraCards = deck.splice(0, extraCardsCount);
+        // 2. Dealer-i merr 10 letra (Total 11), të tjerët 9 (Total 10)
+        const extraCount = (index === currentDealerIndex) ? 10 : 9;
+        const extraCards = deck.splice(0, extraCount);
 
+        // 3. E BASHKOJMË XHOKERIN ME LETRAT E TJERA
+        // Kjo siguron që xhokeri është gjithmonë pjesë e 'cards'
         player.cards = [myJoker, ...extraCards];
+        
+        console.log(`I dhashë xhokerin lojtarit: ${player.name}`);
     });
 
     gameDeck = deck;
-    broadcastState();
+    broadcastState(); // Kjo dërgon të dhënat te script.js
 }
 // ==========================================
 // 2. KOMUNIKIMI ME LOJTARËT
