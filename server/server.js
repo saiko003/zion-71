@@ -66,26 +66,29 @@ function createDeck() {
     return newDeck.sort(() => Math.random() - 0.5);
 }
 function startNewRound() {
-    let deck = createDeck(); // Krijon 104 letra (0 xhokera)
+    let deck = createDeck(); // Kjo krijon 104 letra normale
     shuffle(deck);
 
     players.forEach((player, index) => {
-        // 1. Krijojmë xhokerin "special"
+        // 1. KRIJOJME XHOKERIN MANUALLY
         const myJoker = { v: '★', s: 'Xhoker' };
 
-        // 2. Dealer-i merr 10 letra (Total 11), të tjerët 9 (Total 10)
+        // 2. MARRIM LETRAT NGA STIVA (10 ose 9)
         const extraCount = (index === currentDealerIndex) ? 10 : 9;
         const extraCards = deck.splice(0, extraCount);
 
-        // 3. E BASHKOJMË XHOKERIN ME LETRAT E TJERA
-        // Kjo siguron që xhokeri është gjithmonë pjesë e 'cards'
+        // 3. BASHKIMI (Këtu ndodh magjia)
+        // Duhet të jetë [myJoker, ...extraCards] që xhokeri të jetë i pari
         player.cards = [myJoker, ...extraCards];
         
-        console.log(`I dhashë xhokerin lojtarit: ${player.name}`);
+        console.log(`Lojtari ${player.name} mori xhokerin dhe ${extraCards.length} letra.`);
     });
 
     gameDeck = deck;
-    broadcastState(); // Kjo dërgon të dhënat te script.js
+    discardPile = [];
+    
+    // 4. DËRGIMI I TË DHËNAVE
+    broadcastState(); 
 }
 // ==========================================
 // 2. KOMUNIKIMI ME LOJTARËT
