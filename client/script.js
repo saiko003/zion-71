@@ -87,7 +87,7 @@ if (me && me.cards) {
         // Opsionale: Mund të bësh një kontroll më të thellë këtu 
         // nëse dëshiron të jesh 100% i sigurt.
     }
-
+}
 });
 
 function updateScoreboard(players, activeId) {
