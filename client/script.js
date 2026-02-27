@@ -299,7 +299,7 @@ function handleReorder(clientX) {
     }
 }
 // --- TOUCH END: LËSHIMI I LETRËS ---
-// Te touchend (Kodi yt, i saktësuar pak te thirrja e renderHand)
+// 1. NGJARJA KRYESORE KUR LËSHON LETRËN
 document.addEventListener('touchend', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (!draggingCard) return;
@@ -315,19 +315,40 @@ document.addEventListener('touchend', (e) => {
         touch.clientY < discardRect.bottom + tolerance
     );
 
+    // Kontrollojmë nëse është radha e lojtarit dhe ka 11 letra
     if (isOverDiscard && isMyTurn && doraImeData.length === 11) {
         processDiscard(draggingCard);
     } else {
-        // Këtu bëjmë reset dhe RUAJMË renditjen e re vizuale
         resetCardStyles(draggingCard);
-        saveNewOrder(); 
-        // MOS thirr renderHand() këtu direkt sepse e prish animacionin vizual
+        saveNewOrder();
     }
 
+    // Pastrimi i stileve vizuale pas lëshimit
     draggingCard.classList.remove('dragging');
     discardPile.style.transform = "scale(1)";
-    discardPile.style.borderColor = "#777"; // Resetojmë edhe ngjyrën
+    discardPile.style.borderColor = "#777"; 
 }, { passive: false });
+
+
+// 2. FUNKSIONI QË KONTROLLON RREGULLAT E HEDHJES
+function processDiscard(cardElement) {
+    const v = cardElement.dataset.v;
+    const s = cardElement.dataset.s;
+
+    // Kontrolli për Xhokerin (★)
+    if (v === '★' || s === 'Xhoker' || s === 'Joker') {
+        alert("Xhokeri nuk mund të hidhet! Duhet ta mbash deri në fund.");
+        resetCardStyles(cardElement);
+        return; 
+    }
+
+    // Nëse kalon kontrollin, njoftojmë serverin
+    socket.emit('discardCard', { v, s });
+    
+    // E fshijmë nga ekrani dhe përditësojmë memorien
+    cardElement.remove();
+    saveNewOrder();
+}
 
 function resetCardStyles(el) {
     Object.assign(el.style, {
