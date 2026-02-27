@@ -86,15 +86,14 @@ socket.on('updateGameState', (data) => {
     // 5. Sinkronizimi i letrave (I përmirësuar)
 const me = data.players.find(p => p.id === socket.id);
 
+const me = data.players.find(p => p.id === socket.id);
+
 if (me && me.cards) {
-    // Kontrollojmë nëse numri i letrave ka ndryshuar 
-    // (Kjo lejon renditjen tënde vizuale të mos prishet kur s'ka ndryshime)
-    if (me.cards.length !== doraImeData.length) {
-        doraImeData = me.cards;
-        if (typeof renderHand === "function") renderHand();
-    } else {
-        // Opsionale: Mund të bësh një kontroll më të thellë këtu 
-        // nëse dëshiron të jesh 100% i sigurt.
+    // I marrim letrat gjithmonë, pa pyetur për gjatësinë
+    doraImeData = me.cards; 
+    
+    if (typeof renderHand === "function") {
+        renderHand();
     }
 }
 });
