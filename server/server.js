@@ -180,29 +180,34 @@ socket.on('startGame', () => {
     });
 
     // --- 6. CARD DISCARDED (Me bllokim Xhokeri) ---
-    socket.on('cardDiscarded', (card) => {
-        if (gamePhase !== "playing") return;
-        const player = players[currentTurnIndex];
-        if (!player || player.id !== socket.id) return;
-        if (!hasDrawnThisTurn) return;
+    ssocket.on('cardDiscarded', (card) => {
+    if (gamePhase !== "playing") return;
+    const player = players[currentTurnIndex];
+    if (!player || player.id !== socket.id) return;
+    if (!hasDrawnThisTurn) return;
 
-        // RREGULLI: Xhokeri nuk hidhet në tokë!
-        if (card.v === '★') {
-            socket.emit('error', 'Nuk mund ta hedhësh Xhokerin!');
-            return;
-        }
+    if (card.v === '★') {
+        socket.emit('error', 'Nuk mund ta hedhësh Xhokerin!');
+        return;
+    }
 
-        const index = player.hand.findIndex(c => c.v === card.v && c.s === card.s);
-        if (index === -1) return;
+    const index = player.hand.findIndex(c => c.v === card.v && c.s === card.s);
+    if (index === -1) return;
 
-        const removed = player.hand.splice(index, 1)[0];
-        discardPile.push(removed);
-        hasDrawnThisTurn = false;
+    const removed = player.hand.splice(index, 1)[0];
+    discardPile.push(removed);
+    
+    // *** KJO SHTESË ËSHTË E DOMOSDOSHME ***
+    // Kjo njofton lojtarët e tjerë të vizualizojnë letrën e hedhur
+    socket.broadcast.emit('opponentDiscarded', removed); 
+    // *************************************
 
-        socket.emit('receiveCards', player.hand);
-        moveToNextPlayer(); // Pas hedhjes radha kalon automatikisht
-        sendGameState();
-    });
+    hasDrawnThisTurn = false;
+
+    socket.emit('receiveCards', player.hand);
+    moveToNextPlayer(); 
+    sendGameState();
+});
 
     // --- 7. PLAYER CLOSED (Llogaritja me X) ---
     socket.on('playerClosed', () => {
