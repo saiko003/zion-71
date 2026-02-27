@@ -80,27 +80,49 @@ socket.on('receiveCards', (cards) => {
     const lobbyControls = document.getElementById('lobby-controls');
     if (lobbyControls) lobbyControls.style.display = 'none';
     
-    if (typeof asistentiContainer !== 'undefined') {
-        asistentiContainer.style.display = 'flex';
-    }
+    const asistenti = document.getElementById('asistenti-container'); // Sigurohu që ID është e saktë
+    if (asistenti) asistenti.style.display = 'flex';
 
-    // 2. Përcaktimi i kontenierit (sigurohu që ID-ja 'cards-container' ose 'player-hand' është e saktë)
-    const cardsContainer = document.getElementById('cards-container') || document.getElementById('player-hand');
+    // 2. Përcaktimi i kontenierit (Ti konfirmove që ke 'player-hand')
+    const cardsContainer = document.getElementById('player-hand');
     
     if (cardsContainer) {
         cardsContainer.innerHTML = ''; // Pastrojmë dorën e vjetër
-        
         doraImeData = cards; 
 
-        // 3. Krijojmë dhe shtojmë secilën letër si objekt lëvizës
-        cards.forEach(card => {
-            // Përdorim funksionin createCard që definuam më parë
-            const cardElement = createCard(card.v, card.s);
-            cardsContainer.appendChild(cardElement);
+        // 3. Krijojmë dhe shtojmë secilën letër direkt këtu
+        cards.forEach((card, index) => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.draggable = true;
+            div.dataset.index = index;
+            div.dataset.v = card.v;
+            div.dataset.s = card.s;
+            div.innerHTML = `${card.v}<br>${card.s}`;
+            
+            if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
+
+            // PC Eventet (Drag & Drop)
+            div.addEventListener('dragstart', (e) => {
+                div.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', index);
+            });
+
+            div.addEventListener('dragend', () => {
+                div.classList.remove('dragging');
+            });
+
+            // Mobile Eventet (Touch)
+            div.addEventListener('touchstart', (e) => {
+                // Këtu mund të shtosh logjikën e touch-it që kishe te renderHand
+                // Për momentin po e lëmë thjesht t'i shtojë letrat që t'i shohësh
+            }, { passive: false });
+
+            cardsContainer.appendChild(div);
         });
     }
 
-    // 4. Logjika pas marrjes së letrave
+    // 4. Përditëso logjikën e radhës
     if (typeof checkTurnLogic === "function") checkTurnLogic();
     if (typeof checkMbylljaButton === "function") checkMbylljaButton();
 });
