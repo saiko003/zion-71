@@ -146,15 +146,26 @@ socket.on('startGame', () => {
 });
     // TËRHEQJA E LETRËS (Pika 12)
     socket.on('drawCard', () => {
-        const player = players[activePlayerIndex];
-        if (player.id !== socket.id || player.cards.length >= 11) return;
+    const player = players[activePlayerIndex];
+    
+    // 1. Kontrolli i radhës dhe i numrit të letrave (duhet të ketë saktësisht 10 për të tërhequr)
+    if (!player || player.id !== socket.id || player.cards.length !== 10) return;
 
-        const drawnCard = deck.pop();
+    // 2. Sigurohemi që deçka (deck) nuk është bosh
+    if (newDeck && newDeck.length > 0) {
+        const drawnCard = newDeck.pop(); // Marrim letrën e fundit
         player.cards.push(drawnCard);
-        
-        socket.emit('cardDrawn', drawnCard);
+
+        console.log(`${player.name} tërhoqi një letër. Tani ka ${player.cards.length} letra.`);
+
+        // 3. Njoftojmë lojtarin specifik dhe gjithë grupin
+        // socket.emit('cardDrawn', drawnCard); // Mund ta mbash, por broadcastState mjafton
         broadcastState();
-    });
+    } else {
+        console.log("Deçka është bosh! Nuk ka më letra për të tërhequr.");
+        // Këtu mund të shtosh logjikën për të rrotulluar discardPile nëse dëshiron
+    }
+});
 
     // HEDHJA E LETRËS (Pika 10)
     // server.js
@@ -162,22 +173,28 @@ socket.on('cardDiscarded', (card) => {
     const player = players[activePlayerIndex];
     if (!player || player.id !== socket.id) return;
 
-    // MBROJTJA: Mos lejo hedhjen e Xhokerit (★)
+    // 1. MBROJTJA: Mos lejo hedhjen e Xhokerit (★)
     if (card.v === '★' || card.v === 'Xhoker') {
         console.log("Tentativë për të hedhur Xhokerin u bllokua!");
         return; 
     }
 
-    // Heqim letrën nga dora e lojtarit në server
-    player.cards = player.cards.filter(c => !(c.v === card.v && c.s === card.s));
+    // 2. GJEJMË POZICIONIN E LETRËS (Vetëm për njërën)
+    const cardIndex = player.cards.findIndex(c => c.v === card.v && c.s === card.s);
     
-    // E shtojmë te letra në tokë
-    discardPile.push(card);
-    
-    // Kalojmë radhën te tjetri
-    activePlayerIndex = (activePlayerIndex + 1) % players.length;
-    
-    broadcastState();
+    if (cardIndex !== -1) {
+        // 3. splice(index, 1) heq VETËM 1 letër në atë pozicion
+        const removedCard = player.cards.splice(cardIndex, 1)[0];
+        
+        // 4. E shtojmë te stiva e hedhjes (në tokë)
+        discardPile.push(removedCard);
+        
+        // 5. Kalojmë radhën te tjetri
+        activePlayerIndex = (activePlayerIndex + 1) % players.length;
+        
+        console.log(`${player.name} hodhi ${card.v}${card.s}. I mbeten ${player.cards.length} letra.`);
+        broadcastState();
+    }
 });
 
     // MBYLLJA (ZION!)
