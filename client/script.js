@@ -186,30 +186,35 @@ document.addEventListener('touchmove', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (!draggingCard) return;
 
+    // Safari kërkon preventDefault për të mos bërë scroll të gjithë faqes
+    if (e.cancelable) e.preventDefault();
+
     const touch = e.touches[0];
     
-    // Marrim offset-in
+    // Marrim offset-in që ruajtëm te touchstart
     const offsetX = parseFloat(draggingCard.dataset.offsetX) || 0;
     const offsetY = parseFloat(draggingCard.dataset.offsetY) || 0;
 
-    // Llogaritja e pozicionit të ri
-    const x = touch.clientX - offsetX;
-    const y = touch.clientY - offsetY;
+    // PËR SAFARI: Përdorim clientX/Y sepse position: fixed bazohet në dritare (viewport)
+    let x = touch.clientX - offsetX;
+    let y = touch.clientY - offsetY;
 
+    // I japim pozicionin e ri
     draggingCard.style.left = x + 'px';
     draggingCard.style.top = y + 'px';
 
-    // Kontrolli i zonës së hedhjes (Discard)
+    // Kontrolli i zonës së hedhjes (Discard Pile)
     const discardPile = document.getElementById('discard-pile');
     const dRect = discardPile.getBoundingClientRect();
 
+    // Kontrollojmë nëse gishti është brenda katrorit të discard-pile
     if (touch.clientX > dRect.left && touch.clientX < dRect.right &&
         touch.clientY > dRect.top && touch.clientY < dRect.bottom) {
         discardPile.style.background = "rgba(46, 204, 113, 0.4)";
-        discardPile.style.transform = "scale(1.1)";
+        discardPile.style.borderColor = "#2ecc71";
     } else {
         discardPile.style.background = "transparent";
-        discardPile.style.transform = "scale(1)";
+        discardPile.style.borderColor = "rgba(255, 255, 255, 0.2)";
     }
 }, { passive: false });
 
