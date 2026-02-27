@@ -137,47 +137,40 @@ function renderHand() {
         
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
-        // --- LOGJIKA PËR PC (MAUSIN) ---
+        // Drag for PC
         div.addEventListener('dragstart', (e) => {
-    // Lejohet gjithmonë për renditje
-    div.classList.add('dragging');
-    e.dataTransfer.setData('text/plain', index);
-    
-    const rect = div.getBoundingClientRect();
-    if (e.dataTransfer.setDragImage) {
-        e.dataTransfer.setDragImage(div, rect.width / 2, rect.height / 2);
-    }
-});
+            div.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', index);
+        });
+
         div.addEventListener('dragend', () => {
             div.classList.remove('dragging');
             resetCardStyles(div);
             saveNewOrder();
         });
 
-        // --- LOGJIKA PËR IPHONE (TOUCH) ---
-        div.addEventListener('touchstart', (e) => {   // SAKTË: div
-    // Hiqe kushtin "if (!isMyTurn) return;" 
-    // Tani lejohet kapja e letrës gjithmonë për renditje
+        // Touch for Mobile
+        div.addEventListener('touchstart', (e) => {
+            if (e.cancelable) e.preventDefault(); 
+            const touch = e.touches[0];
+            const rect = div.getBoundingClientRect();
+            div.dataset.offsetX = touch.clientX - rect.left;
+            div.dataset.offsetY = touch.clientY - rect.top;
+            div.classList.add('dragging');
+            div.style.width = rect.width + 'px';
+            div.style.height = rect.height + 'px';
+            div.style.position = 'fixed';
+            div.style.left = rect.left + 'px';
+            div.style.top = rect.top + 'px';
+            div.style.zIndex = '1000';
+            div.style.pointerEvents = 'none'; 
+        }, { passive: false });
+
+        // KJO MUNGOI TE TI:
+        handContainer.appendChild(div); 
+    });
+}
     
-    if (e.cancelable) e.preventDefault(); 
-
-    const touch = e.touches[0];
-    const rect = div.getBoundingClientRect();
-
-    div.dataset.offsetX = touch.clientX - rect.left;
-    div.dataset.offsetY = touch.clientY - rect.top;
-    div.classList.add('dragging');
-
-    // Stilet mbeten të njëjta
-    div.style.width = rect.width + 'px';
-    div.style.height = rect.height + 'px';
-    div.style.position = 'fixed';
-    div.style.left = rect.left + 'px';
-    div.style.top = rect.top + 'px';
-    div.style.zIndex = '1000';
-    div.style.pointerEvents = 'none'; 
-}, { passive: false });
-
 // ==========================================
 // 2. KONTROLLI GLOBAL I LËVIZJES (TOUCH & DRAG)
 // ==========================================
