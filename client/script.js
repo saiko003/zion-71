@@ -1,5 +1,6 @@
 const socket = io('https://zion-71-server.onrender.com', {
-    transports: ['websocket', 'polling'] // Shtoje këtë që të shmangësh bllokimet e transportit
+    transports: ['websocket'], // Forcoje të përdorë Websocket, jo polling
+    upgrade: false
 });
 const handContainer = document.getElementById('player-hand');
 const discardPile = document.getElementById('discard-pile');
