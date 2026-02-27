@@ -27,14 +27,37 @@ socket.emit('joinGame', myName);
 // 2. SCOREBOARD DINAMIK (Pika 17)
 // ==========================================
 socket.on('updateGameState', (data) => {
-    // Nëse loja ka filluar te serveri, fshehim lobby-n
+    // 1. Kontrolli i Lobby-t
     if (data.gameStarted) {
-        lobbyControls.style.display = 'none'; // Kjo e heq mesazhin "Prit lojtarët..."
-        gameTable.style.visibility = 'visible'; // Kjo shfaq tavolinën
+        lobbyControls.style.display = 'none';
+        gameTable.style.display = 'block'; // Sigurohemi që tabela është aktive
     }
     
+    // 2. SHFAQJA E LETRËS NË TOKË (Pika që kërkove)
+    // Kjo bën që letra e fundit e hedhur të qëndrojë e dukshme te Discard Pile
+    if (data.discardPileTop) {
+        const isRed = ['♥', '♦'].includes(data.discardPileTop.s);
+        discardPile.innerHTML = `
+            <div class="card-on-table" style="color: ${isRed ? 'red' : 'black'}">
+                ${data.discardPileTop.v}<br>${data.discardPileTop.s}
+            </div>`;
+    } else {
+        discardPile.innerHTML = '<span class="label">HEDH KËTU</span>';
+    }
+
+    // 3. Kontrolli i Radhës (Glow Effect)
+    isMyTurn = (data.activePlayerId === socket.id);
+    document.body.classList.toggle('my-turn-glow', isMyTurn);
+    
+    // 4. Përditëso Tabelën e Pikëve
     updateScoreboard(data.players, data.activePlayerId);
-    updateGameFlow(data);
+
+    // 5. Sinkronizimi i letrave (Nëse dora jote në JS është bosh, merri nga serveri)
+    const me = data.players.find(p => p.id === socket.id);
+    if (me && me.cards && doraImeData.length === 0) {
+        doraImeData = me.cards;
+        renderHand();
+    }
 });
 function updateScoreboard(players, activeId) {
     const scoreBody = document.getElementById('score-body');
