@@ -74,16 +74,20 @@ socket.on('updateGameState', (data) => {
     }
 
     // 5. Sinkronizimi i letrave
-    const me = data.players.find(p => p.id === socket.id);
-        if (me && me.cards) {
-        // HEQIM: && doraImeData.length === 0
-        // Tani dora përditësohet sa herë që serveri thotë "Këto janë letrat e tua"
-        doraImeData = me.cards; 
+    // 5. Sinkronizimi i letrave (I përmirësuar)
+const me = data.players.find(p => p.id === socket.id);
 
-        if (typeof renderHand === "function") {
-            renderHand();
-        }
+if (me && me.cards) {
+    // Kontrollojmë nëse numri i letrave ka ndryshuar 
+    // (Kjo lejon renditjen tënde vizuale të mos prishet kur s'ka ndryshime)
+    if (me.cards.length !== doraImeData.length) {
+        doraImeData = me.cards;
+        if (typeof renderHand === "function") renderHand();
+    } else {
+        // Opsionale: Mund të bësh një kontroll më të thellë këtu 
+        // nëse dëshiron të jesh 100% i sigurt.
     }
+
 });
 
 function updateScoreboard(players, activeId) {
