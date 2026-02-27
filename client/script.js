@@ -1,6 +1,9 @@
-// ==========================================
-// 1. KONFIGURIMI DHE LIDHJA
-// ==========================================
+// SIGUROHU QË KËTO JANË NË FILLIM TË SCRIPT.JS
+const handContainer = document.getElementById('player-hand');
+const deckElement = document.getElementById('deck'); // KËTU ISHTE GABIMI
+const jackpotElement = document.getElementById('jackpot');
+const discardPile = document.getElementById('discard-pile');
+const btnMbyll = document.getElementById('btn-mbyll');
 const socket = io('https://zion-71.onrender.com', {
     transports: ['polling', 'websocket']
 });
