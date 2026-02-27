@@ -62,26 +62,34 @@ io.on('connection', (socket) => {
     });
 
     // START GAME (Pika 2)
-    socket.on('startGame', () => {
-        if (players.length < 2) return;
-        
-        gameStarted = true;
-        deck = createDeck();
-        discardPile = [];
-        
-        // Shpërndarja (Ndarësi merr 11, të tjerët 10 - Pika 2)
-        players.forEach((player, index) => {
-            const count = (index === activePlayerIndex) ? 11 : 10;
-            player.cards = deck.splice(0, count);
-            io.to(player.id).emit('receiveCards', player.cards);
-        });
+    // server.js
+socket.on('startGame', () => {
+    if (players.length < 2) return; // Sigurohemi që ka të paktën 2 lojtarë
 
-        // Jackpot (Pika 6)
-        jackpotCard = deck.pop();
+    gameStarted = true;
+    deck = createDeck(); // Krijon 104 letra + 2 Xhokera
+    discardPile = [];    // Pastron letrat në tokë nga loja e kaluar
+
+    players.forEach((player, index) => {
+        // RREGULLI: Lojtari i parë (index 0) merr 11, të tjerët 10
+        const saLetra = (index === 0) ? 11 : 10; 
         
-        broadcastState();
+        // I marrim letrat nga deku
+        player.cards = deck.splice(0, saLetra);
+        
+        // Ia dërgojmë vetëm këtij lojtari letrat e tij
+        io.to(player.id).emit('receiveCards', player.cards);
     });
 
+    // Përcaktojmë Jackpot-in (Letra e parë që mbetet në dek)
+    jackpotCard = deck.pop(); 
+    
+    // Radhën e ka gjithmonë lojtari 0 (ai me 11 letra)
+    activePlayerIndex = 0; 
+
+    // Njoftojmë të gjithë që loja nisi
+    broadcastState();
+});
     // TËRHEQJA E LETRËS (Pika 12)
     socket.on('drawCard', () => {
         const player = players[activePlayerIndex];
@@ -95,20 +103,28 @@ io.on('connection', (socket) => {
     });
 
     // HEDHJA E LETRËS (Pika 10)
-    socket.on('cardDiscarded', (card) => {
-        const player = players[activePlayerIndex];
-        if (player.id !== socket.id) return;
+    // server.js
+socket.on('cardDiscarded', (card) => {
+    const player = players[activePlayerIndex];
+    if (!player || player.id !== socket.id) return;
 
-        // Heqim letrën nga dora e lojtarit në server
-        player.cards = player.cards.filter(c => !(c.v === card.v && c.s === card.s));
-        
-        discardPile.push(card);
-        
-        // Kalojmë radhën te lojtari tjetër (Pika 15)
-        activePlayerIndex = (activePlayerIndex + 1) % players.length;
-        
-        broadcastState();
-    });
+    // MBROJTJA: Mos lejo hedhjen e Xhokerit (★)
+    if (card.v === '★' || card.v === 'Xhoker') {
+        console.log("Tentativë për të hedhur Xhokerin u bllokua!");
+        return; 
+    }
+
+    // Heqim letrën nga dora e lojtarit në server
+    player.cards = player.cards.filter(c => !(c.v === card.v && c.s === card.s));
+    
+    // E shtojmë te letra në tokë
+    discardPile.push(card);
+    
+    // Kalojmë radhën te tjetri
+    activePlayerIndex = (activePlayerIndex + 1) % players.length;
+    
+    broadcastState();
+});
 
     // MBYLLJA (ZION! - Pika 7, 8)
     socket.on('playerClose', (finalHand) => {
