@@ -199,4 +199,38 @@ body {
 
 @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
+/* Stili për dritaren e rezultateve që shtuam në HTML */
+#round-modal {
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0, 0, 0, 0.95); /* Pak më e errët për fokus */
+    z-index: 9999; 
+    color: white; 
+    text-align: center; 
+    padding-top: 50px;
+    backdrop-filter: blur(5px); /* E bën sfondin e lojës të turbullt (efekt modern) */
+}
 
+/* Animacion për fituesin */
+#round-winner-text {
+    font-size: 3rem;
+    text-shadow: 0 0 15px gold;
+    animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
+/* Stilimi i listës së pikëve brenda modal-it */
+#round-results-list p {
+    background: rgba(255, 255, 255, 0.1);
+    margin: 10px auto;
+    padding: 10px;
+    max-width: 300px;
+    border-radius: 5px;
+    border-left: 4px solid gold;
+}
