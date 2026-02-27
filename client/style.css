@@ -151,21 +151,15 @@ body {
     text-align: center;
     font-weight: bold;
     font-size: 1.2rem;
-    cursor: grab; /* Ndryshuar nga pointer në grab */
+    cursor: grab;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     position: relative;
     z-index: 10;
-    
-    /* Lejon Drag-un në PC */
     -webkit-user-drag: element !important; 
     user-select: none;
     -webkit-user-select: none;
-
-    /* Tranzicionet */
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
     will-change: transform;
-    
-    /* Për iPhone */
     touch-action: none !important; 
     -webkit-tap-highlight-color: transparent;
     pointer-events: auto !important;
@@ -178,39 +172,27 @@ body {
     cursor: pointer;
 }
 /* Kur letra po lëvizet */
+/* Kur letra është duke u zvarritur (Drag) */
 .card.dragging {
     opacity: 0.6 !important;
     z-index: 9999 !important;
     cursor: grabbing;
-    pointer-events: none !important; /* KRITIKE: Lejon gishtin/mausin të shohë zonën poshtë */
+    
+    /* E rëndësishme: none lejon që zona poshtë letrës të ndiejë drop-in */
+    pointer-events: none !important; 
+    
+    /* Ndalon animacionet gjatë lëvizjes që mos të ketë vonesë (lag) */
     transition: none !important;
-
-  
-       /* 1. Ndalon menunë që shfaqet kur e mbajmë shtypur (Plus-in dhe Google Search) */
-    -webkit-touch-callout: none; 
     
-    /* 2. Ndalon plotësisht selektimin e tekstit */
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-
-    /* 3. Ndalon telefonin të provojë ta bëjë "drag" letrën si imazh */
-    -webkit-user-drag: none;
-    
-    /* 4. Ndalon çdo veprim automatik të browser-it (Zoom, Swipe, etj.) */
-    touch-action: none; 
-
-    /* 5. Estetika në telefon */
-    -webkit-tap-highlight-color: transparent; /* Heq kutinë e kaltër */
-    pointer-events: auto;
-    z-index: 10;
+    /* Lejon lëvizjen lirshëm */
+    -webkit-user-drag: element !important; 
 }
 
-
+/* Kur deku (stiva) është aktive për t'u tërhequr letra */
 .active-deck {
     box-shadow: 0 0 20px #00ff99;
     transform: scale(1.05) translateY(-5px);
+    border: 2px solid #00ff99;
 }
 
 /* ZONA E HEDHJES - E PËRMIRËSUAR */
