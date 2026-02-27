@@ -101,20 +101,15 @@ function renderHand() {
         
         // --- LOGJIKA PËR PC (MAUSIN) ---
         div.addEventListener('dragstart', (e) => {
-            if (!isMyTurn) {
-                e.preventDefault();
-                return;
-            }
-            div.classList.add('dragging');
-            e.dataTransfer.setData('text/plain', index);
-            
-            const rect = div.getBoundingClientRect();
-            if (e.dataTransfer.setDragImage) {
-                e.dataTransfer.setDragImage(div, rect.width / 2, rect.height / 2);
-            }
-            e.dataTransfer.dropEffect = "move";
-        });
-
+    // Lejohet gjithmonë për renditje
+    div.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', index);
+    
+    const rect = div.getBoundingClientRect();
+    if (e.dataTransfer.setDragImage) {
+        e.dataTransfer.setDragImage(div, rect.width / 2, rect.height / 2);
+    }
+});
         div.addEventListener('dragend', () => {
             div.classList.remove('dragging');
             resetCardStyles(div);
@@ -122,29 +117,28 @@ function renderHand() {
         });
 
         // --- LOGJIKA PËR IPHONE (TOUCH) ---
-        div.addEventListener('touchstart', (e) => {
-            if (!isMyTurn) return;
-            if (e.cancelable) e.preventDefault(); 
+        ddiv.addEventListener('touchstart', (e) => {
+    // Hiqe kushtin "if (!isMyTurn) return;" 
+    // Tani lejohet kapja e letrës gjithmonë për renditje
+    
+    if (e.cancelable) e.preventDefault(); 
 
-            const touch = e.touches[0];
-            const rect = div.getBoundingClientRect();
+    const touch = e.touches[0];
+    const rect = div.getBoundingClientRect();
 
-            div.dataset.offsetX = touch.clientX - rect.left;
-            div.dataset.offsetY = touch.clientY - rect.top;
-            div.classList.add('dragging');
+    div.dataset.offsetX = touch.clientX - rect.left;
+    div.dataset.offsetY = touch.clientY - rect.top;
+    div.classList.add('dragging');
 
-            div.style.width = rect.width + 'px';
-            div.style.height = rect.height + 'px';
-            div.style.position = 'fixed';
-            div.style.left = rect.left + 'px';
-            div.style.top = rect.top + 'px';
-            div.style.zIndex = '1000';
-            div.style.pointerEvents = 'none'; 
-        }, { passive: false });
-
-        handContainer.appendChild(div);
-    });
-}
+    // Stilet mbeten të njëjta
+    div.style.width = rect.width + 'px';
+    div.style.height = rect.height + 'px';
+    div.style.position = 'fixed';
+    div.style.left = rect.left + 'px';
+    div.style.top = rect.top + 'px';
+    div.style.zIndex = '1000';
+    div.style.pointerEvents = 'none'; 
+}, { passive: false });
 
 // ==========================================
 // 2. KONTROLLI GLOBAL I LËVIZJES (TOUCH & DRAG)
