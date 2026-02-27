@@ -1,7 +1,7 @@
 // ==========================================
 // 1. KONFIGURIMI DHE LIDHJA
 // ==========================================
-const socket = io('https://zion-71-server.onrender.com', {
+const socket = io('https://zion-71.onrender.com', {
     transports: ['polling', 'websocket']
 });
 
