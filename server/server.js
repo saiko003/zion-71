@@ -15,13 +15,11 @@ const io = new Server(server, {
 // 1. VARIABLAT E LOJËS (Pika 1, 2)
 // ==========================================
 let players = [];
-let deck = [];
 let discardPile = [];
 let jackpotCard = null;
 let activePlayerIndex = 0;
 let gameStarted = false;
 let gameDeck = [];
-let dealerIndex = 0; // Kush e nis lojën
 
 function endRound(winnerId, allPlayersCards) {
     allPlayersCards.forEach(player => {
@@ -99,7 +97,7 @@ function startNewRound() {
     jackpotCard = gameDeck.pop();
     
     // 6. KUSH E KA RADHËN? Ai që ka 11 letra (Dealer-i aktual)
-    activePlayerIndex = currentDealerIndex;
+    activePlayerIndex = dealerIndex
     if (players[activePlayerIndex]) {
         activePlayerId = players[activePlayerIndex].id;
     }
@@ -138,31 +136,25 @@ io.on('connection', (socket) => {
     // START GAME (Pika 2)
     // server.js
 socket.on('startGame', () => {
-    if (players.length < 2) return; // Sigurohemi që ka të paktën 2 lojtarë
+    // 1. Kontrolli i sigurisë: Duhet të jenë të paktën 2 lojtarë
+    if (players.length < 2) {
+        console.log("Nuk ka mjaftueshëm lojtarë për të nisur lojën!");
+        return; 
+    }
 
+    console.log("Loja po nis...");
+
+    // 2. Markojmë që loja nisi (që të mos futen lojtarë të tjerë në mes të lojës)
     gameStarted = true;
-    deck = createDeck(); // Krijon 104 letra + 2 Xhokera
-    discardPile = [];    // Pastron letrat në tokë nga loja e kaluar
 
-    players.forEach((player, index) => {
-        // RREGULLI: Lojtari i parë (index 0) merr 11, të tjerët 10
-        const saLetra = (index === 0) ? 11 : 10; 
-        
-        // I marrim letrat nga deku
-        player.cards = deck.splice(0, saLetra);
-        
-        // Ia dërgojmë vetëm këtij lojtari letrat e tij
-        io.to(player.id).emit('receiveCards', player.cards);
-    });
+    // 3. Përcaktojmë kush e nis i pari (Raundi i parë, gjithmonë index 0)
+    dealerIndex = 0; 
 
-    // Përcaktojmë Jackpot-in (Letra e parë që mbetet në dek)
-    jackpotCard = deck.pop(); 
+    // 4. Thërrasim funksionin "ZEMËR" që bën ndarjen e saktë me Xhokera
+    startNewRound(); 
     
-    // Radhën e ka gjithmonë lojtari 0 (ai me 11 letra)
-    activePlayerIndex = 0; 
-
-    // Njoftojmë të gjithë që loja nisi
-    broadcastState();
+    // Shënim: startNewRound() brenda vetes thërret broadcastState(), 
+    // kështu që nuk ka nevojë ta shkruash prapë këtu.
 });
     // TËRHEQJA E LETRËS (Pika 12)
     socket.on('drawCard', () => {
@@ -191,32 +183,41 @@ socket.on('startGame', () => {
     // server.js
 socket.on('cardDiscarded', (card) => {
     const player = players[activePlayerIndex];
-    if (!player || player.id !== socket.id) return;
 
-    // 1. MBROJTJA: Mos lejo hedhjen e Xhokerit (★)
+    // 1. KONTROLLI I RADHËS DHE SASISË (Kritike!)
+    // Lojtari mund të hedhë letër VETËM nëse është radha e tij dhe ka 11 letra.
+    if (!player || player.id !== socket.id || player.cards.length !== 11) {
+        console.log(`Tentativë e pavlefshme nga ${player?.name}. Letra në dorë: ${player?.cards.length}`);
+        return;
+    }
+
+    // 2. MBROJTJA E XHOKERIT (★)
+    // Sigurohemi që nuk po hedh yllin që i dhamë në fillim.
     if (card.v === '★' || card.v === 'Xhoker') {
-        console.log("Tentativë për të hedhur Xhokerin u bllokua!");
+        console.log("Xhokeri nuk lejohet të hidhet në tokë!");
         return; 
     }
 
-    // 2. GJEJMË POZICIONIN E LETRËS (Vetëm për njërën)
+    // 3. GJETJA DHE HEQJA E LETRËS
     const cardIndex = player.cards.findIndex(c => c.v === card.v && c.s === card.s);
     
     if (cardIndex !== -1) {
-        // 3. splice(index, 1) heq VETËM 1 letër në atë pozicion
+        // Heqim letrën nga dora e lojtarit
         const removedCard = player.cards.splice(cardIndex, 1)[0];
         
-        // 4. E shtojmë te stiva e hedhjes (në tokë)
+        // E vendosim në majë të stivës në tokë
         discardPile.push(removedCard);
         
-        // 5. Kalojmë radhën te tjetri
+        // 4. KALIMI I RADHËS TE LOJTARI TJETËR
+        // Përdorim modulo (%) që radha të kthehet te lojtari i parë pasi të luajë i fundit.
         activePlayerIndex = (activePlayerIndex + 1) % players.length;
         
-        console.log(`${player.name} hodhi ${card.v}${card.s}. I mbeten ${player.cards.length} letra.`);
+        console.log(`${player.name} hodhi ${card.v}${card.s}. Radhën e ka lojtari tjetër.`);
+
+        // 5. NJOFTIMI I TË GJITHËVE
         broadcastState();
     }
 });
-
     // MBYLLJA (ZION!)
 socket.on('playerClosed', (data) => {
     const winner = players.find(p => p.id === socket.id);
@@ -224,19 +225,20 @@ socket.on('playerClosed', (data) => {
 
     console.log(`${winner.name} ka bërë ZION!`);
 
-    // Llogarit pikët e të tjerëve
+    // 1. Llogarit pikët e të gjithë lojtarëve
     players.forEach(p => {
         if (p.id !== winner.id) {
-            // Përdorim calculateScore që është më i saktë për Zion
+            // Llogarisim pikët bazuar në letrat që i kanë mbetur në dorë
             let roundPoints = calculateScore(p.cards); 
             p.score += roundPoints;
             p.history.push(roundPoints);
         } else {
-            p.history.push("X"); // Fituesi merr X
+            // Fituesi shënohet me "X" në histori
+            p.history.push("X"); 
         }
     });
 
-    // Dërgojmë sinjalin te të gjithë që raundi mbaroi
+    // 2. Dërgojmë sinjalin te të gjithë që raundi mbaroi (për të shfaqur tabelën)
     io.emit('roundOver', {
         winnerName: winner.name,
         updatedPlayers: players.map(p => ({
@@ -247,6 +249,16 @@ socket.on('playerClosed', (data) => {
             isOut: p.score >= 71 
         }))
     });
+
+    // 3. NDRYSHIMI I DEALER-IT (Stafeta kalon te lojtari tjetër)
+    dealerIndex = (dealerIndex + 1) % players.length;
+
+    // 4. FILLIMI I RAUNDIT TË RI (Me vonesë 3 sekonda)
+    // Kjo u jep kohë lojtarëve të shohin kush fitoi para se të vijnë letrat e reja
+    setTimeout(() => {
+        console.log("Duke nisur raundin e ri...");
+        startNewRound();
+    }, 3000); 
 });
 
     socket.on('disconnect', () => {
