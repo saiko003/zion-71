@@ -115,46 +115,65 @@ io.on('connection', (socket) => {
     console.log("Lojtar i ri u lidh:", socket.id);
 
     // KORRIGJUAR: socket (jo ssocket)
-    socket.on('joinGame', (playerName) => {
-        const newPlayer = {
-            id: socket.id,
-            name: playerName || "Lojtar i panjohur",
-            cards: [],
-            score: 0,
-            history: [],
-            isOut: false
-        };
-           
-        players.push(newPlayer);
-        console.log(`${newPlayer.name} u shtua në lojë.`);
-        
-        // broadcastState duhet të jetë BRENDA socket.on që të lajmërojë 
-        // të tjerët sapo ky lojtar të shtohet në listë
-        broadcastState(); 
-    });
+    ssocket.on('joinGame', (playerName) => {
+    // 1. KONTROLLI: Mos lejo hyrjen nëse loja ka nisur (për siguri)
+    if (gameStarted) {
+        socket.emit('errorMsg', 'Loja ka filluar, nuk mund të hysh tani!');
+        return;
+    }
 
-    // START GAME (Pika 2)
-    // server.js
+    // 2. KONTROLLI: Maksimumi 5 lojtarë
+    if (players.length >= 5) {
+        socket.emit('errorMsg', 'Dhoma është e plotë (Maksimumi 5 lojtarë)!');
+        console.log(`Tentativë refuzuar: ${playerName} - Dhoma plot.`);
+        return;
+    }
+
+    // 3. KRIJIMI I LOJTARIT (Kodi yt origjinal i ruajtur plotësisht)
+    const newPlayer = {
+        id: socket.id,
+        name: playerName || "Lojtar i panjohur",
+        cards: [],
+        score: 0,
+        history: [],
+        isOut: false
+    };
+        
+    players.push(newPlayer);
+    console.log(`${newPlayer.name} u shtua në lojë. Totali: ${players.length}`);
+    
+    // 4. NJOFTIMI I TË GJITHËVE
+    broadcastState(); 
+});
+
+   
 socket.on('startGame', () => {
-    // 1. Kontrolli i sigurisë: Duhet të jenë të paktën 2 lojtarë
+    // 1. KONTROLLI I MINIMUMIT (Të paktën 2)
     if (players.length < 2) {
-        console.log("Nuk ka mjaftueshëm lojtarë për të nisur lojën!");
+        socket.emit('errorMsg', "Duhen të paktën 2 lojtarë për të nisur!");
+        console.log("Nuk ka mjaftueshëm lojtarë.");
         return; 
+    }
+
+    // 2. KONTROLLI I MAKSIMUMIT (Për siguri, nëse s'e kapi joinGame)
+    if (players.length > 5) {
+        socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
+        return;
     }
 
     console.log("Loja po nis...");
 
-    // 2. Markojmë që loja nisi (që të mos futen lojtarë të tjerë në mes të lojës)
+    // 3. Markojmë që loja nisi (Kjo bllokon hyrjen e të tjerëve te joinGame)
     gameStarted = true;
 
-    // 3. Përcaktojmë kush e nis i pari (Raundi i parë, gjithmonë index 0)
+    // 4. Kush e nis i pari (Raundi i parë)
     dealerIndex = 0; 
 
-    // 4. Thërrasim funksionin "ZEMËR" që bën ndarjen e saktë me Xhokera
+    // 5. Thërrasim funksionin që ndan Xhokerat dhe letrat (ZEMRA)
     startNewRound(); 
     
-    // Shënim: startNewRound() brenda vetes thërret broadcastState(), 
-    // kështu që nuk ka nevojë ta shkruash prapë këtu.
+    // Shënim: Nuk kemi nevojë për broadcastState() këtu sepse 
+    // e thërret startNewRound() automatikisht.
 });
     // TËRHEQJA E LETRËS (Pika 12)
     socket.on('drawCard', () => {
