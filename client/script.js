@@ -258,7 +258,7 @@ function processDiscard(cardEl) {
     doraImeData.splice(idx, 1);
     isMyTurn = false;
     socket.emit('cardDiscarded', card);
-    socket.emit('endTurn');
+    
     
     renderHand();
     updateTurnUI();
@@ -737,7 +737,7 @@ function processDiscard(draggingCard) {
         
         isMyTurn = false;
         socket.emit('cardDiscarded', cardDiscarded);
-        socket.emit('endTurn');
+       
         
         updateTurnUI();
         checkTurnLogic();
