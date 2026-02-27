@@ -50,20 +50,59 @@ document.getElementById('btn-start').addEventListener('click', () => {
     // 2. DËRGIMI I SINJALIT TE SERVERI
     socket.emit('startGame');
 });
+function createCard(v, s) {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'card';
+    cardDiv.draggable = true; // Kjo i jep mundësinë PC-së ta kapë
+    
+    cardDiv.innerHTML = `${v}<br>${s}`;
+    cardDiv.dataset.v = v; 
+    cardDiv.dataset.s = s;
+    
+    // Ngjyra e kuqe për zemrat dhe diamantet
+    if(s === '♥' || s === '♦') cardDiv.style.color = 'red';
 
+    // Kur fillon ta kapësh me maus
+    cardDiv.addEventListener('dragstart', (e) => {
+        cardDiv.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', ''); // Nevojitet për Firefox/Chrome
+    });
+
+    // Kur e lëshon mausin
+    cardDiv.addEventListener('dragend', () => {
+        cardDiv.classList.remove('dragging');
+    });
+
+    return cardDiv;
+}
 socket.on('receiveCards', (cards) => {
-    // 1. Fshih kontrollet e lobit dhe shfaq asistentin
-    document.getElementById('lobby-controls').style.display = 'none';
-    asistentiContainer.style.display = 'flex';
+    // 1. Menaxhimi i pamjes së lobit
+    const lobbyControls = document.getElementById('lobby-controls');
+    if (lobbyControls) lobbyControls.style.display = 'none';
+    
+    if (typeof asistentiContainer !== 'undefined') {
+        asistentiContainer.style.display = 'flex';
+    }
 
-    // 2. PASTRO dorën e vjetër vizualisht (shumë e rëndësishme)
-    const cardsContainer = document.getElementById('cards-container');
-    if (cardsContainer) cardsContainer.innerHTML = ""; 
+    // 2. Përcaktimi i kontenierit (sigurohu që ID-ja 'cards-container' ose 'player-hand' është e saktë)
+    const cardsContainer = document.getElementById('cards-container') || document.getElementById('player-hand');
+    
+    if (cardsContainer) {
+        cardsContainer.innerHTML = ''; // Pastrojmë dorën e vjetër
+        
+        doraImeData = cards; 
 
-    // 3. Përditëso të dhënat dhe vizato letrat e reja
-    doraImeData = cards;
-    renderHand();
-    checkTurnLogic();
+        // 3. Krijojmë dhe shtojmë secilën letër si objekt lëvizës
+        cards.forEach(card => {
+            // Përdorim funksionin createCard që definuam më parë
+            const cardElement = createCard(card.v, card.s);
+            cardsContainer.appendChild(cardElement);
+        });
+    }
+
+    // 4. Logjika pas marrjes së letrave
+    if (typeof checkTurnLogic === "function") checkTurnLogic();
+    if (typeof checkMbylljaButton === "function") checkMbylljaButton();
 });
 
 socket.on('updateGameState', (data) => {
@@ -159,13 +198,18 @@ function renderHand() {
         div.dataset.index = index;
         div.innerHTML = `${card.v}<br>${card.s}`;
         
+        // FORCIMI I KLIKIMIT NË PC
+        div.style.pointerEvents = 'auto'; 
+        div.style.cursor = 'grab';
+
         if(card.s === '♥' || card.s === '♦') div.style.color = 'red';
         
-        // PC: DRAG START
+        // PC: DRAG START (Mausi)
         div.addEventListener('dragstart', (e) => {
+            // Sigurohu që lojtari nuk mund të lëvizë letrat nëse nuk është radha e tij 
+            // ose nëse nuk ka 11 letra (varet nga rregulli yt)
             div.classList.add('dragging');
             e.dataTransfer.setData('text/plain', index);
-            e.dataTransfer.effectAllowed = 'move';
         });
 
         div.addEventListener('dragend', () => {
