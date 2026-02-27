@@ -23,6 +23,20 @@ let isMyTurn = false;
 // Bashkohu në lojë
 socket.emit('joinGame', myName);
 
+if (btnMbyll) {
+    btnMbyll.addEventListener('click', () => {
+        // Kontrolli: A i ka lojtari 11 letra? (Nuk mund të mbyllësh me 10)
+        if (doraImeData.length !== 11) {
+            alert("Duhet të kesh 11 letra për të mbyllur lojën!");
+            return;
+        }
+
+        if (confirm("A dëshiron ta mbyllësh lojën (ZION)?")) {
+            socket.emit('playerClosed', { cards: doraImeData });
+        }
+    });
+}
+
 // ==========================================
 // 2. SCOREBOARD DINAMIK (Pika 17)
 // ==========================================
@@ -68,6 +82,7 @@ socket.on('updateGameState', (data) => {
         }
     }
 });
+
 function updateScoreboard(players, activeId) {
     const scoreBody = document.getElementById('score-body');
     const scoreHeader = document.querySelector('#score-table thead tr');
@@ -156,6 +171,16 @@ socket.on('cardDrawn', (newCard) => {
     renderHand();
 });
 
+function checkZionCondition() {
+    // Për momentin, po e bëjmë që butoni të shfaqet nëse lojtari ka 11 letra
+    // (Më vonë do të shtojmë logjikën që kontrollon nëse janë rresht/grupe)
+    if (doraImeData.length === 11) {
+        btnMbyll.style.display = 'block';
+    } else {
+        btnMbyll.style.display = 'none';
+    }
+}
+
 // ==========================================
 // 3. RENDER HAND (Pika 18 - Renditja Interaktive)
 // ==========================================
@@ -213,6 +238,7 @@ function renderHand() {
         });
 
         handContainer.appendChild(div);
+        checkZionCondition();
     });
 }
 
