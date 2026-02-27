@@ -21,6 +21,32 @@ let jackpotCard = null;
 let activePlayerIndex = 0;
 let gameStarted = false;
 
+let dealerIndex = 0; // Kush e nis lojën
+
+function endRound(winnerId, allPlayersCards) {
+    allPlayersCards.forEach(player => {
+        if (player.id === winnerId) {
+            player.totalScore += 0; // Fituesi merr 0 (X)
+            player.roundHistory.push('X');
+        } else {
+            // Llogarit pikët e mbetura (letrat jashtë grupeve)
+            let penalty = calculatePenalty(player.cards); 
+            player.totalScore += penalty;
+            player.roundHistory.push(penalty);
+        }
+        
+        // Kontrollo nëse lojtari u eliminua
+        if (player.totalScore >= 71) {
+            player.isOut = true;
+        }
+    });
+
+    // Kalojmë Dealer-in te tjetri që nuk është eliminuar
+    dealerIndex = (dealerIndex + 1) % players.length;
+    while(players[dealerIndex].isOut) {
+        dealerIndex = (dealerIndex + 1) % players.length;
+    }
+}
 // Krijimi i 2 pakove me letra (104 letra)
 function createDeck() {
     const suits = ['♠', '♣', '♥', '♦'];
