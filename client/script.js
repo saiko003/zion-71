@@ -96,9 +96,9 @@ function updateGameFlow(data) {
     }
 }
 
-// Butoni Start (Vetëm Host-i e ka, pika 13)
 document.getElementById('btn-start').addEventListener('click', () => {
     socket.emit('startGame');
+    document.getElementById('lobby-controls').style.display = 'none'; // Shtoje këtë rresht
 });
 // ==========================================
 // 3. RENDER HAND (Pika 18 - Renditja Interaktive)
