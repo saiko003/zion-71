@@ -107,10 +107,28 @@ socket.on('updateGameState', (data) => {
     }
 
     isMyTurn = (data.activePlayerId === socket.id);
+    
+    // RREGULLI I ARTË: Përcaktojmë hasDrawnCard bazuar te numri i letrave
+    // Nëse je ti në radhë dhe ke 11 letra, e konsiderojmë që e ke marrë letrën.
+    if (isMyTurn) {
+        hasDrawnCard = (doraImeData.length === 11);
+    } else {
+        hasDrawnCard = false;
+    }
+
     document.body.classList.toggle('my-turn-glow', isMyTurn);
-    checkTurnLogic();
+
+    // Thirrjet e funksioneve pas përditësimit të variablave
+    if (typeof checkTurnLogic === "function") {
+        checkTurnLogic(); 
+    }
     updateTurnUI();
-}); // Kllapa mbyllet vetëm KËTU
+    
+    // Mos e harro këtë, që butoni 'Mbyll' të shfaqet sa hap e mbyll sytë
+    if (typeof checkMbylljaButton === "function") {
+        checkMbylljaButton();
+    }
+});
 
 // PËRMIRËSUAR: Logjika e kontrollit të letrave
 function checkTurnLogic() {
