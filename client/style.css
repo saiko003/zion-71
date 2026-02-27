@@ -154,20 +154,19 @@ body {
 }
 
 .card.dragging {
-    opacity: 0.6 !important;
+    opacity: 0.8 !important; /* Pak më e dukshme */
     transform: scale(1.1) rotate(3deg) !important;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.4) !important;
     z-index: 1000 !important;
     transition: none !important;
     
-    /* LEJO PC-në ta mbajë letrën me maus */
+    /* KRITIKE: Lejo mausin ta mbajë letrën */
     pointer-events: auto !important; 
 }
 
-/* Vetëm kur letra është në lëvizje në iPhone (kur ka style fixed) */
+/* Kjo rregull i thotë iPhone-it: "Kur letra është fixed (në ajër), 
+   mos e blloko zonën poshtë saj" */
 .card.dragging[style*="fixed"] {
-    /* Kjo parandalon që letra të bllokojë 'drop zone' në iPhone */
-    pointer-events: none !important; 
+    pointer-events: none !important;
 }
   
     
