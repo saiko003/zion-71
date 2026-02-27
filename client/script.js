@@ -232,23 +232,16 @@ function saveNewOrder() {
 // 5. TËRHEQJA NGA STIVA (Pika 12 & 3)
 // ==========================================
 
-// Eventi kur klikon stivën (Deck)
+// script.js
 deckElement.addEventListener('click', () => {
-    // Kontrollojmë rregullat: A është radha ime dhe a kam 10 letra? (Pika 15)
-    if (!isMyTurn) {
-        alert("Prit radhën tënde!");
-        return;
+    if (!isMyTurn) return; // Nëse nuk është radha jote, nuk bën dot asgjë
+    
+    // Rregulli: Mund të marrësh letër vetëm nëse ke 10 letra në dorë
+    if (doraImeData.length === 10) {
+        socket.emit('drawCard');
+    } else {
+        alert("Ti i ke 11 letra, duhet të hedhësh një në tokë!");
     }
-    if (doraImeData.length >= 11) {
-        alert("Duhet të hedhësh një letër para se të marrësh tjetrën!");
-        return;
-    }
-
-    // Animacioni vizual i tërheqjes (Pika 3)
-    animateCardDraw();
-
-    // Dërgojmë kërkesën te serveri
-    socket.emit('drawCard');
 });
 
 // Animacioni i letrës që lëviz nga Deck te Dora
@@ -287,31 +280,49 @@ socket.on('cardDrawn', (newCard) => {
 // ==========================================
 
 function processDiscard(cardElement) {
-    const index = parseInt(cardElement.dataset.index);
-    const cardData = { v: cardElement.dataset.v, s: cardElement.dataset.s };
+    const v = cardElement.dataset.v;
+    const s = cardElement.dataset.s;
 
-    // Rregulli: Xhokeri nuk hidhet! (Pika 5)
-    if (cardData.v === '★' || cardData.v === 'Xhoker') {
+    // 1. Rregulli i Xhokerit (Pika 5)
+    if (v === '★' || v === 'Xhoker') {
         alert("Xhokeri nuk hidhet në tokë!");
-        resetCardStyles(cardElement);
+        resetCardStyles(cardElement); // Ktheje letrën në pozicionin fillestar
         return;
     }
 
-    // Heqim letrën nga të dhënat tona
-    doraImeData.splice(index, 1);
+    // 2. Gjejmë indeksin e saktë në array duke krahasuar vlerën dhe simbolin
+    const cardIndex = doraImeData.findIndex(c => c.v === v && c.s === s);
+    
+    if (cardIndex !== -1) {
+        // Heqim letrën nga të dhënat tona
+        doraImeData.splice(cardIndex, 1);
 
-    // Njoftojmë serverin
-    socket.emit('cardDiscarded', cardData);
+        // 3. Animacioni vizual drejt stivës së hedhjes
+        const discardZone = document.getElementById('discard-pile');
+        const rect = cardElement.getBoundingClientRect();
+        const targetRect = discardZone.getBoundingClientRect();
 
-    // Animacioni i zhdukjes (Fade out / Scale 0 - Pika 18.2)
-    cardElement.style.transition = "all 0.3s ease";
-    cardElement.style.transform = "scale(0) rotate(20deg)";
-    cardElement.style.opacity = "0";
+        cardElement.style.position = 'fixed';
+        cardElement.style.left = rect.left + 'px';
+        cardElement.style.top = rect.top + 'px';
+        cardElement.style.zIndex = '1000';
+        
+        // Fluturimi drejt stivës
+        setTimeout(() => {
+            cardElement.style.transition = "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)";
+            cardElement.style.left = targetRect.left + 'px';
+            cardElement.style.top = targetRect.top + 'px';
+            cardElement.style.transform = "scale(0.5) rotate(15deg)";
+            cardElement.style.opacity = "0.5";
+        }, 10);
 
-    setTimeout(() => {
-        renderHand();
-        checkTurnLogic();
-    }, 300);
+        // 4. Njoftojmë serverin pas animacionit
+        setTimeout(() => {
+            socket.emit('cardDiscarded', { v, s });
+            renderHand(); // Rifreskojmë dorën (tani me 10 letra)
+            checkTurnLogic();
+        }, 400);
+    }
 }
 // ==========================================
 // 7. ASISTENTI ZION & TURN LOGIC (Pika 7, 15)
