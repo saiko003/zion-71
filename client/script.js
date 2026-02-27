@@ -172,20 +172,6 @@ document.getElementById('btn-start').addEventListener('click', () => {
     document.getElementById('game-table').style.display = 'block';
 });
 
-// 1. Dëgjojmë për letrat që dërgon serveri
-socket.on('receiveCards', (cards) => {
-    console.log("Letrat u pranuan:", cards);
-    
-    // Ruajmë letrat në variablën tonë globale
-    doraImeData = cards;
-    
-    // Thërrasim funksionin që i vizaton ato në HTML
-    renderHand();
-    
-    // Shfaqim tavolinën dhe fshehim lobby-n
-    document.getElementById('lobby-controls').style.display = 'none';
-    document.getElementById('game-table').style.display = 'block';
-});
 
 // 2. Sigurohu që ke edhe këtë për letrat që do tërheqësh gjatë lojës
 socket.on('cardDrawn', (newCard) => {
@@ -377,7 +363,7 @@ function processDiscard(cardElement) {
     }
 
     // Nëse kalon kontrollin, njoftojmë serverin
-    socket.emit('discardCard', { v, s });
+    socket.emit('cardDiscarded', { v, s });
     
     // E fshijmë nga ekrani dhe përditësojmë memorien
     cardElement.remove();
@@ -563,7 +549,7 @@ function canSolve(hand) {
 // EVENTI I MBYLLJES (Kur klikon butonin MBYLL)
 document.getElementById('btn-mbyll').addEventListener('click', () => {
     if (confirm("A dëshiron të mbyllësh lojën?")) {
-        socket.emit('playerClose', doraImeData);
+        socket.emit('playerClosed', doraImeData);
     }
 });
 // ==========================================
