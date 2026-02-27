@@ -86,6 +86,37 @@ body {
 .card-stack { background: #2c3e50; color: white; cursor: pointer; }
 .active-deck { box-shadow: 0 0 20px #f1c40f; border-color: #f1c40f; } /* Pika 12: Glow stiva */
 
+/* STILI PËR LETRËN QË QËNDRON NË TOKË (DISCARD PILE) */
+.card-on-table {
+    width: 65px;         /* Pak më e vogël se zona që ta rrethojë një kornizë */
+    height: 95px;
+    background: white;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column; /* Për të rreshtuar vlerën mbi simbolin */
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5); /* Hije që të duket sikur rri mbi tavolinë */
+    pointer-events: none;  /* Që të mos e kapësh dot me drag gabimisht */
+    animation: dropEffect 0.2s ease-out; /* Animacion i vogël kur "bie" në tokë */
+}
+
+/* Animacioni kur letra shfaqet në tokë */
+@keyframes dropEffect {
+    0% { transform: scale(1.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Rregullojmë zonën ku hidhet letra që të mos ketë tekstin "HEDH KËTU" kur ka letër sipër */
+#discard-pile {
+    background: rgba(0, 0, 0, 0.2);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden; /* Siguron që letra mos të dalë jashtë kornizës */
+}
+
 .drop-zone {
     background: rgba(255, 255, 255, 0.1);
     border: 2px dashed #aaa;
@@ -148,3 +179,5 @@ body {
 }
 
 @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+
