@@ -31,13 +31,20 @@ function getCoords(e) {
 
 // ZËVENDËSOJE ME KËTË:
 document.getElementById('btn-start').addEventListener('click', () => {
-    // Kjo kërkon që ekrani të bëhet Fullscreen (Heq shiritat e browser-it)
-    if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-    } else if (document.documentElement.webkitRequestFullscreen) { /* Për iPhone/Safari */
-        document.documentElement.webkitRequestFullscreen();
+    console.log("Kllienti: Butoni START u shtyp!");
+
+    // 1. Provo të bësh Fullscreen (opsionale, nuk e bllokon nisjen)
+    try {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+        }
+    } catch (err) {
+        console.log("Fullscreen nuk u lejua, por loja vazhdon.");
     }
-    
+
+    // 2. DËRGIMI I SINJALIT TE SERVERI (Kjo është kryesorja)
     socket.emit('startGame');
 });
 
@@ -148,7 +155,7 @@ function renderHand() {
         });
 
         // --- LOGJIKA PËR IPHONE (TOUCH) ---
-        ddiv.addEventListener('touchstart', (e) => {
+        div.addEventListener('touchstart', (e) => {   // SAKTË: div
     // Hiqe kushtin "if (!isMyTurn) return;" 
     // Tani lejohet kapja e letrës gjithmonë për renditje
     
@@ -175,23 +182,23 @@ function renderHand() {
 // 2. KONTROLLI GLOBAL I LËVIZJES (TOUCH & DRAG)
 // ==========================================
 
-// PËR IPHONE (TOUCHMOVE DHE TOUCHEND)
 document.addEventListener('touchmove', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
-    if (!draggingCard) return;
+    if (draggingCard) {
+        const touch = e.touches[0]; // Kjo duhet të jetë këtu!
+        
+        const offsetX = parseFloat(draggingCard.dataset.offsetX) || draggingCard.offsetWidth / 2;
+        const offsetY = parseFloat(draggingCard.dataset.offsetY) || draggingCard.offsetHeight / 2;
 
-    const touch = e.touches[0]; // Kjo mungonte!
-    const offsetX = parseFloat(draggingCard.dataset.offsetX) || draggingCard.offsetWidth / 2;
-    const offsetY = parseFloat(draggingCard.dataset.offsetY) || draggingCard.offsetHeight / 2;
+        draggingCard.style.left = (touch.clientX - offsetX) + 'px';
+        draggingCard.style.top = (touch.clientY - offsetY) + 'px';
 
-    draggingCard.style.left = (touch.clientX - offsetX) + 'px';
-    draggingCard.style.top = (touch.clientY - offsetY) + 'px';
-
-    const handRect = handContainer.getBoundingClientRect();
-    if (touch.clientY > handRect.top - 100) { 
-        handleReorder(touch.clientX); 
+        // Pjesa tjetër e renditjes...
+        const handRect = handContainer.getBoundingClientRect();
+        if (touch.clientY > handRect.top - 100) { 
+            handleReorder(touch.clientX); 
+        }
     }
-    // ... pjesa tjetër e isOver mbetet njëlloj
 }, { passive: false });
 
 document.addEventListener('touchend', (e) => {
