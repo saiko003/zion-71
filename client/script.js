@@ -129,6 +129,9 @@ function checkTurnLogic() {
 // ==========================================
 // 1. RENDITJA DHE RREGULLIMI I LETRAVE
 // ==========================================
+// ==========================================
+// RENDITJA DHE RREGULLIMI I LETRAVE (UNIFIKUAR)
+// ==========================================
 function renderHand() {
     handContainer.innerHTML = '';
     doraImeData.forEach((card, index) => {
@@ -144,7 +147,6 @@ function renderHand() {
         div.addEventListener('dragstart', (e) => {
             div.classList.add('dragging');
             e.dataTransfer.setData('text/plain', index);
-            // Kjo e ndihmon PC-në të kuptojë që po lëvizim një objekt
             e.dataTransfer.effectAllowed = 'move';
         });
 
@@ -153,27 +155,25 @@ function renderHand() {
             resetCardStyles(div);
         });
 
-        // MOBILE: TOUCH START (Rregullimi i "kërcimit")
+        // MOBILE: TOUCH START
         div.addEventListener('touchstart', (e) => {
             if (e.cancelable) e.preventDefault(); 
             const touch = e.touches[0];
             const rect = div.getBoundingClientRect();
 
-            // Ruajmë pikën e saktë ku gishti preku letrën
             div.dataset.offsetX = touch.clientX - rect.left;
             div.dataset.offsetY = touch.clientY - rect.top;
 
             div.classList.add('dragging');
 
-            // Stilet që e bëjnë letrën "të fluturojë" mbi gisht
             Object.assign(div.style, {
                 position: 'fixed',
                 width: rect.width + 'px',
                 height: rect.height + 'px',
                 left: rect.left + 'px',
                 top: rect.top + 'px',
-                zIndex: '2000',
-                pointerEvents: 'none'
+                zIndex: '9999',
+                pointerEvents: 'none' // KRITIKE: Lejon gishtin të ndjejë zonën poshtë
             });
         }, { passive: false });
 
@@ -181,40 +181,27 @@ function renderHand() {
     });
 }
 
-// KONTROLLI GLOBAL (TOUCHMOVE) - I rregulluar për koordinatat
+// KONTROLLI GLOBAL I LËVIZJES (PC & MOBILE)
 document.addEventListener('touchmove', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (!draggingCard) return;
 
-    // Safari kërkon preventDefault për të mos bërë scroll të gjithë faqes
     if (e.cancelable) e.preventDefault();
-
     const touch = e.touches[0];
     
-    // Marrim offset-in që ruajtëm te touchstart
     const offsetX = parseFloat(draggingCard.dataset.offsetX) || 0;
     const offsetY = parseFloat(draggingCard.dataset.offsetY) || 0;
 
-    // PËR SAFARI: Përdorim clientX/Y sepse position: fixed bazohet në dritare (viewport)
-    let x = touch.clientX - offsetX;
-    let y = touch.clientY - offsetY;
+    draggingCard.style.left = (touch.clientX - offsetX) + 'px';
+    draggingCard.style.top = (touch.clientY - offsetY) + 'px';
 
-    // I japim pozicionin e ri
-    draggingCard.style.left = x + 'px';
-    draggingCard.style.top = y + 'px';
-
-    // Kontrolli i zonës së hedhjes (Discard Pile)
-    const discardPile = document.getElementById('discard-pile');
+    // Feedback vizual për zonën e hedhjes
     const dRect = discardPile.getBoundingClientRect();
-
-    // Kontrollojmë nëse gishti është brenda katrorit të discard-pile
     if (touch.clientX > dRect.left && touch.clientX < dRect.right &&
         touch.clientY > dRect.top && touch.clientY < dRect.bottom) {
         discardPile.style.background = "rgba(46, 204, 113, 0.4)";
-        discardPile.style.borderColor = "#2ecc71";
     } else {
         discardPile.style.background = "transparent";
-        discardPile.style.borderColor = "rgba(255, 255, 255, 0.2)";
     }
 }, { passive: false });
 
@@ -223,11 +210,11 @@ document.addEventListener('touchend', (e) => {
     if (!draggingCard) return;
 
     const touch = e.changedTouches[0];
-    const tableArea = document.getElementById('table-area');
-    const discardRect = discardPile.getBoundingClientRect();
+    const dRect = discardPile.getBoundingClientRect();
 
-    // Kontrolli i zonës së hedhjes
-    if (touch.clientX > discardRect.left - 20 && isMyTurn && doraImeData.length === 11) {
+    // Kontrolli nëse u lëshua mbi stivë
+    if (touch.clientX > dRect.left && touch.clientX < dRect.right &&
+        touch.clientY > dRect.top && touch.clientY < dRect.bottom) {
         processDiscard(draggingCard);
     } else {
         handleReorder(touch.clientX);
@@ -236,97 +223,71 @@ document.addEventListener('touchend', (e) => {
     draggingCard.classList.remove('dragging');
     resetCardStyles(draggingCard);
     saveNewOrder();
-    tableArea.classList.remove('discard-zone-active');
+    discardPile.style.background = "transparent";
 }, { passive: false });
 
-// PËR PC (DROP NË TAVOLINË)
-const tableArea = document.getElementById('table-area');
-tableArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    const discardRect = discardPile.getBoundingClientRect();
-    if (e.clientX > discardRect.left - 20) {
-        tableArea.classList.add('discard-zone-active');
-    }
+// LOGJIKA PËR PC (MAUSIN)
+discardPile.addEventListener('dragover', (e) => {
+    e.preventDefault(); // LEJON DROP
+    discardPile.style.background = "rgba(46, 204, 113, 0.4)";
 });
 
-tableArea.addEventListener('dragleave', () => {
-    tableArea.classList.remove('discard-zone-active');
+discardPile.addEventListener('dragleave', () => {
+    discardPile.style.background = "transparent";
 });
 
-tableArea.addEventListener('drop', (e) => {
+discardPile.addEventListener('drop', (e) => {
     e.preventDefault();
-    tableArea.classList.remove('discard-zone-active');
     const draggingCard = document.querySelector('.card.dragging');
-    const discardRect = discardPile.getBoundingClientRect();
-
-    if (draggingCard && isMyTurn && doraImeData.length === 11 && e.clientX > discardRect.left - 20) {
-        processDiscard(draggingCard);
-    }
+    if (draggingCard) processDiscard(draggingCard);
+    discardPile.style.background = "transparent";
 });
 
-// ==========================================
-// 3. FUNKSIONET NDIHMËSE
-// ==========================================
-function processDiscard(draggingCard) {
+// FUNKSIONET NDIHMËSE (TË PASTRUARA)
+function processDiscard(cardEl) {
     if (!isMyTurn || doraImeData.length < 11) return;
 
-    const parts = draggingCard.innerHTML.split('<br>');
-    const val = parts[0];
-    const suit = parts[1] || '';
+    const idx = parseInt(cardEl.dataset.index);
+    const card = doraImeData[idx];
 
-    if (val === '★') {
+    if (card.v === '★') {
         alert("Xhokeri nuk hidhet!");
         return;
     }
 
-    const idx = doraImeData.findIndex(c => c.v === val && c.s === suit);
-    if (idx > -1) {
-        const cardDiscarded = { v: val, s: suit };
-        doraImeData.splice(idx, 1);
-        renderHand();
-        
-        isMyTurn = false;
-        socket.emit('cardDiscarded', cardDiscarded);
-        socket.emit('endTurn');
-        
-        updateTurnUI();
-        checkTurnLogic();
-    }
+    doraImeData.splice(idx, 1);
+    isMyTurn = false;
+    socket.emit('cardDiscarded', card);
+    socket.emit('endTurn');
+    
+    renderHand();
+    updateTurnUI();
+    checkTurnLogic();
 }
 
 function handleReorder(clientX) {
     const draggingCard = document.querySelector('.card.dragging');
     if (!draggingCard) return;
-
     const cards = [...handContainer.querySelectorAll('.card:not(.dragging)')];
     const nextCard = cards.find(c => {
         const box = c.getBoundingClientRect();
         return clientX <= box.left + box.width / 2;
     });
-
     if (nextCard) handContainer.insertBefore(draggingCard, nextCard);
     else handContainer.appendChild(draggingCard);
 }
 
 function resetCardStyles(el) {
-    el.style.position = '';
-    el.style.left = '';
-    el.style.top = '';
-    el.style.width = '';
-    el.style.height = '';
-    el.style.zIndex = '';
-    el.style.pointerEvents = 'auto';
+    Object.assign(el.style, {
+        position: '', left: '', top: '', width: '', height: '', zIndex: '', pointerEvents: 'auto'
+    });
 }
 
 function saveNewOrder() {
     const currentCards = [...handContainer.querySelectorAll('.card')];
     doraImeData = currentCards.map(c => {
         const parts = c.innerHTML.split('<br>');
-        return { 
-            v: parts[0], 
-            // Shtohet kjo || '' që xhokeri të mos jetë i zbrazët (undefined)
-            s: parts[1] || '' 
-        };
+        return { v: parts[0], s: parts[1] || '' };
     });
     updateAsistenti();
 }
