@@ -69,31 +69,34 @@ function startNewRound() {
     let deck = createDeck(); 
     shuffle(deck);
 
-    // Sigurohemi që kemi një dealer (nëse jo, bëje lojtarin e parë)
-    if (currentDealerIndex === undefined || currentDealerIndex === null) {
+    // Sigurohemi që DealerIndex ekziston, nëse jo e nisim nga i pari
+    if (typeof currentDealerIndex === 'undefined' || currentDealerIndex === null) {
         currentDealerIndex = 0;
     }
 
     players.forEach((player, index) => {
-        // 1. Krijojmë një Xhoker të ri flakë për çdo lojtar
+        // 1. Krijohet Xhokeri i ri për çdo lojtar
         const myJoker = { v: '★', s: 'Xhoker' };
 
-        // 2. Marrim letrat normale nga deçka
+        // 2. Dealer-i merr 10 nga deçka (total 11), të tjerët 9 (total 10)
         let sasiaNgaDeck = (index === currentDealerIndex) ? 10 : 9;
         let letratNgaDeck = deck.splice(0, sasiaNgaDeck);
 
-        // 3. BASHKIMI I DETYRUAR (Xhokeri VETËM 1 herë në fillim)
-        // Përdorim rreshtin poshtë që fshin çdo gjë të vjetër
+        // 3. Bashkimi i sigurt: Xhokeri + letrat e reja
         player.cards = [myJoker].concat(letratNgaDeck);
 
-        console.log(`DEBUG: Lojtari ${player.name} mori Xhokerin + ${letratNgaDeck.length} letra.`);
+        console.log(`DEBUG: ${player.name} (Index: ${index}) mori Xhokerin + ${letratNgaDeck.length} letra.`);
     });
 
     gameDeck = deck;
     discardPile = [];
     
-    // Dealer-i luan i pari (ka 11 letra)
+    // 4. Kush e ka radhën? Ai që ka 11 letra (Dealer-i)
+    activePlayerId = players[currentDealerIndex].id; 
     activePlayerIndex = currentDealerIndex;
+
+    // 5. ROTACIONI: Hera tjetër do jetë radha e lojtarit tjetër të jetë Dealer
+    currentDealerIndex = (currentDealerIndex + 1) % players.length;
 
     broadcastState(); 
 }
