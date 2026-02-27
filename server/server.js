@@ -53,7 +53,7 @@ function createDeck() {
     const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     let newDeck = [];
     
-    // 2 pako
+    // 2 pako (104 letra gjithsej)
     for (let p = 0; p < 2; p++) {
         for (let s of suits) {
             for (let v of values) {
@@ -61,13 +61,29 @@ function createDeck() {
             }
         }
     }
-    // Shto 2 Xhokera (Pika 5)
-    newDeck.push({ v: '★', s: 'Xhoker' }, { v: '★', s: 'Xhoker' });
     
-    // Përzierja (Shuffle)
+    // Shuffle (Përzierja)
     return newDeck.sort(() => Math.random() - 0.5);
 }
+function startNewRound() {
+    let deck = createDeck(); // Këtu deçka ka 104 letra, 0 xhokera
 
+    players.forEach((player, index) => {
+        // Çdo lojtar merr xhokerin e tij personal (jashtë stivës)
+        const myJoker = { v: '★', s: 'Xhoker' };
+
+        // Shpërndajmë letrat e tjera nga stiva
+        // Dealer-i (index 0) merr 10 letra + xhokerin = 11
+        // Të tjerët marrin 9 letra + xhokerin = 10
+        const extraCardsCount = (index === currentDealerIndex) ? 10 : 9;
+        const extraCards = deck.splice(0, extraCardsCount);
+
+        player.cards = [myJoker, ...extraCards];
+    });
+
+    gameDeck = deck;
+    broadcastState();
+}
 // ==========================================
 // 2. KOMUNIKIMI ME LOJTARËT
 // ==========================================
