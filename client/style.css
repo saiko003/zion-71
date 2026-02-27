@@ -234,3 +234,12 @@ body {
     border-radius: 5px;
     border-left: 4px solid gold;
 }
+.card.joker {
+    background-color: #1a1a1a !important;
+    border: 2px solid gold !important;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+.joker-star {
+    font-size: 1.5rem;
+    line-height: 1;
+}
