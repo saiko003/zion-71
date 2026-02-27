@@ -187,13 +187,11 @@ function checkZionCondition() {
 function renderHand() {
     const handContainer = document.getElementById('player-hand');
     if (!handContainer) return;
-    
     handContainer.innerHTML = ''; 
 
     doraImeData.forEach((card, index) => {
-        const div = document.createElement('div');
+        const div = document.createElement('div'); // KORRIGJUAR: ishte ddiv
         div.className = 'card';
-        div.draggable = true;
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
@@ -201,18 +199,20 @@ function renderHand() {
         if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
         div.innerHTML = `${card.v}<br>${card.s}`;
 
-        // --- MOBILE: TOUCH HANDLING ---
+        // TOUCH START
         div.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
+            const t = e.touches[0]; // Marrim touch-in e parë
             const rect = div.getBoundingClientRect();
-            div.dataset.offsetX = touch.clientX - rect.left;
-            div.dataset.offsetY = touch.clientY - rect.top;
+            div.dataset.offsetX = t.clientX - rect.left;
+            div.dataset.offsetY = t.clientY - rect.top;
             div.classList.add('dragging');
             
             Object.assign(div.style, {
                 position: 'fixed',
                 zIndex: '1000',
-                pointerEvents: 'none'
+                pointerEvents: 'none',
+                width: rect.width + 'px',
+                height: rect.height + 'px'
             });
         }, { passive: true });
 
@@ -244,54 +244,70 @@ function renderHand() {
 
 // --- KONTROLLI GLOBAL I LËVIZJES (TouchMove) ---
 document.addEventListener('touchmove', (e) => {
+    // 1. Gjejmë letrën që po lëvizim (Kritike!)
     const draggingCard = document.querySelector('.card.dragging');
-    if (!draggingCard) return;
+    if (!draggingCard) return; // Nëse nuk po lëvizim asgjë, ndalo këtu.
 
     if (e.cancelable) e.preventDefault();
     const touch = e.touches[0];
 
+    // 2. Lëvizim letrën nëpër ekran
     const offsetX = parseFloat(draggingCard.dataset.offsetX) || 0;
     const offsetY = parseFloat(draggingCard.dataset.offsetY) || 0;
-
     draggingCard.style.left = (touch.clientX - offsetX) + 'px';
     draggingCard.style.top = (touch.clientY - offsetY) + 'px';
 
-    // Pika 18: Hapja automatike e letrave (Reordering)
-    handleReorder(touch.clientX);
+    // 3. TANI përdorim listën e letrave të tjera për t'i renditur (Reorder)
+    const otherCards = Array.from(handContainer.children).filter(c => !c.classList.contains('dragging'));
     
-    // Feedback për zonën e hedhjes (Pika 18.2)
-    checkDiscardZoneFeedback(touch.clientX, touch.clientY);
-}, { passive: false });
+    // Logjika e renditjes:
+    otherCards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        // Nëse letra që po lëvizim kalon mesin e një letre tjetër
+        if (touch.clientX > rect.left && touch.clientX < rect.right) {
+            // Këtu ndodh shkëmbimi i vendeve
+            if (touch.clientX < rect.left + rect.width / 2) {
+                handContainer.insertBefore(draggingCard, card);
+            } else {
+                handContainer.insertBefore(draggingCard, card.nextSibling);
+            }
+        }
+    });
 
+}, { passive: false });
 // FUNKSIONI QË NDËRRON VENDET E LETRAVE
 function handleReorder(clientX) {
     const draggingCard = document.querySelector('.card.dragging');
     if (!draggingCard) return;
 
-    const cards = [...handContainer.querySelectorAll('.card:not(.dragging)')];
-    
-    // Gjejmë letrën më të afërt ku po kalon gishti
-    const nextCard = cards.find(c => {
-        const box = c.getBoundingClientRect();
-        return clientX <= box.left + box.width / 2;
+    // Marrim të gjitha letrat e tjera që nuk po i lëvizim
+    const cards = Array.from(handContainer.children).filter(c => c !== draggingCard);
+
+    // Gjejmë letrën që kemi "përfundi" gishtit
+    const sibling = cards.find(card => {
+        const rect = card.getBoundingClientRect();
+        // Kontrollojmë nëse gishti është në gjysmën e parë të letrës tjetër
+        return clientX <= rect.left + rect.width / 2;
     });
 
-    if (nextCard) {
-        handContainer.insertBefore(draggingCard, nextCard);
+    // Nëse gjetëm një fqinj, e vendosim letrën tonë para tij
+    if (sibling) {
+        handContainer.insertBefore(draggingCard, sibling);
     } else {
+        // Nëse jemi në fund të rreshtit, e dërgojmë në fund
         handContainer.appendChild(draggingCard);
     }
 }
 // --- TOUCH END: LËSHIMI I LETRËS ---
+// Te touchend (Kodi yt, i saktësuar pak te thirrja e renderHand)
 document.addEventListener('touchend', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (!draggingCard) return;
 
     const touch = e.changedTouches[0];
     const discardRect = discardPile.getBoundingClientRect();
-    const tolerance = 50; // Pak hapësirë ekstra rreth zonës
+    const tolerance = 50;
 
-    // Kontrolli i Limitit (A është mbi discard pile?)
     const isOverDiscard = (
         touch.clientX > discardRect.left - tolerance &&
         touch.clientX < discardRect.right + tolerance &&
@@ -302,27 +318,40 @@ document.addEventListener('touchend', (e) => {
     if (isOverDiscard && isMyTurn && doraImeData.length === 11) {
         processDiscard(draggingCard);
     } else {
-        // Rikthimi Smooth në dorë (Pika 18.3)
+        // Këtu bëjmë reset dhe RUAJMË renditjen e re vizuale
         resetCardStyles(draggingCard);
-        saveNewOrder(); // Ruajmë renditjen e re vizuale te data
+        saveNewOrder(); 
+        // MOS thirr renderHand() këtu direkt sepse e prish animacionin vizual
     }
 
     draggingCard.classList.remove('dragging');
-    discardPile.style.transform = "scale(1)"; // Hiq glow-in e tavolinës
+    discardPile.style.transform = "scale(1)";
+    discardPile.style.borderColor = "#777"; // Resetojmë edhe ngjyrën
 }, { passive: false });
 
 function resetCardStyles(el) {
     Object.assign(el.style, {
-        position: '', left: '', top: '', width: '', height: '', zIndex: '', pointerEvents: 'auto'
+        position: '', 
+        left: '', 
+        top: '', 
+        width: '', 
+        height: '', 
+        zIndex: '', 
+        pointerEvents: 'auto',
+        transform: '' // Shto këtë për të hequr çdo mbetje të transformimeve
     });
 }
-
 function saveNewOrder() {
     const currentCards = [...handContainer.querySelectorAll('.card')];
+    
+    // Marrim renditjen fiks siç e shohim në ekran
     doraImeData = currentCards.map(c => ({
         v: c.dataset.v,
         s: c.dataset.s
     }));
+
+    console.log("Renditja e re u ruajt:", doraImeData);
+
     if (typeof updateAsistenti === "function") updateAsistenti();
 }
 // ==========================================
