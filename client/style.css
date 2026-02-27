@@ -343,7 +343,7 @@ body {
 /* ==========================
    Buttons
 ========================== */
-.start-btn, .glow-btn {
+.glow-btn {
     padding: 14px 28px;
     border: none;
     border-radius: 10px;
@@ -351,20 +351,8 @@ body {
     cursor: pointer;
     text-transform: uppercase;
     transition: 0.3s;
-}
-
-.start-btn {
-    background: #007bff;
-    color: white;
-    box-shadow: 0 4px 0 #0056b3;
-}
-
-.start-btn:active { transform: translateY(2px); box-shadow: none; }
-
-.glow-btn {
-    background: #444;
+    background: #444; /* Ngjyra gri që kishe */
     color: #888;
-    border: 1px solid #555;
 }
 
 .glow-green-intense {
@@ -633,4 +621,50 @@ body {
         rgba(39, 174, 96, 0.2) 100%) !important;
     border-right: 6px solid #2ecc71 !important; /* E bëjmë pak më të trashë anën e djathtë */
     box-shadow: inset -20px 0 30px rgba(39, 174, 96, 0.1); /* Shton pak dritë nga e djathta */
+}
+/* ==========================
+    Lobby & Start Button 
+========================== */
+#lobby-controls {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2000; 
+    text-align: center;
+    background: rgba(27, 42, 61, 0.95); 
+    padding: 30px;
+    border-radius: 20px;
+    border: 2px solid rgba(46, 204, 113, 0.3);
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+.start-btn {
+    padding: 20px 50px;
+    font-size: 1.6rem;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 8px 0 #1e8449, 0 15px 25px rgba(46, 204, 113, 0.4);
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: block;
+}
+
+.start-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+
+.start-btn:active {
+    transform: translateY(4px) scale(0.98); /* Ky është ai që e zëvendëson atë që pyete */
+    box-shadow: 0 2px 0 #1e8449, 0 5px 10px rgba(0,0,0,0.3);
+}
+
+.hidden {
+    display: none !important;
 }
