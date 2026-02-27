@@ -21,6 +21,14 @@ if (!myName) {
 }
 socket.emit('joinGame', myName);
 
+// Funksion universal për të marrë koordinatat (PC dhe Mobile)
+function getCoords(e) {
+    if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+}
+
 // ZËVENDËSOJE ME KËTË:
 document.getElementById('btn-start').addEventListener('click', () => {
     // Kjo kërkon që ekrani të bëhet Fullscreen (Heq shiritat e browser-it)
