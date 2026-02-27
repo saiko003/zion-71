@@ -2,7 +2,6 @@ const socket = io('https://zion-71.onrender.com', {
     transports: ['polling', 'websocket']
 });
 const handContainer = document.getElementById('player-hand');
-const deckElement = document.getElementById('deck');
 const jackpotElement = document.getElementById('jackpot');
 const discardPile = document.getElementById('discard-pile');
 const btnMbyll = document.getElementById('btn-mbyll');
@@ -10,7 +9,17 @@ const statusDrita = document.getElementById('status-drita');
 const statusTeksti = document.getElementById('status-teksti');
 const lobbyControls = document.getElementById('lobby-controls');
 const gameTable = document.getElementById('game-table');
-
+const deckElement = document.getElementById('deck'); 
+if (deckElement) {
+    deckElement.onclick = () => {
+        // Tërheqim letër vetëm nëse është radha jonë dhe kemi 10 letra
+        if (isMyTurn && doraImeData.length === 10) {
+            socket.emit('drawCard');
+        } else if (doraImeData.length === 11) {
+            alert("Duhet të hedhësh një letër para se të marrësh një tjetër!");
+        }
+    };
+}
 
 // Ruajtja e emrit dhe identifikimi
 let myName = localStorage.getItem('zion_player_name') || prompt("Shkruaj emrin tënd:");
