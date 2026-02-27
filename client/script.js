@@ -98,9 +98,8 @@ function renderHand() {
         
         div.addEventListener('dragstart', (e) => {
             div.classList.add('dragging');
-            // E rëndësishme për Firefox dhe Chrome
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', index); 
+            e.dataTransfer.setData('text/plain', index);
+            e.dataTransfer.setDragImage(div, 37, 52); // Siguron që letra shihet gjatë lëvizjes
         });
 
         div.addEventListener('dragend', () => {
@@ -525,25 +524,20 @@ discardPile.addEventListener('dragleave', () => {
     discardPile.style.transform = "";
 });
 
-// 2. Eventi i lëshimit të letrës
 discardPile.addEventListener('drop', (e) => {
-    e.preventDefault(); // Ndalon browser-in të bëjë veprime të tjera
-    discardPile.style.background = "";
-    discardPile.style.transform = "";
-
+    e.preventDefault();
     const draggingCard = document.querySelector('.card.dragging');
     if (draggingCard) {
         processDiscard(draggingCard);
-    } else {
-        console.error("PC: Nuk u gjet asnjë letër me klasën .dragging");
     }
 });
 
 document.addEventListener('touchmove', (e) => {
     const draggingCard = document.querySelector('.card.dragging');
     if (draggingCard) {
-        if (e.cancelable) e.preventDefault();
-        const touch = e.touches[0];
+        if (e.type === 'touchstart' && e.cancelable) {
+    // Kjo parandalon scroll-in në iPhone, por nuk bllokon mausin në PC
+    }
 
         // 1. Lëvizja precize (Përdorim offset-et që ruajtëm te touchstart)
         const offsetX = parseFloat(draggingCard.dataset.offsetX) || draggingCard.offsetWidth / 2;
