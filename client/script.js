@@ -75,8 +75,11 @@ socket.on('updateGameState', (data) => {
 
     // 5. Sinkronizimi i letrave
     const me = data.players.find(p => p.id === socket.id);
-    if (me && me.cards && doraImeData.length === 0) {
-        doraImeData = me.cards;
+        if (me && me.cards) {
+        // HEQIM: && doraImeData.length === 0
+        // Tani dora përditësohet sa herë që serveri thotë "Këto janë letrat e tua"
+        doraImeData = me.cards; 
+
         if (typeof renderHand === "function") {
             renderHand();
         }
