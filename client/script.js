@@ -159,20 +159,22 @@ function renderHand() {
             const touch = e.touches[0];
             const rect = div.getBoundingClientRect();
 
-            // Ruajmë saktë ku e kemi prekur letrën (brenda katrorit të saj)
+            // Ruajmë pikën e saktë ku gishti preku letrën
             div.dataset.offsetX = touch.clientX - rect.left;
             div.dataset.offsetY = touch.clientY - rect.top;
 
             div.classList.add('dragging');
-            
-            // I japim koordinatat e sakta menjëherë që të mos "këcejë"
-            div.style.position = 'fixed';
-            div.style.width = rect.width + 'px';
-            div.style.height = rect.height + 'px';
-            div.style.left = rect.left + 'px';
-            div.style.top = rect.top + 'px';
-            div.style.zIndex = '1000';
-            div.style.pointerEvents = 'none'; 
+
+            // Stilet që e bëjnë letrën "të fluturojë" mbi gisht
+            Object.assign(div.style, {
+                position: 'fixed',
+                width: rect.width + 'px',
+                height: rect.height + 'px',
+                left: rect.left + 'px',
+                top: rect.top + 'px',
+                zIndex: '2000',
+                pointerEvents: 'none'
+            });
         }, { passive: false });
 
         handContainer.appendChild(div);
@@ -185,22 +187,29 @@ document.addEventListener('touchmove', (e) => {
     if (!draggingCard) return;
 
     const touch = e.touches[0];
+    
+    // Marrim offset-in
     const offsetX = parseFloat(draggingCard.dataset.offsetX) || 0;
     const offsetY = parseFloat(draggingCard.dataset.offsetY) || 0;
 
-    // Vendosja e letrës fiks nën gisht
-    draggingCard.style.left = (touch.pageX - offsetX) + 'px';
-    draggingCard.style.top = (touch.pageY - offsetY) + 'px';
+    // Llogaritja e pozicionit të ri
+    const x = touch.clientX - offsetX;
+    const y = touch.clientY - offsetY;
 
-    // Shfaqja e zonës së hedhjes kur afrohemi
+    draggingCard.style.left = x + 'px';
+    draggingCard.style.top = y + 'px';
+
+    // Kontrolli i zonës së hedhjes (Discard)
     const discardPile = document.getElementById('discard-pile');
-    const discardRect = discardPile.getBoundingClientRect();
-    
-    if (touch.clientX > discardRect.left && touch.clientX < discardRect.right &&
-        touch.clientY > discardRect.top && touch.clientY < discardRect.bottom) {
-        discardPile.style.background = "rgba(39, 174, 96, 0.3)";
+    const dRect = discardPile.getBoundingClientRect();
+
+    if (touch.clientX > dRect.left && touch.clientX < dRect.right &&
+        touch.clientY > dRect.top && touch.clientY < dRect.bottom) {
+        discardPile.style.background = "rgba(46, 204, 113, 0.4)";
+        discardPile.style.transform = "scale(1.1)";
     } else {
         discardPile.style.background = "transparent";
+        discardPile.style.transform = "scale(1)";
     }
 }, { passive: false });
 
