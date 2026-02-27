@@ -81,14 +81,18 @@ socket.on('updateGameState', (data) => {
     if (typeof updateScoreboard === "function") {
         updateScoreboard(data.players, data.activePlayerId);
     }
+// script.js (Brenda updateGameState)
 const me = data.players.find(p => p.id === socket.id);
 
 if (me && me.cards) {
-    // I marrim letrat gjithmonë, pa pyetur për gjatësinë
-    doraImeData = me.cards; 
-    
-    if (typeof renderHand === "function") {
-        renderHand();
+    // Shtojmë një kontroll: nëse dora aktuale nuk ka asnjë Xhoker, 
+    // por ajo që vjen nga serveri ka, atëherë përditësoje detyrimisht.
+    const hasJokerNow = me.cards.some(c => c.v === '★');
+    const iHadJoker = doraImeData.some(c => c.v === '★');
+
+    if (me.cards.length !== doraImeData.length || hasJokerNow !== iHadJoker || doraImeData.length === 0) {
+        doraImeData = me.cards;
+        if (typeof renderHand === "function") renderHand();
     }
 }
 });
