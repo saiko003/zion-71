@@ -74,17 +74,23 @@ function createDeck() {
 io.on('connection', (socket) => {
     console.log("Lojtar i ri u lidh:", socket.id);
 
-    socket.on('joinGame', (name) => {
-        if (!players.find(p => p.id === socket.id)) {
-            players.push({
-                id: socket.id,
-                name: name,
-                cards: [],
-                score: 0,
-                history: [] // Pika 17: R1, R2, R3...
-            });
-        }
-        broadcastState();
+    // KORRIGJUAR: socket (jo ssocket)
+    socket.on('joinGame', (playerName) => {
+        const newPlayer = {
+            id: socket.id,
+            name: playerName || "Lojtar i panjohur",
+            cards: [],
+            score: 0,
+            history: [],
+            isOut: false
+        };
+           
+        players.push(newPlayer);
+        console.log(`${newPlayer.name} u shtua në lojë.`);
+        
+        // broadcastState duhet të jetë BRENDA socket.on që të lajmërojë 
+        // të tjerët sapo ky lojtar të shtohet në listë
+        broadcastState(); 
     });
 
     // START GAME (Pika 2)
@@ -184,7 +190,7 @@ socket.on('playerClosed', (data) => {
     });
 });
 
-    ssocket.on('disconnect', () => {
+    socket.on('disconnect', () => {
     players = players.filter(p => p.id !== socket.id);
     broadcastState();
 });
