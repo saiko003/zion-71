@@ -56,51 +56,91 @@ io.on('connection', (socket) => {
         socket.emit('receiveCards', [...player.hand]);
     });
 
-    // --- 3. START GAME (Me logjikën e Dealer-it) ---
-    socket.on('startGame', () => {
-        // Lejohet fillimi nëse jemi në lobby ose raundi ka mbaruar
-        if (gamePhase !== "waiting" && gamePhase !== "roundOver") return;
-
-        const activePlayers = players.filter(p => !p.eliminated);
-        if (activePlayers.length < 2) {
-            socket.emit('error', 'Duhen të paktën 2 lojtarë aktivë.');
-            return;
-        }
-
-        gamePhase = "playing";
-        roundCount++;
-        deck = createFullDeck();
-        discardPile = [];
-        hasDrawnThisTurn = false;
-
-        // Gjejmë Dealer-in e radhës që nuk është i eliminuar
-        if (roundCount > 1) {
-            do {
-                currentDealerIndex = (currentDealerIndex + 1) % players.length;
-            } while (players[currentDealerIndex].eliminated);
-        }
-
-        currentTurnIndex = currentDealerIndex;
-
-        players.forEach((p, i) => {
-            if (!p.eliminated) {
-                // Dealer-i merr 10 letra, të tjerët 9
-                let count = (i === currentDealerIndex) ? 10 : 9;
-                p.hand = deck.splice(0, count);
-                p.hand.push({ v: '★', s: 'X' }); // Xhoker i detyrueshëm
-                io.to(p.id).emit('receiveCards', p.hand);
-            } else {
-                p.hand = []; // Të eliminuarit s'kanë letra
-            }
+    // --- KËTU MUND TA SHTOSH ---
+    socket.on('submitMyPoints', (data) => {
+        console.log(`Lojtari ${socket.id} dërgoi pikët: ${data.points}`);
+        // Këtu mund të shtosh logjikë tjetër nëse do
+    });
+    
+    socket.on('forceReset', () => {
+        gamePhase = "waiting";
+        players.forEach(p => {
+            p.score = 0;
+            p.history = [];
+            p.eliminated = false;
+            p.hand = [];
         });
+        roundCount = 0;
+        currentDealerIndex = 0;
+        currentTurnIndex = 0;
+        io.emit('updateGameState', { gamePhase: "waiting" });
+        console.log("!!! LOJA U RESETUA NGA NJË LOJTAR !!!");
+    });
+    
+    // --- 3. START GAME (Me logjikën e Dealer-it) ---
+socket.on('startGame', () => {
+    console.log("--- Tentim për Start ---");
+    console.log("Faza aktuale:", gamePhase);
+    console.log("Lojtarë gjithsej:", players.length);
 
-        // Dealer-i i ka 11 letra, nuk ka nevojë të tërheqë letër (hasDrawn = true)
-        hasDrawnThisTurn = true;
-        jackpotCard = deck.pop() || null;
+    // 1. Kontrolli i fazës
+    if (gamePhase !== "waiting" && gamePhase !== "roundOver") {
+        console.log("START u refuzua: Loja është në zhvillim (playing)");
+        return;
+    }
 
-        sendGameState();
+    // 2. Kontrolli i lojtarëve aktivë
+    const activePlayers = players.filter(p => !p.eliminated);
+    console.log("Lojtarë aktivë:", activePlayers.length);
+
+    if (activePlayers.length < 2) {
+        socket.emit('error', 'Duhen të paktën 2 lojtarë aktivë.');
+        return;
+    }
+
+    // 3. Inicializimi i raundit
+    gamePhase = "playing";
+    roundCount++;
+    deck = createFullDeck();
+    discardPile = [];
+    
+    // Gjejmë Dealer-in e radhës
+    if (roundCount > 1) {
+        let attempts = 0;
+        do {
+            currentDealerIndex = (currentDealerIndex + 1) % players.length;
+            attempts++;
+        } while (players[currentDealerIndex].eliminated && attempts < players.length);
+    }
+
+    currentTurnIndex = currentDealerIndex;
+
+    // 4. Shpërndarja e letrave
+    players.forEach((p, i) => {
+        if (!p.eliminated) {
+            // Dealer-i (currentDealerIndex) merr 10 letra + 1 Xhoker = 11
+            // Të tjerët marrin 9 letra + 1 Xhoker = 10
+            let count = (i === currentDealerIndex) ? 10 : 9;
+            p.hand = deck.splice(0, count);
+            p.hand.push({ v: '★', s: 'X' }); // Xhoker i detyrueshëm
+            
+            io.to(p.id).emit('receiveCards', p.hand);
+        } else {
+            p.hand = [];
+        }
     });
 
+    // 5. Letra Jackpot
+    jackpotCard = deck.pop() || null;
+    
+    // ME RËNDËSI: Nëse unë jam Dealer, unë e kam radhën dhe kam 11 letra, 
+    // prandaj hasDrawnThisTurn duhet të jetë true që të mund të hedh letër.
+    hasDrawnThisTurn = true; 
+
+    console.log(`Raundi ${roundCount} nisi. Dealer: ${players[currentDealerIndex].name}`);
+    
+    sendGameState();
+});
     // --- 4. DRAW CARD ---
     socket.on('drawCard', () => {
         if (gamePhase !== "playing") return;
