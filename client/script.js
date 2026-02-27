@@ -27,22 +27,27 @@ socket.emit('joinGame', myName);
 // 2. SCOREBOARD DINAMIK (Pika 17)
 // ==========================================
 socket.on('updateGameState', (data) => {
-    // 1. Kontrolli i Lobby-t
+    // 1. Kontrolli i Lobby-t (Përdorim getElementById direkt që të jemi 100% të sigurt)
+    const lobby = document.getElementById('lobby-controls');
+    const table = document.getElementById('game-table');
+    
     if (data.gameStarted) {
-        lobbyControls.style.display = 'none';
-        gameTable.style.display = 'block'; // Sigurohemi që tabela është aktive
+        if (lobby) lobby.style.display = 'none';
+        if (table) table.style.display = 'block'; 
     }
     
-    // 2. SHFAQJA E LETRËS NË TOKË (Pika që kërkove)
-    // Kjo bën që letra e fundit e hedhur të qëndrojë e dukshme te Discard Pile
-    if (data.discardPileTop) {
-        const isRed = ['♥', '♦'].includes(data.discardPileTop.s);
-        discardPile.innerHTML = `
-            <div class="card-on-table" style="color: ${isRed ? 'red' : 'black'}">
-                ${data.discardPileTop.v}<br>${data.discardPileTop.s}
-            </div>`;
-    } else {
-        discardPile.innerHTML = '<span class="label">HEDH KËTU</span>';
+    // 2. SHFAQJA E LETRËS NË TOKË
+    const discardPileElement = document.getElementById('discard-pile');
+    if (discardPileElement) {
+        if (data.discardPileTop) {
+            const isRed = ['♥', '♦'].includes(data.discardPileTop.s);
+            discardPileElement.innerHTML = `
+                <div class="card-on-table" style="color: ${isRed ? 'red' : 'black'}">
+                    ${data.discardPileTop.v}<br>${data.discardPileTop.s}
+                </div>`;
+        } else {
+            discardPileElement.innerHTML = '<span class="label">HEDH KËTU</span>';
+        }
     }
 
     // 3. Kontrolli i Radhës (Glow Effect)
@@ -50,13 +55,17 @@ socket.on('updateGameState', (data) => {
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
     // 4. Përditëso Tabelën e Pikëve
-    updateScoreboard(data.players, data.activePlayerId);
+    if (typeof updateScoreboard === "function") {
+        updateScoreboard(data.players, data.activePlayerId);
+    }
 
-    // 5. Sinkronizimi i letrave (Nëse dora jote në JS është bosh, merri nga serveri)
+    // 5. Sinkronizimi i letrave
     const me = data.players.find(p => p.id === socket.id);
     if (me && me.cards && doraImeData.length === 0) {
         doraImeData = me.cards;
-        renderHand();
+        if (typeof renderHand === "function") {
+            renderHand();
+        }
     }
 });
 function updateScoreboard(players, activeId) {
@@ -121,7 +130,9 @@ function updateGameFlow(data) {
 
 document.getElementById('btn-start').addEventListener('click', () => {
     socket.emit('startGame');
-    document.getElementById('lobby-controls').style.display = 'none'; // Shtoje këtë rresht
+    // Forco fshehjen menjëherë pas klikimit
+    document.getElementById('lobby-controls').style.display = 'none';
+    document.getElementById('game-table').style.display = 'block';
 });
 // ==========================================
 // 3. RENDER HAND (Pika 18 - Renditja Interaktive)
