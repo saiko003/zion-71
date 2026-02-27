@@ -81,11 +81,6 @@ socket.on('updateGameState', (data) => {
     if (typeof updateScoreboard === "function") {
         updateScoreboard(data.players, data.activePlayerId);
     }
-
-    // 5. Sinkronizimi i letrave
-    // 5. Sinkronizimi i letrave (I përmirësuar)
-const me = data.players.find(p => p.id === socket.id);
-
 const me = data.players.find(p => p.id === socket.id);
 
 if (me && me.cards) {
