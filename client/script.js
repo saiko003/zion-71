@@ -84,17 +84,22 @@ socket.on('updateGameState', (data) => {
 // script.js (Brenda updateGameState)
 const me = data.players.find(p => p.id === socket.id);
 
-if (me && me.cards) {
-    // Shtojmë një kontroll: nëse dora aktuale nuk ka asnjë Xhoker, 
-    // por ajo që vjen nga serveri ka, atëherë përditësoje detyrimisht.
-    const hasJokerNow = me.cards.some(c => c.v === '★');
-    const iHadJoker = doraImeData.some(c => c.v === '★');
+    if (me && me.cards) {
+        // Kontrolli më i saktë: A janë letrat e serverit të ndryshme nga ato që kam?
+        // JSON.stringify është mënyra më e shpejtë për të parë nëse diçka ka ndryshuar brenda listës
+        const cardsChanged = JSON.stringify(me.cards) !== JSON.stringify(doraImeData);
 
-    if (me.cards.length !== doraImeData.length || hasJokerNow !== iHadJoker || doraImeData.length === 0) {
-        doraImeData = me.cards;
-        if (typeof renderHand === "function") renderHand();
+        if (cardsChanged) {
+            doraImeData = me.cards;
+            
+            // Renderi thirret vetëm nëse ka ndryshim real
+            if (typeof renderHand === "function") {
+                renderHand();
+                console.log("Dora u përditësua me sukses!");
+            }
+        }
     }
-}
+    updateUI(data);
 });
 
 function updateScoreboard(players, activeId) {
