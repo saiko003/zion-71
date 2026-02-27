@@ -144,30 +144,44 @@ div.addEventListener('touchstart', (e) => {
 div.addEventListener('touchend', (e) => {
     const touch = e.changedTouches[0];
     
-    // 1. Shiko nëse gishti është mbi stivën e hedhjes (Discard Pile)
-    const dropZone = discardPile.getBoundingClientRect();
-    const isOverDiscard = (
-        touch.clientX > dropZone.left && 
-        touch.clientX < dropZone.right &&
-        touch.clientY > dropZone.top && 
-        touch.clientY < dropZone.bottom
+    const tableArea = document.getElementById('table-area');
+    const tableRect = tableArea.getBoundingClientRect();
+    const discardRect = discardPile.getBoundingClientRect();
+
+    // Shto pak tolerancë (50px) që të mos jetë shumë strikte lart e poshtë
+    const tolerance = 50;
+
+    // LOGJIKA: Nga ana e majtë e stivës së hedhjes deri në fund të ekranit djathtas
+    const isOverDiscardZone = (
+        touch.clientX > discardRect.left && 
+        touch.clientX < (tableRect.right + tolerance) && 
+        touch.clientY > (tableRect.top - tolerance) && 
+        touch.clientY < (tableRect.bottom + tolerance)
     );
 
-    if (isOverDiscard) {
-        processDiscard(div); // Nëse po, hedh letrën
+    // Gjejmë letrën që po tërhiqet (dragging)
+    const draggingCard = document.querySelector('.card.dragging');
+
+    if (isOverDiscardZone && isMyTurn && doraImeData.length === 11 && draggingCard) {
+        processDiscard(draggingCard);
     } else {
-        // Nëse jo, rregullo renditjen në dorë
+        // Nëse nuk është mbi zonën e hedhjes, rregullo renditjen në dorë
         handleReorder(touch.clientX);
     }
 
-    // 2. Pastrimi i stileve
-    div.classList.remove('dragging');
-    resetCardStyles(div);
-    saveNewOrder(); 
+    // Reset vizual i detyrueshëm
+    if (draggingCard) {
+        draggingCard.classList.remove('dragging');
+        resetCardStyles(draggingCard);
+    }
     
+    saveNewOrder();
+    tableArea.classList.remove('discard-zone-active');
+    
+    // Pastrim i stileve të stivës për siguri
     discardPile.style.background = "";
     discardPile.style.transform = "";
-}, { passive: false }); // NDRYSHIMI: Nga true në false
+}, { passive: false });
 
         // Ky dragover duhet vetëm për PC
         div.addEventListener('dragover', (e) => {
