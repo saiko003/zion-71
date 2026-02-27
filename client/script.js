@@ -111,46 +111,63 @@ function renderHand() {
         }, 100);
     });
 
-        // --- LOGJIKA PËR IPHONE (TOUCH START & END) ---
-        div.addEventListener('touchstart', (e) => {
-            if (!isMyTurn) return;
-            if (e.cancelable) e.preventDefault(); 
-
-            const touch = e.touches[0];
-            const rect = div.getBoundingClientRect();
-
-            // Ruajmë distancën mes gishtit dhe cepit të letrës
-            const offsetX = touch.clientX - rect.left;
-            const offsetY = touch.clientY - rect.top;
-
-            div.classList.add('dragging');
-
-            div.style.position = 'fixed';
-            div.style.zIndex = '1000';
-            div.style.width = rect.width + 'px';
-            div.style.height = rect.height + 'px';
-            div.style.left = rect.left + 'px';
-            div.style.top = rect.top + 'px';
-            div.style.pointerEvents = 'none';
-
-            div.dataset.offsetX = offsetX;
-            div.dataset.offsetY = offsetY;
-        }, { passive: false });
-        div.addEventListener('touchend', (e) => {
-            // 1. Marrim koordinatat e fundit ku ishte gishti para se të largohej
-            const touch = e.changedTouches[0];
+        
+        // --- LOGJIKA PËR IPHONE & TOUCH (Zëvendësimi) ---
+div.addEventListener('touchstart', (e) => {
+    if (!isMyTurn) return;
     
-            // 2. Detyrojmë renditjen në atë pozicion
-            handleReorder(touch.clientX);
+    // E rëndësishme: preventDefault ndalon "ghost clicks" dhe scroll-in e padëshiruar
+    if (e.cancelable) e.preventDefault(); 
 
-            // 3. Resetojmë stilin dhe ruajmë renditjen e re në variablin doraImeData
-            div.classList.remove('dragging');
-            resetCardStyles(div); 
-            saveNewOrder(); 
+    const touch = e.touches[0];
+    const rect = div.getBoundingClientRect();
+
+    // Ruajmë distancën ekzakte ku e preke letrën
+    const offsetX = touch.clientX - rect.left;
+    const offsetY = touch.clientY - rect.top;
+
+    div.classList.add('dragging');
+
+    // I japim dimensionet dhe pozicionin fiks menjëherë që të mos "kërcejë"
+    div.style.width = rect.width + 'px';
+    div.style.height = rect.height + 'px';
+    div.style.left = rect.left + 'px';
+    div.style.top = rect.top + 'px';
+    div.style.position = 'fixed';
+    div.style.zIndex = '1000';
+    div.style.pointerEvents = 'none'; // Lejon gishtin të "prekë" elementet poshtë letrës
+
+    div.dataset.offsetX = offsetX;
+    div.dataset.offsetY = offsetY;
+}, { passive: false });
+
+div.addEventListener('touchend', (e) => {
+    const touch = e.changedTouches[0];
     
-            discardPile.style.background = "";
-            discardPile.style.transform = "";
-        }, { passive: true });
+    // 1. Shiko nëse gishti është mbi stivën e hedhjes (Discard Pile)
+    const dropZone = discardPile.getBoundingClientRect();
+    const isOverDiscard = (
+        touch.clientX > dropZone.left && 
+        touch.clientX < dropZone.right &&
+        touch.clientY > dropZone.top && 
+        touch.clientY < dropZone.bottom
+    );
+
+    if (isOverDiscard) {
+        processDiscard(div); // Nëse po, hedh letrën
+    } else {
+        // Nëse jo, rregullo renditjen në dorë
+        handleReorder(touch.clientX);
+    }
+
+    // 2. Pastrimi i stileve
+    div.classList.remove('dragging');
+    resetCardStyles(div);
+    saveNewOrder(); 
+    
+    discardPile.style.background = "";
+    discardPile.style.transform = "";
+}, { passive: false }); // NDRYSHIMI: Nga true në false
 
         // Ky dragover duhet vetëm për PC
         div.addEventListener('dragover', (e) => {
