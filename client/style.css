@@ -154,23 +154,23 @@ body {
 }
 
 .card.dragging {
-    opacity: 0.8 !important; /* Pak më e dukshme */
+    opacity: 0.8 !important;
     transform: scale(1.1) rotate(3deg) !important;
     z-index: 1000 !important;
     transition: none !important;
     
-    /* KRITIKE: Lejo mausin ta mbajë letrën */
+    /* PËR PC: Lejon mausin ta mbajë letrën gjatë drag-it */
     pointer-events: auto !important; 
 }
 
-/* Kjo rregull i thotë iPhone-it: "Kur letra është fixed (në ajër), 
-   mos e blloko zonën poshtë saj" */
+/* KJO ËSHTË ZGJIDHJA: */
+/* Kur letra lëvizet në iPhone (JS i shton style position: fixed), 
+   ia heqim pointer-events që stiva e hedhjes të jetë "e prekshme" poshtë saj */
 .card.dragging[style*="fixed"] {
     pointer-events: none !important;
 }
   
-    
-    /* 1. Ndalon menunë që shfaqet kur e mbajmë shtypur (Plus-in dhe Google Search) */
+       /* 1. Ndalon menunë që shfaqet kur e mbajmë shtypur (Plus-in dhe Google Search) */
     -webkit-touch-callout: none; 
     
     /* 2. Ndalon plotësisht selektimin e tekstit */
