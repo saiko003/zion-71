@@ -593,3 +593,18 @@ body {
         transform: scale(0.95);
     }
 }
+
+/* 1. Shto overflow: hidden te table-area që ekziston */
+#table-area {
+    position: relative;
+    overflow: hidden; /* Kjo bën që shkëlqimi jeshil të mos dalë jashtë kornizës së tavolinës */
+}
+
+/* 2. Shto këtë klasë të re (kjo aktivizohet vetëm kur afron letrën) */
+.discard-zone-active {
+    background: linear-gradient(to right, 
+        transparent 50%, 
+        rgba(39, 174, 96, 0.2) 100%) !important;
+    border-right: 6px solid #2ecc71 !important; /* E bëjmë pak më të trashë anën e djathtë */
+    box-shadow: inset -20px 0 30px rgba(39, 174, 96, 0.1); /* Shton pak dritë nga e djathta */
+}
