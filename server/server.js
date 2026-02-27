@@ -20,7 +20,7 @@ let jackpotCard = null;
 let activePlayerIndex = 0;
 let gameStarted = false;
 let gameDeck = [];
-
+let dealerIndex = 0;
 function endRound(winnerId, allPlayersCards) {
     allPlayersCards.forEach(player => {
         if (player.id === winnerId) {
@@ -115,7 +115,7 @@ io.on('connection', (socket) => {
     console.log("Lojtar i ri u lidh:", socket.id);
 
     // KORRIGJUAR: socket (jo ssocket)
-    ssocket.on('joinGame', (playerName) => {
+    socket.on('joinGame', (playerName) => {
     // 1. KONTROLLI: Mos lejo hyrjen nëse loja ka nisur (për siguri)
     if (gameStarted) {
         socket.emit('errorMsg', 'Loja ka filluar, nuk mund të hysh tani!');
@@ -183,8 +183,8 @@ socket.on('startGame', () => {
     if (!player || player.id !== socket.id || player.cards.length !== 10) return;
 
     // 2. Sigurohemi që deçka (deck) nuk është bosh
-    if (newDeck && newDeck.length > 0) {
-        const drawnCard = newDeck.pop(); // Marrim letrën e fundit
+    if (gameDeck && gameDeck.length > 0){
+        const drawnCard = gameDeck.pop(); // Marrim letrën e fundit
         player.cards.push(drawnCard);
 
         console.log(`${player.name} tërhoqi një letër. Tani ka ${player.cards.length} letra.`);
@@ -331,4 +331,10 @@ function calculateScore(cards) {
     players.forEach(player => {
         io.to(player.id).emit('yourCards', player.cards);
     });
+}
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
 }
