@@ -8,6 +8,8 @@ const discardPile = document.getElementById('discard-pile');
 const btnMbyll = document.getElementById('btn-mbyll');
 const statusDrita = document.getElementById('status-drita');
 const statusTeksti = document.getElementById('status-teksti');
+const lobbyControls = document.getElementById('lobby-controls');
+const gameTable = document.getElementById('game-table');
 
 
 // Ruajtja e emrit dhe identifikimi
@@ -25,10 +27,15 @@ socket.emit('joinGame', myName);
 // 2. SCOREBOARD DINAMIK (Pika 17)
 // ==========================================
 socket.on('updateGameState', (data) => {
+    // Nëse loja ka filluar te serveri, fshehim lobby-n
+    if (data.gameStarted) {
+        lobbyControls.style.display = 'none'; // Kjo e heq mesazhin "Prit lojtarët..."
+        gameTable.style.visibility = 'visible'; // Kjo shfaq tavolinën
+    }
+    
     updateScoreboard(data.players, data.activePlayerId);
     updateGameFlow(data);
 });
-
 function updateScoreboard(players, activeId) {
     const scoreBody = document.getElementById('score-body');
     const scoreHeader = document.querySelector('#score-table thead tr');
