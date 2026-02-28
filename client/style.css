@@ -292,3 +292,7 @@ body.game-active #lobby-controls {
     justify-content: center;
     transition: transform 0.2s, border-color 0.2s;
 }
+#player-hand {
+    display: flex;
+    transition: all 0.2s ease; /* Kjo i bën letrat të rrëshqasin butë */
+}
