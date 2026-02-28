@@ -144,20 +144,31 @@ body {
 /* 6. DORA E LOJTARIT (Pika 18) */
 .hand-area {
     position: fixed;
-    bottom: 20px;
+    bottom: 10px; /* Pak më poshtë për të lënë vend për hover */
     left: 50%;
     transform: translateX(-50%);
-    width: 95%;
-    height: 150px;
+    width: auto;         /* Ndryshuar nga 95% në auto */
+    min-width: 300px;    /* Siguron një hapësirë minimale */
+    max-width: 98vw;     /* Nuk lejon daljen jashtë ekranit */
+    height: 160px;       /* Pak më e lartë për efektin hover */
     display: flex;
-    justify-content: center;
+    justify-content: center; 
     align-items: flex-end;
-    background: rgba(0,0,0,0.2);
-    border-radius: 20px;
-    padding: 10px;
-    z-index: 100;
+    background: rgba(0, 0, 0, 0.3); /* Pak më e errët për kontrast */
+    border-radius: 25px;
+    padding: 10px 40px;  /* Padding anash që letra e parë/fundit të mos prekin bordurën */
+    z-index: 1000;       /* Mbi çdo element tjetër të lojës */
+    backdrop-filter: blur(5px); /* Efekt modern xhami */
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+    
+    /* KJO ËSHTË E RËNDËSISHME: */
+    pointer-events: none; /* Lejon klikimin e tavolinës "nën" container nëse është bosh */
 }
 
+/* Lejon klikimin vetëm te letrat, jo te hapësira boshe e container-it */
+.hand-area .card {
+    pointer-events: auto;
+}
 .card {
     width: 70px;
     height: 110px;
