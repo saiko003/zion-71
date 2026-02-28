@@ -637,10 +637,13 @@ function getVal(card) {
     return parseInt(v);
 }
 
-// EVENTI I MBYLLJES (Kur klikon butonin MBYLL)
 document.getElementById('btn-mbyll').addEventListener('click', () => {
     if (confirm("A dëshiron të mbyllësh lojën?")) {
-        socket.emit('playerClosed', doraImeData);
+        // Dërgojmë informacionin nëse u mbyll me Jackpot
+        socket.emit('playerClosed', { 
+            cards: doraImeData, 
+            isJackpotClosing: tookJackpotThisTurn 
+        });
     }
 });
 // ==========================================
