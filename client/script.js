@@ -21,53 +21,6 @@ if (deckElement) {
     };
 }
 
-// Ruajtja e emrit dhe identifikimi
-let myName = localStorage.getItem('zion_player_name') || prompt("Shkruaj emrin tënd:");
-if (!myName) myName = "Lojtar_" + Math.floor(Math.random() * 1000);
-localStorage.setItem('zion_player_name', myName);
-
-let tookJackpotThisTurn = false;
-let doraImeData = [];
-let isMyTurn = false;
-
-// Bashkohu në lojë
-socket.emit('joinGame', myName);
-
-if (btnMbyll) {
-    btnMbyll.addEventListener('click', () => {
-    // 1. Kontrolli: A i ka lojtari 11 letra?
-    if (doraImeData.length !== 11) {
-        alert("Duhet të kesh 11 letra për të mbyllur lojën!");
-        return;
-    }
-
-    // 2. Pyetja për konfirmim
-    if (confirm("A dëshiron ta mbyllësh lojën (ZION)?")) {
-        // 3. Dërgimi i të dhënave te serveri
-        // 'tookJackpotThisTurn' duhet të jetë true nëse sapo ke klikuar Jackpot-in
-        socket.emit('playerClosed', { 
-            cards: doraImeData,
-            isJackpotClosing: typeof tookJackpotThisTurn !== 'undefined' ? tookJackpotThisTurn : false 
-        });
-
-        // Pas dërgimit e bëjmë reset variablën për raundin tjetër
-        if (typeof tookJackpotThisTurn !== 'undefined') {
-            tookJackpotThisTurn = false;
-        }
-    }
-});
-}
-
-socket.on('yourCards', (cards) => {
-    console.log("Mora letrat e mia nga serveri:", cards);
-    if (cards && Array.isArray(cards)) {
-        doraImeData = cards; // Ruajmë letrat në variablën globale
-        renderHand();        // I vizatojmë menjëherë
-        checkTurnLogic();    // Kontrollojmë nëse mund të mbyllet
-    }
-});
-
-socket.on('updateGameState', (data) => {
     // 1. Kontrolli i Lobby-t
     const lobby = document.getElementById('lobby-controls');
     const table = document.getElementById('game-table');
@@ -842,4 +795,12 @@ function getHandOrder() {
 // Eventi i fundit: Nëse lojtari rifreskon faqen, ruajmë emrin
 window.addEventListener('beforeunload', () => {
     localStorage.setItem('zion_player_name', myName);
+});
+socket.on('yourCards', (cards) => {
+    console.log("Mora letrat e mia nga serveri:", cards);
+    if (cards && Array.isArray(cards)) {
+        doraImeData = cards; 
+        renderHand();        
+        checkTurnLogic();    
+    }
 });
