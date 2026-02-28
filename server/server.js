@@ -1,15 +1,27 @@
-
-const express = require('express');
+cconst express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
+const { Server } = require('socket.io'); // MBAJE KËTË
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
+
 const server = http.createServer(app);
+
+// KËTU bëhet bashkimi - Përdorim { Server } që importuam sipër
 const io = new Server(server, {
-    cors: { origin: "*" }
+    cors: {
+        origin: [
+            "https://zion-71.onrender.com", 
+            "http://127.0.0.1:5500",        
+            "http://localhost:5500"
+        ],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
 });
+
+// Vazhdon kodi tjetër...
 
 // ==========================================
 // 1. VARIABLAT E LOJËS (Pika 1, 2)
