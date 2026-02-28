@@ -28,13 +28,15 @@ let tookJackpotThisTurn = false;
 socket.on('gameState', (data) => {
     console.log("Mora gjendjen e lojës:", data);
     
-    // 1. Kontrolli i Lobby-t
+    // 1. KONTROLLI I LOBBY-T DHE TAVOLINËS
     const lobby = document.getElementById('lobby-controls');
     const table = document.getElementById('game-table');
     
     if (data.gameStarted) {
         if (lobby) lobby.style.display = 'none';
         if (table) table.style.display = 'block'; 
+        // Sigurohemi që klasa për "glow" të jetë gati në body
+        document.body.classList.add('game-active');
     }
     
     // 2. SHFAQJA E LETRËS NË TOKË (Discard Pile)
@@ -51,39 +53,50 @@ socket.on('gameState', (data) => {
         }
     }
 
-    // --- SHTESË: Përditësimi i Jackpot-it (që të mos harrohet) ---
+    // 3. PËRDITËSIMI I JACKPOT-IT
     const jackpotElement = document.getElementById('jackpot');
-    if (jackpotElement && data.jackpotCard) {
-        const isRedJackpot = ['♥', '♦'].includes(data.jackpotCard.s);
-        jackpotElement.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
-        jackpotElement.style.color = isRedJackpot ? 'red' : 'white';
-        jackpotElement.style.display = 'block';
+    if (jackpotElement) {
+        if (data.jackpotCard) {
+            const isRedJackpot = ['♥', '♦'].includes(data.jackpotCard.s);
+            jackpotElement.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
+            jackpotElement.style.color = isRedJackpot ? 'red' : 'white';
+            jackpotElement.style.display = 'block';
+        } else {
+            // Nëse nuk ka letër Jackpot (p.sh. është marrë), fshihet
+            jackpotElement.style.display = 'none';
+        }
     }
 
-    // 3. Kontrolli i Radhës (Glow Effect)
+    // 4. KONTROLLI I RADHËS (Glow Effect)
     isMyTurn = (data.activePlayerId === socket.id);
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
-    // 4. Përditëso Tabelën e Pikëve
+    // 5. PËRDITËSO TABELËN E PIKËVE
     if (typeof updateScoreboard === "function") {
         updateScoreboard(data.players, data.activePlayerId);
     }
 
-    // 5. UPDATE I LETRAVE (Me mbrojtje për renditjen manuale)
+    // 6. UPDATE I LETRAVE (Mbrojtja për renditjen manuale)
     const me = data.players.find(p => p.id === socket.id);
 
     if (me && me.cards && Array.isArray(me.cards)) {
-        // RREGULLIM: I bëjmë render letrat vetëm nëse ka ndryshuar NUMRI i letrave
-        // Kjo të lejon t'i rendisësh vetë pa t'u kthyer mbrapsht nga serveri
-        if (me.cards.length !== doraImeData.length) {
+        // I bëjmë render vetëm nëse:
+        // - Nuk kemi pasur letra fare (sapo nisi loja)
+        // - Ka ndryshuar numri i letrave (kemi marrë ose hedhur letër)
+        if (doraImeData.length === 0 || me.cards.length !== doraImeData.length) {
             doraImeData = me.cards;
             if (typeof renderHand === "function") {
                 renderHand();
-                console.log("Dora u përditësua (ndryshoi numri i letrave)");
+                console.log("Dora u përditësua nga serveri.");
             }
         }
     }
     
+    // 7. PËRDITËSO RRJEDHËN (Dritat e Deck-ut etj.)
+    if (typeof updateGameFlow === "function") {
+        updateGameFlow(data);
+    }
+
     if (typeof checkTurnLogic === "function") {
         checkTurnLogic();
     }
@@ -342,26 +355,6 @@ document.addEventListener('touchend', (e) => {
 }, { passive: false });
 
 
-// 2. FUNKSIONI QË KONTROLLON RREGULLAT E HEDHJES
-function processDiscard(cardElement) {
-    const v = cardElement.dataset.v;
-    const s = cardElement.dataset.s;
-
-    // Kontrolli për Xhokerin (★)
-    if (v === '★' || s === 'Xhoker' || s === 'Joker') {
-        alert("Xhokeri nuk mund të hidhet! Duhet ta mbash deri në fund.");
-        resetCardStyles(cardElement);
-        return; 
-    }
-
-    // Nëse kalon kontrollin, njoftojmë serverin
-    socket.emit('cardDiscarded', { v, s });
-    
-    // E fshijmë nga ekrani dhe përditësojmë memorien
-    cardElement.remove();
-    saveNewOrder();
-}
-
 function resetCardStyles(el) {
     Object.assign(el.style, {
         position: '', 
@@ -496,52 +489,80 @@ function checkTurnLogic() {
     const statusDrita = document.getElementById('status-drita');
     const statusTeksti = document.getElementById('status-teksti');
 
-    // 1. Kontrolli i butonit MBYLL (Shfaqet vetëm nëse ka 11 letra dhe është radha jote)
+    // 1. Kontrolli nëse është radha jote dhe ke 11 letra
     if (isMyTurn && doraImeData.length === 11) {
-        // Kontrollojmë nëse dora është valide (9 letra të lidhura + 1 xhoker + 1 për të hedhur)
+        
+        // Thërrasim funksionin që kontrollon rregullat (Flush ose Grupe)
         const eshteGati = verifyZionRules(doraImeData);
         
         if (eshteGati) {
             btnMbyll.style.display = 'block';
-            statusDrita.className = 'led-green'; // Pika 7: Glow jeshil
-            statusTeksti.innerText = "ZION! Mund të mbyllesh.";
+            statusDrita.className = 'led-green'; 
+            // Nëse e ka marrë nga Jackpot, njoftojmë për x2
+            statusTeksti.innerText = tookJackpotThisTurn ? "ZION (X2)! Mbyllu." : "ZION! Mund të mbyllesh.";
         } else {
             btnMbyll.style.display = 'none';
             statusDrita.className = 'led-red';
             statusTeksti.innerText = "Rendit letrat ose hidh një.";
         }
     } else {
+        // Kur nuk është radha ose s'ke 11 letra
         btnMbyll.style.display = 'none';
         statusDrita.className = isMyTurn ? 'led-yellow' : 'led-red';
         statusTeksti.innerText = isMyTurn ? "Tërhiq një letër..." : "Prit radhën...";
     }
 }
-
 // ALGORITMI I VERIFIKIMIT (Thjeshtuar për momentin)
 function verifyZionRules(cards) {
-    // Kontrolli fillestar: Duhet t'i kemi 11 letra për të menduar mbylljen
+    // 1. Kontrolli fillestar: Duhet t'i kemi saktësisht 11 letra për të mbyllur raundin
     if (!cards || cards.length !== 11) return false;
 
-    // =========================================================
-    // 1. RREGULLI I FLUSH-it (10 letra me simbol të njëjtë + 1 për ta hedhur)
-    // =========================================================
-    const suits = ['♠', '♣', '♥', '♦'];
-    // Numërojmë xhokerat që kemi në dorë
-    const jokers = cards.filter(c => c.v === '★' || c.v === 'Xhoker').length;
+    // Provojmë të heqim secilën letër (si letër mbyllëse që do hidhet në tokë)
+    // dhe shohim nëse 10 letrat që mbeten plotësojnë kushtet.
+    for (let i = 0; i < cards.length; i++) {
+        // Krijojmë një dorë testuese me 10 letra (hiqet letra i-të)
+        const testHand = cards.filter((_, idx) => idx !== i);
+        const closingCard = cards[i];
 
-    for (let s of suits) {
-        // Numërojmë letrat normale të këtij simboli
-        const sameSuitNormal = cards.filter(c => c.s === s && c.v !== '★' && c.v !== 'Xhoker').length;
+        // Rregull: Xhokeri nuk mund të jetë letra që hidhet për mbyllje!
+        if (closingCard.v === '★' || closingCard.v === 'Xhoker') continue;
+
+        // =========================================================
+        // A. KONTROLLI I FLUSH (10 letra me simbol të njëjtë)
+        // =========================================================
+        const suits = ['♠', '♣', '♥', '♦'];
+        const jokersCount = testHand.filter(c => c.v === '★' || c.v === 'Xhoker').length;
+
+        let isFlush = false;
+        for (let s of suits) {
+            const sameSuitNormal = testHand.filter(c => c.s === s && c.v !== '★' && c.v !== 'Xhoker').length;
+            if (sameSuitNormal + jokersCount >= 10) {
+                console.log("ZION FLUSH i mundshëm me letrën mbyllëse:", closingCard.v + closingCard.s);
+                isFlush = true;
+                break; 
+            }
+        }
         
-        // Nëse (Letrat normale + Xhokerat) >= 10, kemi mbyllje FLUSH
-        if (sameSuitNormal + jokers >= 10) {
-            console.log("ZION FLUSH! Simbol fitues:", s);
-            return true; 
+        // Nëse gjetëm FLUSH, kthejmë true menjëherë
+        if (isFlush) return true;
+
+        // =========================================================
+        // B. KONTROLLI I GRUPEVE/RRADHËVE (canSolve)
+        // =========================================================
+        // Nëse nuk është Flush, kontrollojmë nëse 10 letrat janë të lidhura saktë
+        if (typeof canSolve === "function") {
+            if (canSolve(testHand)) {
+                console.log("ZION NORMAL i mundshëm me letrën mbyllëse:", closingCard.v + closingCard.s);
+                return true;
+            }
         }
     }
+    
+    // Nëse asnjë kombinim (nga 11 provat) nuk nxori fitues
+    return false;
+}
 
-    // =========================================================
-    // 2. RREGULLI NORMAL (Vargjet dhe Grupet - canSolve)
+    
     // =========================================================
     // Provojmë të heqim secilën letër (si letër mbyllëse) dhe shohim
     // nëse 10 letrat e mbetura formojnë grupe të vlefshme.
@@ -708,59 +729,59 @@ jackpotElement.addEventListener('click', () => {
         alert("Jackpot merret vetëm si letra e fundit për mbyllje!");
     }
 });
-// ==========================================
-// 9. ALGORITMI I ZGJIDHJES (canSolve)
-// ==========================================
+
 
 function canSolve(hand) {
-    if (hand.length !== 10) return false;
-
-    // 1. Ndajmë Xhokerat nga letrat normale
     const jokers = hand.filter(c => c.v === '★' || c.v === 'Xhoker').length;
     const normalCards = hand.filter(c => c.v !== '★' && c.v !== 'Xhoker');
 
-    // 2. Funksioni Rekursiv që provon të gjitha kombinimet
-    return backtrack(normalCards, jokers);
+    // I rendisim që t'i gjejmë rradhët më lehtë
+    normalCards.sort((a, b) => getVal(a) - getVal(b));
+
+    return checkRecursive(normalCards, jokers);
 }
 
-function backtrack(cards, jokers) {
-    // Nëse nuk kanë mbetur letra normale, kemi fituar (Xhokerat e mbetur plotësojnë çdo gjë)
-    if (cards.length === 0) return true;
+function checkRecursive(cards, jokers) {
+    if (cards.length === 0) return true; 
 
-    // Marrim letrën e parë dhe provojmë të formojmë një GRUP ose RRESHT
     const first = cards[0];
 
-    // --- PROVO GRUPIN (3 ose 4 letra me vlerë të njëjtë) ---
+    // --- 1. PROVO GRUPIN (Vlera e njëjtë - psh. tre 7-sha) ---
     const sameValue = cards.filter(c => c.v === first.v);
-    for (let size = 2; size <= 4; size++) {
-        const neededFromNormal = Math.min(size, sameValue.length);
-        const neededJokers = size - neededFromNormal;
-
-        if (size >= 3 && jokers >= neededJokers) {
-            // Krijojmë një kopje të letrave pa ato që përdorëm në grup
-            const remaining = cards.filter(c => !sameValue.slice(0, neededFromNormal).includes(c));
-            if (backtrack(remaining, jokers - neededJokers)) return true;
+    
+    // Provojmë grupe me madhësi 3 ose 4
+    for (let size = 3; size <= 4; size++) {
+        for (let jUsed = 0; jUsed <= jokers; jUsed++) {
+            let normalNeeded = size - jUsed;
+            // Nëse kemi mjaftueshëm letra normale për këtë madhësi grupi
+            if (normalNeeded > 0 && normalNeeded <= sameValue.length) {
+                const used = sameValue.slice(0, normalNeeded);
+                const remaining = cards.filter(c => !used.includes(c));
+                if (checkRecursive(remaining, jokers - jUsed)) return true;
+            }
         }
     }
 
-    // --- PROVO RRESHTIN (3+ letra në radhë, i njëjti simbol) ---
-    // (Për rreshtin duhet t'i kthejmë vlerat në numra: A=1/14, J=11, Q=12, K=13)
-    const sameSuit = cards.filter(c => c.s === first.s).sort((a, b) => cardValue(a) - cardValue(b));
-    // Provojmë të nisim një rresht nga 'first'
-    for (let len = 3; len <= 10; len++) {
-        if (canFormSequence(first, sameSuit, len, jokers)) {
-            // Hiq letrat e përdorura dhe vazhdo kontrollin
-            // (Kjo pjesë kërkon logjikë më të detajuar për heqjen e saktë)
+    // --- 2. PROVO RRADHËN (Psh. 5-6-7 me të njëjtin simbol) ---
+    const sameSuit = cards.filter(c => c.s === first.s);
+    if (sameSuit.length + jokers >= 3) {
+        // Provojmë vargje nga 3 deri në 10 letra
+        for (let len = 3; len <= 10; len++) {
+            const res = findAndRemoveSequence(sameSuit, len, jokers);
+            if (res) {
+                const remaining = cards.filter(c => !res.usedCards.includes(c));
+                if (checkRecursive(remaining, jokers - res.jokersUsed)) return true;
+            }
         }
     }
 
     return false;
 }
 
-// Kthejmë vlerat tekst në numra për renditje
-function cardValue(card) {
+// Funksion ndihmës për të gjetur vlerën numerike
+function getVal(card) {
     const v = card.v;
-    if (v === 'A') return 1; // Mund të jetë edhe 14, kërkon kontroll të dyfishtë
+    if (v === 'A') return 1; 
     if (v === 'J') return 11;
     if (v === 'Q') return 12;
     if (v === 'K') return 13;
