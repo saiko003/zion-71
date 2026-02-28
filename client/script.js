@@ -2,23 +2,16 @@ const socket = io('https://zion-71.onrender.com');
 
 let myName = sessionStorage.getItem('zion_player_name');
 
-// Nëse nuk ka emër, ose emri është "null" si string (gabim i shpeshtë)
-if (!myName || myName === "null") {
-    myName = prompt("Shkruaj emrin tuaj për këtë lojë:");
-    
-    if (!myName || myName.trim() === "") {
-        myName = "Lojtar_" + Math.floor(Math.random() * 999);
-    }
+// Nëse nuk ka emër në storage, krijo një të përkohshëm
+if (!myName) {
+    myName = "Lojtar-" + Math.floor(Math.random() * 1000);
     sessionStorage.setItem('zion_player_name', myName);
-}
+} // Këtu duhet vetëm kllapa gjarpëruese
 
-// KJO ËSHTË E RËNDËSISHME:
-// Dërgojmë emrin vetëm PASI lidhemi me sukses
 socket.on('connect', () => {
-    console.log("U lidha me ID:", socket.id);
+    console.log("U lidha si:", myName, "me ID:", socket.id);
     socket.emit('joinGame', myName);
 });
-
 const handContainer = document.getElementById('player-hand');
 const jackpotElement = document.getElementById('jackpot');
 const discardPile = document.getElementById('discard-pile');
@@ -36,12 +29,6 @@ let tookJackpotThisTurn = false;
 socket.on('lobbyMessage', (msg) => {
     const lobbyText = document.getElementById('lobby-text');
     if (lobbyText) lobbyText.innerText = msg;
-});
-socket.on('updateLobbyCount', (count) => {
-    const lobbyText = document.getElementById('lobby-text');
-    if(lobbyText) {
-        lobbyText.innerText = `Prit lojtarët e tjerë të futen... (${count} lojtar/e)`;
-    }
 });
 
 const btnStart = document.getElementById('btn-start');
@@ -67,15 +54,25 @@ socket.on('updateGameState', (data) => {
 
     // 1. Kontrolli i Lobby-t
     if (data.gameStarted === true) {
-        console.log("Loja nisi! Duke fshehur lobby-n...");
-        if (lobbyControls) lobbyControls.style.display = 'none';
-        if (gameTable) gameTable.style.display = 'block';
-        document.body.classList.add('game-active');
-    } else {
-        console.log("Loja nuk ka nisur ende.");
-        if (lobbyControls) lobbyControls.style.display = 'flex';
-        if (gameTable) gameTable.style.display = 'none';
-        return; // Ky return është i rrezikshëm nëse data.gameStarted vjen gabim
+    if (lobbyControls) lobbyControls.style.display = 'none';
+    if (gameTable) gameTable.style.display = 'block';
+} else {
+    if (lobbyControls) lobbyControls.style.display = 'flex';
+    if (gameTable) gameTable.style.display = 'none';
+    // Hiqe return-in këtu!
+}
+
+// 6. Update i Letrave (I rregulluar që të jetë më i shpejtë)
+// 6. Update i Letrave (Këtu sigurohu që kllapat janë OK)
+    if (data.players) {
+        const me = data.players.find(p => p.id === socket.id);
+        if (me && me.cards) {
+            const cardsChanged = JSON.stringify(me.cards) !== JSON.stringify(doraImeData);
+            if (cardsChanged) {
+                doraImeData = [...me.cards];
+                renderHand(); 
+            }
+        }
     }
 
     // 2. Përditëso Scoreboard
@@ -117,14 +114,6 @@ socket.on('updateGameState', (data) => {
     if (statusTeksti) statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
     if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
 
-    // 6. Update i Letrave në dorë (vetëm nëse ka ndryshim)
-    if (data.players) {
-        const me = data.players.find(p => p.id === socket.id);
-        if (me && me.cards && (doraImeData.length === 0 || me.cards.length !== doraImeData.length)) {
-            doraImeData = [...me.cards];
-            renderHand();
-        }
-    }
 
     // 7. Thirr funksionet ndihmëse
     if (typeof updateGameFlow === "function") updateGameFlow(data);
