@@ -21,11 +21,19 @@ if (deckElement) {
     };
 }
 
+// Shtoje këtë menjëherë pas rreshtit: const socket = io(...);
+let myName = localStorage.getItem('zion_player_name') || prompt("Shkruaj emrin tuaj:");
+if (!myName) myName = "Lojtar_" + Math.floor(Math.random() * 100);
+localStorage.setItem('zion_player_name', myName);
+
+// Kjo dërgon emrin te serveri
+socket.emit('joinGame', myName);
+
 let isMyTurn = false;
 let doraImeData = [];
 let tookJackpotThisTurn = false;
 
-socket.on('gameState', (data) => {
+socket.on('updateGameState', (data) => {
     console.log("Mora gjendjen e lojës:", data);
     
     // 1. KONTROLLI I LOBBY-T DHE TAVOLINËS
@@ -173,7 +181,6 @@ if (btnStart) {
     btnStart.onclick = () => {
         console.log("Duke kërkuar nisjen e lojës...");
         socket.emit('startGame');
-        // Mos e fshih lobby-n këtu, do ta bëjmë te socket.on('gameState')
     };
 }
 
