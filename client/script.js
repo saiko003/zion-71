@@ -272,14 +272,22 @@ function renderHand() {
         
         div.addEventListener('touchend', (e) => {
             div.classList.remove('dragging');
+
             const touch = e.changedTouches[0];
-            const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-            
             const pile = document.getElementById('discard-pile');
-            if (dropTarget && (dropTarget === pile || pile.contains(dropTarget))) {
-                processDiscard(div); 
+            const rect = pile.getBoundingClientRect();
+            const tolerance = 20; // pixel ekstra për t’ju lejuar pak gabim
+
+            const isOverPile =
+                touch.clientX > rect.left - tolerance &&
+                touch.clientX < rect.right + tolerance &&
+                touch.clientY > rect.top - tolerance &&
+                touch.clientY < rect.bottom + tolerance;
+
+            if (isOverPile && isMyTurn && doraImeData.length === 11) {
+                processDiscard(div);
             } else {
-                renderHand(); 
+                resetCardStyles(div); // letra kthehet në pozicion
             }
         });
 
