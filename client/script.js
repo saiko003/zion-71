@@ -34,6 +34,12 @@ let isMyTurn = false;
 let doraImeData = [];
 let tookJackpotThisTurn = false;
 
+const btnStart = document.getElementById('btn-start');
+btnStart.addEventListener('click', () => {
+    console.log("Po dërgoj startGame te serveri...");
+    socket.emit('startGame');  // Dërgon eventin tek serveri që nis lojën
+});
+
 if (deckElement) {
     deckElement.onclick = () => {
         // Tërheqim letër vetëm nëse është radha jonë dhe kemi 10 letra
