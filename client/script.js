@@ -1,6 +1,19 @@
 const socket = io('https://zion-71.onrender.com', {
     transports: ['polling', 'websocket']
 });
+let myName = sessionStorage.getItem('zion_player_name');
+
+if (!myName) {
+    myName = prompt("Shkruaj emrin tuaj për këtë lojë:");
+    if (!myName || myName.trim() === "") {
+        myName = "Lojtar_" + Math.floor(Math.random() * 999);
+    }
+    sessionStorage.setItem('zion_player_name', myName);
+}
+
+// Dërgojmë emrin te serveri menjëherë pas lidhjes
+socket.emit('joinGame', myName);
+
 const handContainer = document.getElementById('player-hand');
 const jackpotElement = document.getElementById('jackpot');
 const discardPile = document.getElementById('discard-pile');
@@ -20,14 +33,6 @@ if (deckElement) {
         }
     };
 }
-
-// Shtoje këtë menjëherë pas rreshtit: const socket = io(...);
-let myName = localStorage.getItem('zion_player_name') || prompt("Shkruaj emrin tuaj:");
-if (!myName) myName = "Lojtar_" + Math.floor(Math.random() * 100);
-localStorage.setItem('zion_player_name', myName);
-
-// Kjo dërgon emrin te serveri
-socket.emit('joinGame', myName);
 
 let isMyTurn = false;
 let doraImeData = [];
