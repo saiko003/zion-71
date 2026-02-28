@@ -169,11 +169,10 @@ socket.on('startGame', () => {
     console.log("Shtypet butoni START. Lojtarë të lidhur:", players.length);
 
     // 1️⃣ Kontrolli i numrit të lojtarëve
-    if (players.length < 2) {
-        console.log("DËSHTIM: Nuk ka mjaftueshëm lojtarë (vetëm " + players.length + ")");
-        socket.emit('errorMsg', "Duhen të paktën 2 lojtarë për të nisur!");
-        return; 
-    }
+   if (players.length < 2) {
+    console.log("Vetëm 1 lojtar: nisim për testim solo.");
+    // ose socket.emit('errorMsg', ...) për prod
+}
 
     if (players.length > 5) {
         socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
