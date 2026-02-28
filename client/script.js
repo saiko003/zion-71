@@ -1,6 +1,5 @@
-const socket = io('https://zion-71.onrender.com', {
-    transports: ['polling', 'websocket']
-});
+const socket = io('https://zion-71.onrender.com');
+
 let myName = sessionStorage.getItem('zion_player_name');
 
 // Nëse nuk ka emër, ose emri është "null" si string (gabim i shpeshtë)
