@@ -416,7 +416,7 @@ function broadcastState() {
             lobbyMsg += `${activePlayers} lojtarë janë aktivë. Mund të nisni lojën!`;
         }
     }
-
+ }
     io.emit('lobbyMessage', lobbyMsg); // Ky është event i ri për mesazhin
 
     // 🔹 Më pas vazhdojmë me updateGameState
@@ -438,7 +438,6 @@ function broadcastState() {
     players.forEach(player => {
         io.to(player.id).emit('yourCards', player.cards);
     }
-};
 
 // Funksioni profesional për përzierjen e letrave
 function shuffle(array) {
