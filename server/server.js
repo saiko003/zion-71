@@ -156,32 +156,45 @@ io.on('connection', (socket) => {
 
    
 // KODI I SAKTË PËR SERVER.JS
+// --- UPDATE PËR SERVER.JS ---
 socket.on('startGame', () => {
-    console.log("Tentativa për nisje... Lojtarë të lidhur:", players.length);
+    console.log("-----------------------------------------");
+    console.log("Shtypet butoni START. Lojtarë të lidhur:", players.length);
 
-    // Kontrolli 1: Minimumi i lojtarëve
+    // 1. Kontrolli i numrit të lojtarëve
     if (players.length < 2) {
-        socket.emit('errorMsg', "Duhen të paktën 2 lojtarë!");
+        console.log("DËSHTIM: Nuk ka mjaftueshëm lojtarë (vetëm " + players.length + ")");
+        socket.emit('errorMsg', "Duhen të paktën 2 lojtarë për të nisur!");
         return; 
     }
 
-    // Kontrolli 2: Maksimumi i lojtarëve
     if (players.length > 5) {
         socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
         return;
     }
 
-    // Nise lojën
-    gameStarted = true;
-    dealerIndex = 0; 
-    
-    console.log("Loja po nis zyrtarisht...");
+    try {
+        // 2. Ndryshojmë statusin global (Sigurohu që 'gameStarted' është let, jo const)
+        gameStarted = true;
+        activePlayerIndex = 0; // Kush e ka radhën i pari
+        
+        console.log("STATUSI: gameStarted u bë TRUE.");
 
-    // Thërrasim funksionin që ndan letrat
-    startNewRound(); 
-    
-    // Njoftojmë të gjithë që të ndryshojë ekrani nga Lobby te Tavolina
-    broadcastState();
+        // 3. Ndan letrat dhe përgatit dekun (ZEMRA E LOJËS)
+        console.log("DUKE NDARË LETRAT (startNewRound)...");
+        startNewRound(); 
+        
+        // 4. Lajmërojmë klientët që të ndryshojë pamja
+        console.log("DUKE DËRGUAR STATE (broadcastState)...");
+        broadcastState();
+
+        console.log("SUKSES: Loja u nis zyrtarisht!");
+        console.log("-----------------------------------------");
+
+    } catch (error) {
+        console.error("GABIM FATAL gjatë nisjes së lojës:", error);
+        socket.emit('errorMsg', "Ndodhi një gabim në server gjatë ndarjes së letrave.");
+    }
 });
     
     // TËRHEQJA E LETRËS (Pika 12)
