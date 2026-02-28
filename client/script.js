@@ -90,20 +90,29 @@ socket.on('updateGameState', (data) => {
     }
 
     // 6. UPDATE I LETRAVE (Mbrojtja për renditjen manuale)
+    // Kontrollojmë nëse data.players ekziston para se të bëjmë .find
+if (data.players && Array.isArray(data.players)) {
     const me = data.players.find(p => p.id === socket.id);
 
-    if (me && me.cards && Array.isArray(me.cards)) {
-        // I bëjmë render vetëm nëse:
-        // - Nuk kemi pasur letra fare (sapo nisi loja)
-        // - Ka ndryshuar numri i letrave (kemi marrë ose hedhur letër)
-        if (doraImeData.length === 0 || me.cards.length !== doraImeData.length) {
-            doraImeData = me.cards;
+    if (me && me.cards) {
+        // SHTO KËTË LOG: Të tregon saktë çfarë po vjen nga serveri
+        console.log("Letrat e mia nga serveri:", me.cards.length);
+
+        // Kushti i përmirësuar
+        const kaNdryshimNumri = me.cards.length !== doraImeData.length;
+        const doraEshteBosh = doraImeData.length === 0;
+
+        if (doraEshteBosh || kaNdryshimNumri) {
+            doraImeData = [...me.cards]; // Përdorim spread operator për siguri
             if (typeof renderHand === "function") {
                 renderHand();
-                console.log("Dora u përditësua nga serveri.");
+                console.log("Dora u vizatua (render) me sukses.");
+            } else {
+                console.error("GABIM: Funksioni renderHand nuk ekziston!");
             }
         }
     }
+}
     
     // 7. PËRDITËSO RRJEDHËN (Dritat e Deck-ut etj.)
     if (typeof updateGameFlow === "function") {
