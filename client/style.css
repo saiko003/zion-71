@@ -261,3 +261,13 @@ body.game-active #lobby-controls {
 #game-table {
     display: none;
 }
+.pile {
+    width: 120px;
+    height: 160px;
+    border: 2px dashed #777;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, border-color 0.2s;
+}
