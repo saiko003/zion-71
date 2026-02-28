@@ -78,7 +78,6 @@ let tookJackpotThisTurn = false;
     if (typeof checkTurnLogic === "function") {
         checkTurnLogic();
     }
-});
 
 function updateScoreboard(players, activeId) {
     const scoreBody = document.getElementById('score-body');
