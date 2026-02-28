@@ -199,7 +199,8 @@ io.on('connection', (socket) => {
 // --- UPDATE PËR SERVER.JS ---
 socket.on('startGame', () => {
     // 1. Kontrollet e sigurisë
-    if (players.length < 1) { // Mund ta bësh < 2 nëse s'do të luash vetëm
+    if (players.length < 1) { 
+        console.log("DEBUG: Ndalova këtu sepse players.length është 0");
         socket.emit('errorMsg', "Nuk ka lojtarë të mjaftueshëm!");
         return;
     }
