@@ -10,13 +10,31 @@
 <body>
 
     <div id="lobby-controls">
-        <h1>ZION 71</h1>
-        <div class="input-group">
-            <button id="btn-start">NIS LOJËN (START)</button>
-        </div>
-        <p>Prit lojtarët e tjerë të futen...</p>
+    <h1>ZION 71</h1>
+    <div class="input-group">
+        <button id="btn-start">NIS LOJËN (START)</button>
     </div>
+    <!-- Kjo është për mesazhin e lobby-së -->
+    <p id="lobby-text">Prit lojtarët e tjerë të futen...</p>
+    </div>
+    <div>
 
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io('https://zion-71.onrender.com');
+
+// Kur serveri dërgon mesazh të lobby-së
+socket.on('lobbyMessage', (msg) => {
+    const lobbyText = document.getElementById('lobby-text');
+    if (lobbyText) lobbyText.innerText = msg;
+});
+
+// Shembull: dërgo një mesazh test nga klienti (opsional)
+document.getElementById('btn-start').addEventListener('click', () => {
+    socket.emit('startGame');
+});
+</script>
+  </div>    
     <div id="game-table" style="display: none;">
         
         <div id="scoreboard-container">
