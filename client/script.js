@@ -37,11 +37,18 @@ socket.on('lobbyMessage', (msg) => {
     if (lobbyText) lobbyText.innerText = msg;
 });
 
-const btnStart = document.getElementById('btn-start');
-btnStart.addEventListener('click', () => {
-    console.log("Po dërgoj startGame te serveri...");
-    socket.emit('startGame');  // Dërgon eventin tek serveri që nis lojën
-});
+const btnstart = document.getElementById('btn-start');
+
+// 2. Kontrollojmë nëse butoni ekziston para se t'i vëmë "EventListener"
+if (btnstart) {
+    btnstart.addEventListener('click', () => {
+        console.log("🚀 Po dërgoj startGame te serveri...");
+        socket.emit('startGame');
+    });
+} else {
+    // Kjo të ndihmon të kuptosh nëse ID-ja në HTML është e saktë
+    console.error("Butoni 'btn-start' nuk u gjet në HTML!");
+}
 
 if (deckElement) {
     deckElement.onclick = () => {
