@@ -46,11 +46,27 @@ socket.on('updateGameState', (data) => {
     const table = document.getElementById('game-table');
     
     if (data.gameStarted) {
-        if (lobby) lobby.style.display = 'none';
-        if (table) table.style.display = 'block'; 
-        // Sigurohemi që klasa për "glow" të jetë gati në body
-        document.body.classList.add('game-active');
+    console.log("URRA! Serveri tha që loja nisi."); // Do e shohësh këtë në Console
+    
+    const lobby = document.getElementById('lobby-controls');
+    const table = document.getElementById('game-table');
+
+    if (lobby) {
+        lobby.style.display = 'none';
+        console.log("Lobby u fsheh me sukses.");
+    } else {
+        console.error("GABIM: Nuk po e gjej elementin me ID 'lobby-controls' në HTML!");
     }
+
+    if (table) {
+        table.style.display = 'block';
+        console.log("Tavolina u shfaq me sukses.");
+    } else {
+        console.error("GABIM: Nuk po e gjej elementin me ID 'game-table' në HTML!");
+    }
+    
+    document.body.classList.add('game-active');
+}
     
     // 2. SHFAQJA E LETRËS NË TOKË (Discard Pile)
     const discardPileElement = document.getElementById('discard-pile');
