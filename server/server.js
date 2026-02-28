@@ -385,20 +385,24 @@ function calculateScore(cards) {
     return score;
 }
 function broadcastState() {
+    // KONTROLLI: Shiko në terminalin e serverit nëse kjo është TRUE
+    console.log("Statusi i lojës që po dërgohet:", gameStarted);
+
     io.emit('updateGameState', {
-        gameStarted: gameStarted,
-        players: players.map(p => ({ 
-            id: p.id, 
-            name: p.name, 
-            score: p.score, 
+        gameStarted: gameStarted, // <--- KY RRESHT DUHET TË JETË KËTU!
+        players: players.map(p => ({
+            id: p.id,
+            name: p.name,
+            score: p.score,
             history: p.history,
-            isOut: p.isOut,
-            cardCount: p.cards.length 
+            cardCount: p.cards.length
+            // cards: p.cards // (Opcionale: mund t'i dërgosh këtu për testim)
         })),
         activePlayerId: players[activePlayerIndex]?.id,
         discardPileTop: discardPile[discardPile.length - 1] || null,
         jackpotCard: jackpotCard
-    }); // Kjo mbyll io.emit
+    });
+}
 
     // Dërgojmë letrat private te secili lojtar
     players.forEach(player => {
