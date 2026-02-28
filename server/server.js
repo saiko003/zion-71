@@ -399,11 +399,23 @@ socket.on('playerClosed', (data) => {
     }, 3000); 
 });
 
-    socket.on('disconnect', () => {
-        console.log("❌ Lojtari u shkëput:", socket.id);
-        players = players.filter(p => p.id !== socket.id);
-        io.emit('updateLobbyCount', players.length);
-        broadcastState();
+   socket.on('disconnect', () => {
+    console.log("❌ Lojtari u shkëput:", socket.id);
+    
+    // 1. Hiq lojtarin nga lista
+    players = players.filter(p => p.id !== socket.id);
+    
+    // 2. NESE DHOMA MBETET BOSH, RESETO STATUSIN E LOJES
+    if (players.length === 0) {
+        gameStarted = false; 
+        activePlayerId = null;
+        discardPile = [];
+        console.log("🔄 Dhoma është bosh. Loja u resetua për lojtarët e rinj.");
+    }
+
+    // 3. Njofto të tjerët (nëse ka mbetur dikush)
+    io.emit('updateLobbyCount', players.length);
+    broadcastState();
     });
 });
 
