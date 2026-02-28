@@ -156,34 +156,35 @@ io.on('connection', (socket) => {
 
    
 socket.on('startGame', () => {
-    if (players.length < 2) { // <--- A janë të paktën 2 lojtarë të lidhur?
+    console.log("Tentativa për nisje... Lojtarë të lidhur:", players.length);
+
+    // 1. Kontrolli i numrit të lojtarëve
+    if (players.length < 2) {
         socket.emit('errorMsg', "Duhen të paktën 2 lojtarë!");
         return; 
     }
-    gameStarted = true;
-    startNewRound();
-});
 
-    // 2. KONTROLLI I MAKSIMUMIT (Për siguri, nëse s'e kapi joinGame)
     if (players.length > 5) {
         socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
         return;
     }
 
-    console.log("Loja po nis...");
-
-    // 3. Markojmë që loja nisi (Kjo bllokon hyrjen e të tjerëve te joinGame)
+    // 2. Markojmë që loja nisi
     gameStarted = true;
+    console.log("Loja po nis zyrtarisht...");
 
-    // 4. Kush e nis i pari (Raundi i parë)
+    // 3. Kush e nis i pari (Raundi i parë)
     dealerIndex = 0; 
 
-    // 5. Thërrasim funksionin që ndan Xhokerat dhe letrat (ZEMRA)
+    // 4. Thërrasim funksionin që ndan letrat
+    // SIGUROHU që ky funksion ekziston në server.js
     startNewRound(); 
     
-    // Shënim: Nuk kemi nevojë për broadcastState() këtu sepse 
-    // e thërret startNewRound() automatikisht.
-});
+    // Edhe pse the që startNewRound e thërret vetë, 
+    // shtoje një broadcastState këtu për siguri që të ndryshojë ekrani i klientit
+    broadcastState();
+}); // KËTU mbyllet startGame
+    
     // TËRHEQJA E LETRËS (Pika 12)
     socket.on('drawCard', () => {
     const player = players[activePlayerIndex];
