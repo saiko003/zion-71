@@ -17,28 +17,7 @@
     <!-- Kjo është për mesazhin e lobby-së -->
     <p id="lobby-text">Prit lojtarët e tjerë të futen...</p>
     </div>
-    <div>
-<script>
-const socket = io('https://zion-71.onrender.com');
-
-// Kur serveri dërgon mesazh të lobby-së
-socket.on('lobbyMessage', (msg) => {
-    const lobbyText = document.getElementById('lobby-text');
-    if (lobbyText) lobbyText.innerText = msg;
-});
-// Live update i numrit të lojtarëve në lobby
-socket.on('updateLobbyCount', (count) => {
-    const lobbyText = document.getElementById('lobby-text');
-    if(lobbyText) {
-        lobbyText.innerText = `Prit lojtarët e tjerë të futen... (${count} lojtar/e)`;
-    }
-});
-// Shembull: dërgo një mesazh test nga klienti (opsional)
-document.getElementById('btn-start').addEventListener('click', () => {
-    socket.emit('startGame');
-});
-</script>
-  </div>    
+    
     <div id="game-table" style="display: none;">
         
         <div id="scoreboard-container">
