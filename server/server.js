@@ -41,6 +41,13 @@ function endRound(winnerId) {
         // Rregulli i eliminimit në 71
         if (player.score >= 71) {
             player.isOut = true;
+
+            const activePlayers = players.filter(p => !p.isOut);
+
+    if (activePlayers.length === 1) {
+        io.emit('gameOver', { winner: activePlayers[0].name });
+        return; // ndal ekzekutimin këtu
+    }
         }
     });
 
