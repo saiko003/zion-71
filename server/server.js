@@ -168,7 +168,7 @@ socket.on('startGame', () => {
     console.log("-----------------------------------------");
     console.log("Shtypet butoni START. Lojtarë të lidhur:", players.length);
 
-    1. Kontrolli i numrit të lojtarëve
+    // 1️⃣ Kontrolli i numrit të lojtarëve
     if (players.length < 2) {
         console.log("DËSHTIM: Nuk ka mjaftueshëm lojtarë (vetëm " + players.length + ")");
         socket.emit('errorMsg', "Duhen të paktën 2 lojtarë për të nisur!");
@@ -176,22 +176,22 @@ socket.on('startGame', () => {
     }
 
     if (players.length > 5) {
-       socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
+        socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
         return;
     }
 
     try {
-        // 2. Ndryshojmë statusin global (Sigurohu që 'gameStarted' është let, jo const)
+        // 2️⃣ Ndryshojmë statusin global
         gameStarted = true;
-        activePlayerIndex = 0; // Kush e ka radhën i pari
+        activePlayerIndex = 0; 
         
         console.log("STATUSI: gameStarted u bë TRUE.");
 
-        // 3. Ndan letrat dhe përgatit dekun (ZEMRA E LOJËS)
+        // 3️⃣ Ndarja e letrave
         console.log("DUKE NDARË LETRAT (startNewRound)...");
         startNewRound(); 
         
-        // 4. Lajmërojmë klientët që të ndryshojë pamja
+        // 4️⃣ Dërgojmë state
         console.log("DUKE DËRGUAR STATE (broadcastState)...");
         broadcastState();
 
