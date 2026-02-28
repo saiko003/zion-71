@@ -776,3 +776,4 @@ socket.on('yourCards', (cards) => {
         checkTurnLogic();    
     }
 });
+console.log("Lidhja HTML -> Script: OK ✅");
