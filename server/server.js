@@ -398,11 +398,13 @@ function calculateScore(cards) {
     return score;
 }
 function broadcastState() {
-    console.log("Statusi i lojës që po dërgohet:", gameStarted);
+    if(players.length === 0) return;
 
-    // 1. Dërgo gjendjen e tavolinës te TË GJITHË
+    console.log("Statusi i lojës që po dërgohet:", gameStarted);
+    console.log("DEBUG: activePlayerIndex =", activePlayerIndex, "Players length =", players.length);
+
     io.emit('updateGameState', {
-        gameStarted: gameStarted, 
+        gameStarted: gameStarted,
         players: players.map(p => ({
             id: p.id,
             name: p.name,
@@ -411,16 +413,15 @@ function broadcastState() {
             cardCount: p.cards.length,
             isOut: p.isOut
         })),
-        activePlayerId: players[activePlayerIndex]?.id || null,
+        activePlayerId: activePlayerId || null,
         discardPileTop: discardPile[discardPile.length - 1] || null,
         jackpotCard: jackpotCard
     });
 
-    // 2. Dërgo letrat private te SECILI lojtar (brenda funksionit)
     players.forEach(player => {
         io.to(player.id).emit('yourCards', player.cards);
     });
-} // Këtu mbyllet funksioni
+}
 
 // Funksioni profesional për përzierjen e letrave
 function shuffle(array) {
