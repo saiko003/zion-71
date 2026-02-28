@@ -22,28 +22,34 @@ let gameStarted = false;
 let gameDeck = [];
 let players = [];
 let dealerIndex = 0;
-function endRound(winnerId, allPlayersCards) {
-    allPlayersCards.forEach(player => {
+function endRound(winnerId) {
+    // Përdorim direkt listën 'players' që kemi në server
+    players.forEach(player => {
         if (player.id === winnerId) {
-            player.totalScore += 0; // Fituesi merr 0 (X)
-            player.roundHistory.push('X');
+            // Fituesi (ai që bëri ZION)
+            player.score += 0; 
+            player.history.push('X');
         } else {
-            // Llogarit pikët e mbetura (letrat jashtë grupeve)
-            let penalty = calculatePenalty(player.cards); 
-            player.totalScore += penalty;
-            player.roundHistory.push(penalty);
+            // HUMBËSIT: Llogarit pikët e letrave që nuk janë lidhur në grupe
+            // Funksioni calculateScore që kemi më poshtë i mbledh këto vlera
+            let penalty = calculateScore(player.cards); 
+            
+            player.score += penalty;
+            player.history.push(penalty);
         }
         
-        // Kontrollo nëse lojtari u eliminua
-        if (player.totalScore >= 71) {
+        // Rregulli i eliminimit në 71
+        if (player.score >= 71) {
             player.isOut = true;
         }
     });
 
-    // Kalojmë Dealer-in te tjetri që nuk është eliminuar
+    // Rrotullimi i Dealer-it (shmang lojtarët e eliminuar)
     dealerIndex = (dealerIndex + 1) % players.length;
-    while(players[dealerIndex].isOut) {
+    let attempts = 0;
+    while(players[dealerIndex].isOut && attempts < players.length) {
         dealerIndex = (dealerIndex + 1) % players.length;
+        attempts++;
     }
 }
 // Krijimi i 2 pakove me letra (104 letra)
