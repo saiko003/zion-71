@@ -1,9 +1,5 @@
 const socket = io('https://zion-71.onrender.com', {
-    transports: ['websocket', 'polling'],
-    upgrade: true,
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000
+    transports: ['websocket', 'polling']
 });
 
 let myName = sessionStorage.getItem('zion_player_name');
