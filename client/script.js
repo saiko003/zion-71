@@ -422,6 +422,10 @@ deckElement.addEventListener('click', () => {
     
     // Rregulli: Mund të marrësh letër vetëm nëse ke 10 letra në dorë
     if (doraImeData.length === 10) {
+        
+        // --- UPDATE: Sigurohemi që mbyllja nuk do të jetë me Jackpot (x1) ---
+        tookJackpotThisTurn = false; 
+
         socket.emit('drawCard');
     } else {
         alert("Ti i ke 11 letra, duhet të hedhësh një në tokë!");
@@ -712,6 +716,10 @@ document.getElementById('btn-mbyll').addEventListener('click', () => {
 jackpotElement.addEventListener('click', () => {
     // Rregulli: Jackpot merret vetëm nëse ke 10 letra (radha jote, pa marrë letër te stiva)
     if (isMyTurn && doraImeData.length === 10) {
+        
+        // --- UPDATE: Markojmë që mbyllja e mundshme është me Jackpot (x2) ---
+        tookJackpotThisTurn = true; 
+        
         socket.emit('drawJackpot');
         
         // Animacion vizual (Pika 6)
