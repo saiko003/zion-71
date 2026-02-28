@@ -1,4 +1,4 @@
-const socket = io('https://zion-71.onrender.com');
+const socket = io();
 
 let myName = sessionStorage.getItem('zion_player_name');
 
