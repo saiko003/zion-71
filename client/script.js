@@ -1,18 +1,24 @@
 const socket = io('https://zion-71.onrender.com', {
     transports: ['polling', 'websocket']
-});
+        
 let myName = sessionStorage.getItem('zion_player_name');
 
-if (!myName) {
+// Nëse nuk ka emër, ose emri është "null" si string (gabim i shpeshtë)
+if (!myName || myName === "null") {
     myName = prompt("Shkruaj emrin tuaj për këtë lojë:");
+    
     if (!myName || myName.trim() === "") {
         myName = "Lojtar_" + Math.floor(Math.random() * 999);
     }
     sessionStorage.setItem('zion_player_name', myName);
 }
 
-// Dërgojmë emrin te serveri menjëherë pas lidhjes
-socket.emit('joinGame', myName);
+// KJO ËSHTË E RËNDËSISHME:
+// Dërgojmë emrin vetëm PASI lidhemi me sukses
+socket.on('connect', () => {
+    console.log("U lidha me ID:", socket.id);
+    socket.emit('joinGame', myName);
+});
 
 const handContainer = document.getElementById('player-hand');
 const jackpotElement = document.getElementById('jackpot');
