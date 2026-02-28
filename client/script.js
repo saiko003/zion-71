@@ -110,10 +110,13 @@ function updateScoreboard(players, activeId) {
     const scoreHeader = document.querySelector('#score-table thead tr');
     if (!scoreBody || !scoreHeader) return;
 
-    // Gjejmë sa është numri maksimal i raundeve që është luajtur
-    let maxRounds = players.reduce((max, p) => Math.max(max, (p.history ? p.history.length : 0)), 0);
+    // 1. Gjejmë numrin maksimal të raundeve (sigurohemi që history ekziston)
+    let maxRounds = players.reduce((max, p) => {
+        const historyLen = (p.history && Array.isArray(p.history)) ? p.history.length : 0;
+        return Math.max(max, historyLen);
+    }, 0);
 
-    // Krijojmë Header-in: Lojtari | R1 | R2 | ... | Total
+    // 2. Krijojmë Header-in
     let headerHTML = `<th>Lojtari</th>`;
     for (let i = 1; i <= maxRounds; i++) {
         headerHTML += `<th>R${i}</th>`;
@@ -121,17 +124,20 @@ function updateScoreboard(players, activeId) {
     headerHTML += `<th>Total</th>`;
     scoreHeader.innerHTML = headerHTML;
 
-    // Mbushim rreshtat për çdo lojtar
+    // 3. Mbushim rreshtat
     scoreBody.innerHTML = '';
     players.forEach(player => {
         const row = document.createElement('tr');
-        if (player.id === activeId) row.classList.add('active-row'); // Pika 15: Turn Indicator
-        if (player.score > 71) row.classList.add('eliminated'); // Pika 9: Eliminimi
+        
+        // Klasat për stilim
+        if (player.id === activeId) row.classList.add('active-row');
+        if (player.score >= 71) row.classList.add('eliminated'); // Zion: 71 e lartë eliminohesh
 
-        let nameCell = `<td>${player.name} ${player.id === socket.id ? '<b>(Ti)</b>' : ''}</td>`;
+        let nameCell = `<td>${player.name} ${player.id === socket.id ? '<small>(Ti)</small>' : ''}</td>`;
         
         let historyCells = '';
         for (let i = 0; i < maxRounds; i++) {
+            // Shfaqim vlerën, nëse është "X" (fituesi) e bëjmë me ngjyrë tjetër në CSS
             let pikaRaundi = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
             historyCells += `<td>${pikaRaundi}</td>`;
         }
