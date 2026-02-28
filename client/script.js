@@ -268,16 +268,8 @@ function renderHand() {
                 width: rect.width + 'px',
                 height: rect.height + 'px'
             });
-        }, { passive: true });
-
-        div.addEventListener('touchmove', (e) => {
-            if (!div.classList.contains('dragging')) return;
-            const touch = e.touches[0];
-            div.style.left = (touch.clientX - parseFloat(div.dataset.offsetX)) + 'px';
-            div.style.top = (touch.clientY - parseFloat(div.dataset.offsetY)) + 'px';
-            e.preventDefault(); // parandalon scroll
         }, { passive: false });
-
+        
         div.addEventListener('touchend', (e) => {
             div.classList.remove('dragging');
             const touch = e.changedTouches[0];
