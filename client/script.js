@@ -214,12 +214,12 @@ if (btnStart) {
 }
 
 
-// 2. Sigurohu që ke edhe këtë për letrat që do tërheqësh gjatë lojës
 socket.on('cardDrawn', (newCard) => {
+    animateCardDraw();
     doraImeData.push(newCard);
     renderHand();
+    checkTurnLogic();
 });
-
 function checkZionCondition() {
     // Për momentin, po e bëjmë që butoni të shfaqet nëse lojtari ka 11 letra
     // (Më vonë do të shtojmë logjikën që kontrollon nëse janë rresht/grupe)
