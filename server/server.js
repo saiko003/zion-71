@@ -385,30 +385,29 @@ function calculateScore(cards) {
     return score;
 }
 function broadcastState() {
-    // KONTROLLI: Shiko në terminalin e serverit nëse kjo është TRUE
     console.log("Statusi i lojës që po dërgohet:", gameStarted);
 
+    // 1. Dërgo gjendjen e tavolinës te TË GJITHË
     io.emit('updateGameState', {
-        gameStarted: gameStarted, // <--- KY RRESHT DUHET TË JETË KËTU!
+        gameStarted: gameStarted, 
         players: players.map(p => ({
             id: p.id,
             name: p.name,
             score: p.score,
             history: p.history,
-            cardCount: p.cards.length
-            // cards: p.cards // (Opcionale: mund t'i dërgosh këtu për testim)
+            cardCount: p.cards.length,
+            isOut: p.isOut
         })),
-        activePlayerId: players[activePlayerIndex]?.id,
+        activePlayerId: players[activePlayerIndex]?.id || null,
         discardPileTop: discardPile[discardPile.length - 1] || null,
         jackpotCard: jackpotCard
     });
-}
 
-    // Dërgojmë letrat private te secili lojtar
+    // 2. Dërgo letrat private te SECILI lojtar (brenda funksionit)
     players.forEach(player => {
         io.to(player.id).emit('yourCards', player.cards);
     });
-} // Kjo mbyll funksionin broadcastState
+} // Këtu mbyllet funksioni
 
 // Funksioni profesional për përzierjen e letrave
 function shuffle(array) {
