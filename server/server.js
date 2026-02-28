@@ -189,41 +189,28 @@ io.on('connection', (socket) => {
 // KODI I SAKTË PËR SERVER.JS
 // --- UPDATE PËR SERVER.JS ---
 socket.on('startGame', () => {
-    console.log("-----------------------------------------");
-    console.log("Shtypet butoni START. Lojtarë të lidhur:", players.length);
-
-    // 1️⃣ Kontrolli i numrit të lojtarëve
-   if (players.length < 2) {
-    console.log("Vetëm 1 lojtar: nisim për testim solo.");
-    // ose socket.emit('errorMsg', ...) për prod
-}
-
-    if (players.length > 5) {
-        socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
-        return;
-    }
+    if(players.length < 2) console.log("Solo test");
+    if(players.length > 5) { socket.emit('errorMsg', "Maksimumi është 5 lojtarë!"); return; }
 
     try {
-        // 2️⃣ Ndryshojmë statusin global
         gameStarted = true;
-        activePlayerIndex = 0; 
-        
-        console.log("STATUSI: gameStarted u bë TRUE.");
+        activePlayerIndex = 0;
+        activePlayerId = players[activePlayerIndex].id;
 
-        // 3️⃣ Ndarja e letrave
-        console.log("DUKE NDARË LETRAT (startNewRound)...");
-        startNewRound(); 
-        
-        // 4️⃣ Dërgojmë state
-        console.log("DUKE DËRGUAR STATE (broadcastState)...");
-        broadcastState();
+        startNewRound(); // duhet të caktojë player.cards dhe jackpotCard
 
-        console.log("SUKSES: Loja u nis zyrtarisht!");
-        console.log("-----------------------------------------");
+        broadcastState(); // dërgon updateGameState
+
+        // Dërgon letrat individuale
+        players.forEach(player => {
+            io.to(player.id).emit('yourCards', player.cards);
+        });
+
+        console.log("Loja u nis me sukses!");
 
     } catch (error) {
-        console.error("GABIM FATAL gjatë nisjes së lojës:", error);
-        socket.emit('errorMsg', "Ndodhi një gabim në server gjatë ndarjes së letrave.");
+        console.error("Gabim gjatë nisjes:", error);
+        socket.emit('errorMsg', "Gabim në server gjatë nisjes së lojës.");
     }
 });
     
