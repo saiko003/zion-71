@@ -161,12 +161,12 @@ socket.on('startGame', () => {
     console.log("-----------------------------------------");
     console.log("Shtypet butoni START. Lojtarë të lidhur:", players.length);
 
-    // 1. Kontrolli i numrit të lojtarëve
-   // if (players.length < 2) {
-      //  console.log("DËSHTIM: Nuk ka mjaftueshëm lojtarë (vetëm " + players.length + ")");
-      //  socket.emit('errorMsg', "Duhen të paktën 2 lojtarë për të nisur!");
-       // return; 
-   // }
+    1. Kontrolli i numrit të lojtarëve
+    if (players.length < 2) {
+        console.log("DËSHTIM: Nuk ka mjaftueshëm lojtarë (vetëm " + players.length + ")");
+        socket.emit('errorMsg', "Duhen të paktën 2 lojtarë për të nisur!");
+        return; 
+    }
 
     if (players.length > 5) {
        socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
@@ -275,9 +275,9 @@ socket.on('cardDiscarded', (card) => {
         // E vendosim në majë të stivës në tokë
         discardPile.push(removedCard);
         
-        // 4. KALIMI I RADHËS TE LOJTARI TJETËR
-        // Përdorim modulo (%) që radha të kthehet te lojtari i parë pasi të luajë i fundit.
-        activePlayerIndex = (activePlayerIndex + 1) % players.length;
+        do {
+            activePlayerIndex = (activePlayerIndex + 1) % players.length;
+        } while (players[activePlayerIndex].isOut);
         
         console.log(`${player.name} hodhi ${card.v}${card.s}. Radhën e ka lojtari tjetër.`);
 
