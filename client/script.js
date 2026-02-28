@@ -536,22 +536,18 @@ function checkTurnLogic() {
 }
 // ALGORITMI I VERIFIKIMIT (Thjeshtuar për momentin)
 function verifyZionRules(cards) {
-    // 1. Kontrolli fillestar: Duhet t'i kemi saktësisht 11 letra për të mbyllur raundin
+    // 1. Kontrolli fillestar
     if (!cards || cards.length !== 11) return false;
 
-    // Provojmë të heqim secilën letër (si letër mbyllëse që do hidhet në tokë)
-    // dhe shohim nëse 10 letrat që mbeten plotësojnë kushtet.
+    // Provojmë të heqim secilën letër si letër mbyllëse
     for (let i = 0; i < cards.length; i++) {
-        // Krijojmë një dorë testuese me 10 letra (hiqet letra i-të)
         const testHand = cards.filter((_, idx) => idx !== i);
         const closingCard = cards[i];
 
-        // Rregull: Xhokeri nuk mund të jetë letra që hidhet për mbyllje!
+        // Rregull: Xhokeri nuk hidhet për mbyllje
         if (closingCard.v === '★' || closingCard.v === 'Xhoker') continue;
 
-        // =========================================================
-        // A. KONTROLLI I FLUSH (10 letra me simbol të njëjtë)
-        // =========================================================
+        // A. KONTROLLI I FLUSH (10 letra njësoj)
         const suits = ['♠', '♣', '♥', '♦'];
         const jokersCount = testHand.filter(c => c.v === '★' || c.v === 'Xhoker').length;
 
@@ -559,49 +555,26 @@ function verifyZionRules(cards) {
         for (let s of suits) {
             const sameSuitNormal = testHand.filter(c => c.s === s && c.v !== '★' && c.v !== 'Xhoker').length;
             if (sameSuitNormal + jokersCount >= 10) {
-                console.log("ZION FLUSH i mundshëm me letrën mbyllëse:", closingCard.v + closingCard.s);
+                console.log("ZION FLUSH gati me:", closingCard.v + closingCard.s);
                 isFlush = true;
                 break; 
             }
         }
         
-        // Nëse gjetëm FLUSH, kthejmë true menjëherë
         if (isFlush) return true;
 
-        // =========================================================
-        // B. KONTROLLI I GRUPEVE/RRADHËVE (canSolve)
-        // =========================================================
-        // Nëse nuk është Flush, kontrollojmë nëse 10 letrat janë të lidhura saktë
+        // B. KONTROLLI I GRUPEVE/RRADHËVE
         if (typeof canSolve === "function") {
             if (canSolve(testHand)) {
-                console.log("ZION NORMAL i mundshëm me letrën mbyllëse:", closingCard.v + closingCard.s);
+                console.log("ZION NORMAL gati me:", closingCard.v + closingCard.s);
                 return true;
             }
         }
     }
     
-    // Nëse asnjë kombinim (nga 11 provat) nuk nxori fitues
-    return false;
-
-    
-    // =========================================================
-    // Provojmë të heqim secilën letër (si letër mbyllëse) dhe shohim
-    // nëse 10 letrat e mbetura formojnë grupe të vlefshme.
-    for (let i = 0; i < cards.length; i++) {
-        // Krijojmë një dorë testuese me 10 letra
-        let testHand = cards.filter((_, idx) => idx !== i);
-        
-        // Nëse funksioni canSolve ekziston dhe thotë "PO", ndizet butoni
-        if (typeof canSolve === "function" && canSolve(testHand)) {
-            console.log("ZION NORMAL! Grupet/Vargjet janë gati.");
-            return true;
-        }
-    }
-    
+    // Nëse pas 11 provave asgjë s'u gjet
     return false;
 }
-
-
 
 /**
  * Gjen një rradhë valide duke llogaritur Asin (1 dhe 14) dhe Xhokerat.
