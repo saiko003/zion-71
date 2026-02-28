@@ -21,6 +21,10 @@ if (deckElement) {
     };
 }
 
+let isMyTurn = false;
+let doraImeData = [];
+let tookJackpotThisTurn = false;
+
     // 1. Kontrolli i Lobby-t
     const lobby = document.getElementById('lobby-controls');
     const table = document.getElementById('game-table');
