@@ -156,12 +156,13 @@ io.on('connection', (socket) => {
 
    
 socket.on('startGame', () => {
-    // 1. KONTROLLI I MINIMUMIT (Të paktën 2)
-    if (players.length < 2) {
-        socket.emit('errorMsg', "Duhen të paktën 2 lojtarë për të nisur!");
-        console.log("Nuk ka mjaftueshëm lojtarë.");
+    if (players.length < 2) { // <--- A janë të paktën 2 lojtarë të lidhur?
+        socket.emit('errorMsg', "Duhen të paktën 2 lojtarë!");
         return; 
     }
+    gameStarted = true;
+    startNewRound();
+});
 
     // 2. KONTROLLI I MAKSIMUMIT (Për siguri, nëse s'e kapi joinGame)
     if (players.length > 5) {
