@@ -20,6 +20,7 @@ let jackpotCard = null;
 let activePlayerIndex = 0;
 let gameStarted = false;
 let gameDeck = [];
+let players = [];
 let dealerIndex = 0;
 function endRound(winnerId, allPlayersCards) {
     allPlayersCards.forEach(player => {
