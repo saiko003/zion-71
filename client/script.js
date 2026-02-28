@@ -1,11 +1,4 @@
-const socket = io('https://zion-71.onrender.com', {
-    transports: ['websocket', 'polling'], // Provon WebSocket-in të parin, pastaj Polling
-    withCredentials: true,                // Mundëson dërgimin e cookies nëse duhen
-    reconnection: true,                   // Rilidhet automatikisht nëse humb interneti
-    reconnectionAttempts: 5,              // Provon 5 herë para se të dorëzohet
-    reconnectionDelay: 1000               // Pret 1 sekondë mes çdo tentative
-});
-
+const socket = io('https://zion-71.onrender.com');
 let myName = sessionStorage.getItem('zion_player_name');
 
 // Nëse nuk ka emër në storage, krijo një të përkohshëm
