@@ -14,7 +14,7 @@ const io = new Server(server, {
 // ==========================================
 // 1. VARIABLAT E LOJËS (Pika 1, 2)
 // ==========================================
-let players = [];
+let activePlayerId = null; 
 let discardPile = [];
 let jackpotCard = null;
 let activePlayerIndex = 0;
@@ -364,19 +364,25 @@ function calculateScore(cards) {
     return score;
 }
     function broadcastState() {
-    // 1. NJOFTIMI GJERË (Për të gjithë: Kush e ka radhën, çfarë ka në tokë)
     io.emit('updateGameState', {
+        gameStarted: gameStarted, // E rëndësishme për frontendin
         players: players.map(p => ({ 
             id: p.id, 
             name: p.name, 
             score: p.score, 
             history: p.history,
-            cardCount: p.cards.length // E dërgojmë sa letra kanë (pa treguar cilat janë)
+            isOut: p.isOut,
+            cardCount: p.cards.length 
         })),
         activePlayerId: players[activePlayerIndex]?.id,
-        discardPileTop: discardPile[discardPile.length - 1],
+        discardPileTop: discardPile[discardPile.length - 1] || null,
         jackpotCard: jackpotCard
     });
+
+    players.forEach(player => {
+        io.to(player.id).emit('yourCards', player.cards);
+    });
+}
 
     // 2. NJOFTIMI PRIVAT (Kritike për Xhokerin!)
     // Dërgojmë letrat specifike te secili lojtar në kanalin e tij "yourCards"
