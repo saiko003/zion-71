@@ -34,13 +34,15 @@ if (deckElement) {
     };
 }
 
+let gameStarted = false;
 let isMyTurn = false;
 let doraImeData = [];
 let tookJackpotThisTurn = false;
 
 socket.on('updateGameState', (data) => {
     console.log("Mora gjendjen e lojës:", data);
-    
+
+    gameStarted = data.gameStarted;
     // 1. KONTROLLI I LOBBY-T DHE TAVOLINËS (FIXED BRACKETS)
     const lobby = document.getElementById('lobby-controls');
     const table = document.getElementById('game-table');
