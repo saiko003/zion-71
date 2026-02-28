@@ -202,9 +202,6 @@ socket.on('startGame', () => {
         broadcastState(); // dërgon updateGameState
 
         // Dërgon letrat individuale
-        players.forEach(player => {
-            io.to(player.id).emit('yourCards', player.cards);
-        });
 
         console.log("Loja u nis me sukses!");
 
