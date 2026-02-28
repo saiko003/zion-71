@@ -442,11 +442,11 @@ function broadcastState() {
         activePlayerId: activePlayerId || null,
         discardPileTop: discardPile[discardPile.length - 1] || null,
         jackpotCard: jackpotCard
-    }
+    });
 
     players.forEach(player => {
         io.to(player.id).emit('yourCards', player.cards);
-    }
+    });
 
 // Funksioni profesional për përzierjen e letrave
 function shuffle(array) {
@@ -455,4 +455,4 @@ function shuffle(array) {
         [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
-}
+});
