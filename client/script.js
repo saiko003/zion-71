@@ -102,7 +102,6 @@ const me = data.players.find(p => p.id === socket.id);
             }
         }
     }
-    updateUI(data);
 });
 
 function updateScoreboard(players, activeId) {
