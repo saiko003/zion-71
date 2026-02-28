@@ -161,6 +161,7 @@ io.on('connection', (socket) => {
         return;
     }
 
+        
     // 2. KONTROLLI: Maksimumi 5 lojtarë
     if (players.length >= 5) {
         socket.emit('errorMsg', 'Dhoma është e plotë (Maksimumi 5 lojtarë)!');
@@ -180,7 +181,7 @@ io.on('connection', (socket) => {
         
     players.push(newPlayer);
     console.log(`${newPlayer.name} u shtua në lojë. Totali: ${players.length}`);
-    
+    io.emit('updateLobbyCount', players.length);
     // 4. NJOFTIMI I TË GJITHËVE
     broadcastState(); 
 });
@@ -368,6 +369,7 @@ socket.on('playerClosed', (data) => {
 });
 
     socket.on('disconnect', () => {
+    console.log('Lojtar u shkëput:', socket.id); 
     players = players.filter(p => p.id !== socket.id);
     broadcastState();
 });
@@ -431,12 +433,12 @@ function broadcastState() {
         activePlayerId: activePlayerId || null,
         discardPileTop: discardPile[discardPile.length - 1] || null,
         jackpotCard: jackpotCard
-    });
+    }
 
     players.forEach(player => {
         io.to(player.id).emit('yourCards', player.cards);
-    });
-}
+    }
+};
 
 // Funksioni profesional për përzierjen e letrave
 function shuffle(array) {
