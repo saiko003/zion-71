@@ -60,12 +60,15 @@ if (btnMbyll) {
 
 socket.on('yourCards', (cards) => {
     console.log("Mora letrat e mia nga serveri:", cards);
-    doraImeData = cards; // Përditësojmë dorën tonë lokale
-    renderHand();        // I vizatojmë letrat në ekran
+    if (cards && Array.isArray(cards)) {
+        doraImeData = cards; // Ruajmë letrat në variablën globale
+        renderHand();        // I vizatojmë menjëherë
+        checkTurnLogic();    // Kontrollojmë nëse mund të mbyllet
+    }
 });
 
 socket.on('updateGameState', (data) => {
-    // 1. Kontrolli i Lobby-t (Përdorim getElementById direkt që të jemi 100% të sigurt)
+    // 1. Kontrolli i Lobby-t
     const lobby = document.getElementById('lobby-controls');
     const table = document.getElementById('game-table');
     
@@ -96,23 +99,27 @@ socket.on('updateGameState', (data) => {
     if (typeof updateScoreboard === "function") {
         updateScoreboard(data.players, data.activePlayerId);
     }
-// script.js (Brenda updateGameState)
-const me = data.players.find(p => p.id === socket.id);
 
-    if (me && me.cards) {
-        // Kontrolli më i saktë: A janë letrat e serverit të ndryshme nga ato që kam?
-        // JSON.stringify është mënyra më e shpejtë për të parë nëse diçka ka ndryshuar brenda listës
+    // 5. UPDATE I LETRAVE (Rregullimi i Bug-ut)
+    const me = data.players.find(p => p.id === socket.id);
+
+    // Kemi shtuar kontrollin: vetëm nëse serveri i dërgon letrat te 'players'
+    if (me && me.cards && Array.isArray(me.cards)) {
         const cardsChanged = JSON.stringify(me.cards) !== JSON.stringify(doraImeData);
 
         if (cardsChanged) {
             doraImeData = me.cards;
             
-            // Renderi thirret vetëm nëse ka ndryshim real
             if (typeof renderHand === "function") {
                 renderHand();
-                console.log("Dora u përditësua me sukses!");
+                console.log("Dora u përditësua nga GameState!");
             }
         }
+    }
+    
+    // Ruajmë funksionet e tjera që mund të kesh pasur në fund të këtij blloku
+    if (typeof checkTurnLogic === "function") {
+        checkTurnLogic();
     }
 });
 
