@@ -404,6 +404,20 @@ function broadcastState() {
     console.log("Statusi i lojës që po dërgohet:", gameStarted);
     console.log("DEBUG: activePlayerIndex =", activePlayerIndex, "Players length =", players.length);
 
+    // 📌 Shtojmë mesazhin e lobby
+    const activePlayers = players.filter(p => !p.isOut).length;
+    let lobbyMsg = "ZION 71\nNIS LOJËN (START)\n";
+    if (!gameStarted) {
+        if (activePlayers < 2) {
+            lobbyMsg += "Prit lojtarët e tjerë të futen...";
+        } else {
+            lobbyMsg += `${activePlayers} lojtarë janë aktivë. Mund të nisni lojën!`;
+        }
+    }
+
+    io.emit('lobbyMessage', lobbyMsg); // Ky është event i ri për mesazhin
+
+    // 🔹 Më pas vazhdojmë me updateGameState
     io.emit('updateGameState', {
         gameStarted: gameStarted,
         players: players.map(p => ({
