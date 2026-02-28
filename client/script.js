@@ -26,6 +26,7 @@ let myName = localStorage.getItem('zion_player_name') || prompt("Shkruaj emrin t
 if (!myName) myName = "Lojtar_" + Math.floor(Math.random() * 1000);
 localStorage.setItem('zion_player_name', myName);
 
+let tookJackpotThisTurn = false;
 let doraImeData = [];
 let isMyTurn = false;
 
@@ -34,16 +35,27 @@ socket.emit('joinGame', myName);
 
 if (btnMbyll) {
     btnMbyll.addEventListener('click', () => {
-        // Kontrolli: A i ka lojtari 11 letra? (Nuk mund të mbyllësh me 10)
-        if (doraImeData.length !== 11) {
-            alert("Duhet të kesh 11 letra për të mbyllur lojën!");
-            return;
-        }
+    // 1. Kontrolli: A i ka lojtari 11 letra?
+    if (doraImeData.length !== 11) {
+        alert("Duhet të kesh 11 letra për të mbyllur lojën!");
+        return;
+    }
 
-        if (confirm("A dëshiron ta mbyllësh lojën (ZION)?")) {
-            socket.emit('playerClosed', { cards: doraImeData });
+    // 2. Pyetja për konfirmim
+    if (confirm("A dëshiron ta mbyllësh lojën (ZION)?")) {
+        // 3. Dërgimi i të dhënave te serveri
+        // 'tookJackpotThisTurn' duhet të jetë true nëse sapo ke klikuar Jackpot-in
+        socket.emit('playerClosed', { 
+            cards: doraImeData,
+            isJackpotClosing: typeof tookJackpotThisTurn !== 'undefined' ? tookJackpotThisTurn : false 
+        });
+
+        // Pas dërgimit e bëjmë reset variablën për raundin tjetër
+        if (typeof tookJackpotThisTurn !== 'undefined') {
+            tookJackpotThisTurn = false;
         }
-    });
+    }
+});
 }
 
 socket.on('yourCards', (cards) => {
