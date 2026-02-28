@@ -269,20 +269,27 @@ socket.on('playerClosed', (data) => {
     const winner = players.find(p => p.id === socket.id);
     if (!winner) return;
 
-    // --- RREGULLI I RI I JACKPOT-IT ---
-    // Kontrollojmë nëse mbyllja është legjitime (ose Zion normal ose Zion me Jackpot)
-    // data.cards vjen nga frontend-i (renditja që ka bërë lojtari me gisht)
-    const cardsToVerify = data.cards || winner.cards; 
+    // --- RREGULLI I RI I DYFISHIMIT ---
+    // Kontrollojmë nëse mbyllja është bërë me Jackpot (vjen nga frontend-i)
+    const isJackpotWin = data.isJackpotClosing || false;
 
-    console.log(`${winner.name} kërkoi mbylljen e raundit.`);
+    console.log(`${winner.name} kërkoi mbylljen e raundit. Jackpot Win: ${isJackpotWin}`);
 
     // 1. Llogarit pikët për të gjithë
     players.forEach(p => {
         if (p.id !== winner.id) {
             // Humbësit llogarisin letrat që u kanë mbetur në dorë
             let roundPoints = calculateScore(p.cards); 
+            
+            // SHUMËZIMI: Nëse është mbyllje me Jackpot, pikët bëhen x2
+            if (isJackpotWin) {
+                roundPoints = roundPoints * 2;
+            }
+
             p.score += roundPoints;
-            p.history.push(roundPoints);
+            
+            // Në histori shtojmë një shenjë (p.sh. "!") që të dihet kur janë dyfishuar
+            p.history.push(isJackpotWin ? `${roundPoints}!` : roundPoints);
             
             // Kontrollojmë nëse lojtari është eliminuar (>= 71)
             if (p.score >= 71) p.isOut = true;
@@ -292,9 +299,10 @@ socket.on('playerClosed', (data) => {
         }
     });
 
-    // 2. Njoftojmë të gjithë për rezultatet
+    // 2. Njoftojmë të gjithë për rezultatet (Shtojmë edhe 'isJackpot' te njoftimi)
     io.emit('roundOver', {
         winnerName: winner.name,
+        isJackpot: isJackpotWin,
         updatedPlayers: players.map(p => ({
             id: p.id,
             name: p.name,
@@ -305,19 +313,17 @@ socket.on('playerClosed', (data) => {
     });
 
     // 3. NDRYSHIMI I DEALER-IT (Rotacioni)
-    // Kalojmë te lojtari tjetër. Nëse lojtari tjetër është 'isOut', e kalojmë te pasardhësi.
     dealerIndex = (dealerIndex + 1) % players.length;
     
-    // Opsionale: Skip lojtarët që kanë dalë nga loja
     let attempts = 0;
     while(players[dealerIndex].isOut && attempts < players.length) {
         dealerIndex = (dealerIndex + 1) % players.length;
         attempts++;
     }
 
-    // 4. PASTRIMI I TAVOLINËS (Përgatitja për raundin e ri)
-    jackpotCard = null; // Sigurohemi që Jackpot-i i vjetër fshihet
-    discardPile = [];   // Pastrojmë letrat në tokë
+    // 4. PASTRIMI I TAVOLINËS
+    jackpotCard = null; 
+    discardPile = [];   
 
     // 5. FILLIMI I RAUNDIT TË RI (Pas 3 sekondave)
     setTimeout(() => {
@@ -343,14 +349,14 @@ function calculateScore(cards) {
     if (!cards) return 0;
 
     cards.forEach(card => {
-        // Xhokeri nuk llogaritet (0 pikë)
-        if (card.v === '★' || card.v === 'Xhoker' || card.s === 'Joker') return;
+        // 1. Xhokeri (Ylli) vlen 0 pikë (nuk dënohesh)
+        if (card.v === '★' || card.v === 'Xhoker') return;
 
-        // Nëse është 10, J, Q, K ose A, shto 10 pikë
-        if (['10', 'J', 'Q', 'K', 'A'].includes(card.v)) {
+        // 2. Letrat e rënda (A, K, Q, J, 10) vlejnë nga 10 pikë secila
+        if (['A', 'K', 'Q', 'J', '10'].includes(card.v)) {
             score += 10;
         } else {
-            // Për letrat 2-9, shto vlerën e tyre numerike
+            // 3. Letrat e tjera (2-9) vlejnë sa numri i tyre
             let val = parseInt(card.v);
             if (!isNaN(val)) score += val;
         }
