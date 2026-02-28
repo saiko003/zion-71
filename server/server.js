@@ -64,30 +64,32 @@ function createDeck() {
     return newDeck.sort(() => Math.random() - 0.5);
 }
 function startNewRound() {
-    // 1. Krijojmë dhe përziejmë dekun (Përdorim variablën globale gameDeck direkt)
+    // 1. Krijojmë dhe përziejmë dekun
     gameDeck = createDeck(); 
     shuffle(gameDeck);
     discardPile = []; // Pastrojmë letrat në tokë
 
-    // Sigurohemi që DealerIndex ekziston (Përdorim emrin që ke në variablat globale)
-    if (typeof currentDealerIndex === 'undefined' || currentDealerIndex === null) {
-        currentDealerIndex = 0;
+    // KORRIGJIM: Përdorim 'dealerIndex' që e ke deklaruar në fillim të serverit
+    // Nëse nuk është caktuar asnjëherë, e nisim nga 0
+    if (typeof dealerIndex === 'undefined' || dealerIndex === null) {
+        dealerIndex = 0;
     }
 
     players.forEach((player, index) => {
-        // RESET: Fshijmë letrat e vjetra para se të japim të rejat
+        // RESET: Fshijmë letrat e vjetra
         player.cards = []; 
 
-        // 2. KRIJOJME XHOKERIN (VETËM 1 për çdo lojtar)
+        // 2. KRIJOJMË XHOKERIN (1 për çdo lojtar)
         const myJoker = { v: '★', s: 'Xhoker' };
 
-        // 3. SHPËRNDARJA: Dealer-i (ai që ka radhën) merr 10 nga deku, tjetri 9
-        let sasiaNgaDeck = (index === currentDealerIndex) ? 10 : 9;
+        // 3. SHPËRNDARJA: Dealer-i merr 10 nga deku, të tjerët 9
+        // Kujdes: Këtu përdorim dealerIndex për krahasim
+        let sasiaNgaDeck = (index === dealerIndex) ? 10 : 9;
         
         // Marrim letrat nga gameDeck
         let letratNgaDeck = gameDeck.splice(0, sasiaNgaDeck);
 
-        // 4. BASHKIMI: Xhokeri + letrat e deçkës (Garanton 11 për Dealer, 10 për të tjerët)
+        // 4. BASHKIMI: Xhokeri + letrat e deçkës
         player.cards = [myJoker, ...letratNgaDeck];
 
         console.log(`DEBUG: ${player.name} (Index: ${index}) - Mori: ${player.cards.length} letra.`);
@@ -97,15 +99,14 @@ function startNewRound() {
     jackpotCard = gameDeck.pop();
     
     // 6. KUSH E KA RADHËN? Ai që ka 11 letra (Dealer-i aktual)
-    activePlayerIndex = dealerIndex
+    activePlayerIndex = dealerIndex; 
+    
     if (players[activePlayerIndex]) {
+        // Përditësojmë ID-në e lojtarit aktiv për komunikim me frontendin
         activePlayerId = players[activePlayerIndex].id;
     }
 
-    // KUJDES: Rotacioni (currentDealerIndex = ...) 
-    // DUHET të bëhet te funksioni 'playerClosed' (kur mbaron raundi), 
-    // JO këtu, sepse i ngatërron radhët e shpërndarjes tani.
-
+    // Njoftojmë të gjithë lojtarët për gjendjen e re
     broadcastState(); 
 }
 // ==========================================
