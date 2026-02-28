@@ -83,30 +83,40 @@ function startNewRound() {
     // 1️⃣ Krijojmë dhe përziejmë dekun
     gameDeck = createDeck(); 
     shuffle(gameDeck);
-    discardPile = []; // Pastrojmë letrat në tokë
+    discardPile = []; 
     console.log("Deku u krijua dhe u përzgjodh.");
 
-    // 2️⃣ Kontroll i dealerIndex
-    if (typeof dealerIndex === 'undefined' || dealerIndex === null) {
-        dealerIndex = 0;
+    // 2️⃣ Kontroll i dealerIndex dhe siguro që është tek një lojtar aktiv
+    if (typeof dealerIndex === 'undefined' || dealerIndex === null) dealerIndex = 0;
+
+    // Nëse dealer-i aktual është jashtë, gjej lojtarin e parë aktiv
+    let attempts = 0;
+    while (players[dealerIndex]?.isOut && attempts < players.length) {
+        dealerIndex = (dealerIndex + 1) % players.length;
+        attempts++;
     }
 
-    // 3️⃣ Shpërndarja e letrave te lojtarët
+    // 3️⃣ Shpërndarja e letrave te lojtarët aktivë
     players.forEach((player, index) => {
-        // RESET: Fshijmë letrat e vjetra
+        if (player.isOut) {
+            player.cards = [];
+            return; // Skipo lojtarët që janë jashtë
+        }
+
+        // RESET letrat e vjetra
         player.cards = []; 
 
-        // Krijojmë Xhokerin
+        // Xhokeri
         const myJoker = { v: '★', s: 'Xhoker' };
 
         // Dealer merr 10 letra, të tjerët 9
         let sasiaNgaDeck = (index === dealerIndex) ? 10 : 9;
         let letratNgaDeck = gameDeck.splice(0, sasiaNgaDeck);
 
-        // Bashkojmë Xhoker + letra nga deku
+        // Bashkim
         player.cards = [myJoker, ...letratNgaDeck];
 
-        console.log(`DEBUG: ${player.name} (Index: ${index}) - Mori ${player.cards.length} letra:`, 
+        console.log(`DEBUG: ${player.name} - Mori ${player.cards.length} letra:`,
                     player.cards.map(c => `${c.v}${c.s}`));
     });
 
@@ -114,8 +124,15 @@ function startNewRound() {
     jackpotCard = gameDeck.pop();
     console.log("Jackpot-i është:", jackpotCard ? `${jackpotCard.v}${jackpotCard.s}` : "Bosh");
 
-    // 5️⃣ Vendosim lojtarin aktiv (Dealer-i fillestar)
+    // 5️⃣ Vendosim lojtarin aktiv (lojtari me 11 letra = dealer)
     activePlayerIndex = dealerIndex;
+
+    // Siguro që lojtar aktiv nuk është jashtë
+    attempts = 0;
+    while (players[activePlayerIndex]?.isOut && attempts < players.length) {
+        activePlayerIndex = (activePlayerIndex + 1) % players.length;
+        attempts++;
+    }
 
     if (!players[activePlayerIndex]) {
         console.warn("Nuk u gjet lojtari aktiv! Duke vendosur default te 0.");
