@@ -768,13 +768,9 @@ window.addEventListener('beforeunload', () => {
 });
 
 socket.on('initGame', () => {
-    console.log("Mora sinjalin nga serveri për të nisur lojën!");
-    
-    // Fshehim menunë e fillimit (Lobby)
-    document.getElementById('lobby-controls').style.display = 'none';
-    
-    // Shfaqim tavolinën e lojës (Table)
-    document.getElementById('game-table').style.display = 'block';
+    console.log("Loja nisi! Po fsheh Lobby-n...");
+    document.getElementById('lobby-screen').classList.add('hidden');
+    document.getElementById('game-table').classList.remove('hidden');
 });
 
 socket.on('yourCards', (cards) => {
