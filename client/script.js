@@ -25,6 +25,8 @@ let isMyTurn = false;
 let doraImeData = [];
 let tookJackpotThisTurn = false;
 
+socket.on('gameState', (data) => {
+    console.log("Mora gjendjen e lojës:", data);
     // 1. Kontrolli i Lobby-t
     const lobby = document.getElementById('lobby-controls');
     const table = document.getElementById('game-table');
@@ -78,7 +80,7 @@ let tookJackpotThisTurn = false;
     if (typeof checkTurnLogic === "function") {
         checkTurnLogic();
     }
-
+});
 function updateScoreboard(players, activeId) {
     const scoreBody = document.getElementById('score-body');
     const scoreHeader = document.querySelector('#score-table thead tr');
