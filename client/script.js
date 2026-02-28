@@ -27,6 +27,7 @@ let tookJackpotThisTurn = false;
 
 socket.on('gameState', (data) => {
     console.log("Mora gjendjen e lojës:", data);
+    
     // 1. Kontrolli i Lobby-t
     const lobby = document.getElementById('lobby-controls');
     const table = document.getElementById('game-table');
@@ -36,7 +37,7 @@ socket.on('gameState', (data) => {
         if (table) table.style.display = 'block'; 
     }
     
-    // 2. SHFAQJA E LETRËS NË TOKË
+    // 2. SHFAQJA E LETRËS NË TOKË (Discard Pile)
     const discardPileElement = document.getElementById('discard-pile');
     if (discardPileElement) {
         if (data.discardPileTop) {
@@ -50,6 +51,15 @@ socket.on('gameState', (data) => {
         }
     }
 
+    // --- SHTESË: Përditësimi i Jackpot-it (që të mos harrohet) ---
+    const jackpotElement = document.getElementById('jackpot');
+    if (jackpotElement && data.jackpotCard) {
+        const isRedJackpot = ['♥', '♦'].includes(data.jackpotCard.s);
+        jackpotElement.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
+        jackpotElement.style.color = isRedJackpot ? 'red' : 'white';
+        jackpotElement.style.display = 'block';
+    }
+
     // 3. Kontrolli i Radhës (Glow Effect)
     isMyTurn = (data.activePlayerId === socket.id);
     document.body.classList.toggle('my-turn-glow', isMyTurn);
@@ -59,24 +69,21 @@ socket.on('gameState', (data) => {
         updateScoreboard(data.players, data.activePlayerId);
     }
 
-    // 5. UPDATE I LETRAVE (Rregullimi i Bug-ut)
+    // 5. UPDATE I LETRAVE (Me mbrojtje për renditjen manuale)
     const me = data.players.find(p => p.id === socket.id);
 
-    // Kemi shtuar kontrollin: vetëm nëse serveri i dërgon letrat te 'players'
     if (me && me.cards && Array.isArray(me.cards)) {
-        const cardsChanged = JSON.stringify(me.cards) !== JSON.stringify(doraImeData);
-
-        if (cardsChanged) {
+        // RREGULLIM: I bëjmë render letrat vetëm nëse ka ndryshuar NUMRI i letrave
+        // Kjo të lejon t'i rendisësh vetë pa t'u kthyer mbrapsht nga serveri
+        if (me.cards.length !== doraImeData.length) {
             doraImeData = me.cards;
-            
             if (typeof renderHand === "function") {
                 renderHand();
-                console.log("Dora u përditësua nga GameState!");
+                console.log("Dora u përditësua (ndryshoi numri i letrave)");
             }
         }
     }
     
-    // Ruajmë funksionet e tjera që mund të kesh pasur në fund të këtij blloku
     if (typeof checkTurnLogic === "function") {
         checkTurnLogic();
     }
@@ -147,12 +154,15 @@ function updateGameFlow(data) {
     }
 }
 
-document.getElementById('btn-start').addEventListener('click', () => {
-    socket.emit('startGame');
-    // Forco fshehjen menjëherë pas klikimit
-    document.getElementById('lobby-controls').style.display = 'none';
-    document.getElementById('game-table').style.display = 'block';
-});
+const btnStart = document.getElementById('btn-start');
+
+if (btnStart) {
+    btnStart.onclick = () => {
+        console.log("Duke kërkuar nisjen e lojës...");
+        socket.emit('startGame');
+        // Mos e fshih lobby-n këtu, do ta bëjmë te socket.on('gameState')
+    };
+}
 
 
 // 2. Sigurohu që ke edhe këtë për letrat që do tërheqësh gjatë lojës
