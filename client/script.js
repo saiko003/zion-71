@@ -11,9 +11,11 @@ if (!myName) {
 } // Këtu duhet vetëm kllapa gjarpëruese
 
 socket.on('connect', () => {
-    console.log("U lidha si:", myName, "me ID:", socket.id);
-    socket.emit('joinGame', myName);
+    const testi = "Lojtari_1"; // Emër fiks
+    console.log("U lidha! Po dërgoj joinGame...");
+    socket.emit('joinGame', testi);
 });
+
 const handContainer = document.getElementById('player-hand');
 const jackpotElement = document.getElementById('jackpot');
 const discardPile = document.getElementById('discard-pile');
