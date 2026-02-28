@@ -764,6 +764,17 @@ function getHandOrder() {
 window.addEventListener('beforeunload', () => {
     localStorage.setItem('zion_player_name', myName);
 });
+
+socket.on('initGame', () => {
+    console.log("Mora sinjalin nga serveri për të nisur lojën!");
+    
+    // Fshehim menunë e fillimit (Lobby)
+    document.getElementById('lobby-controls').style.display = 'none';
+    
+    // Shfaqim tavolinën e lojës (Table)
+    document.getElementById('game-table').style.display = 'block';
+});
+
 socket.on('yourCards', (cards) => {
     console.log("Mora letrat e mia nga serveri:", cards);
     if (cards && Array.isArray(cards)) {
