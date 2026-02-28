@@ -198,8 +198,34 @@ socket.on('startGame', () => {
     }
 });
 
-    // HEDHJA E LETRËS (Pika 10)
-    // server.js
+  socket.on('drawJackpot', () => {
+    const player = players[activePlayerIndex];
+
+    // 1. KONTROLLI I RADHËS DHE SASISË
+    // Mund ta marrësh Jackpot-in vetëm nëse është radha jote dhe ke 10 letra
+    if (!player || player.id !== socket.id || player.cards.length !== 10) {
+        console.log(`Tentativë e gabuar për Jackpot nga ${player?.name}`);
+        return;
+    }
+
+    // 2. KONTROLLI NËSE KA JACKPOT
+    if (!jackpotCard) {
+        socket.emit('errorMsg', "Jackpot-i është marrë tashmë!");
+        return;
+    }
+
+    console.log(`${player.name} mori Jackpot-in: ${jackpotCard.v}${jackpotCard.s}`);
+
+    // 3. TRANSFERIMI I LETRËS
+    player.cards.push(jackpotCard); // Lojtari bëhet me 11 letra
+    jackpotCard = null; // Jackpot-i fshihet nga tavolina
+
+    // 4. NJOFTIMI
+    // Nuk e kalojmë radhën automatikisht, sepse lojtari tani duhet ose 
+    // të bëjë "ZION" (mbyllje) ose të hedhë një letër tjetër në tokë.
+    broadcastState();
+});
+    
 socket.on('cardDiscarded', (card) => {
     const player = players[activePlayerIndex];
 
@@ -242,22 +268,30 @@ socket.on('playerClosed', (data) => {
     const winner = players.find(p => p.id === socket.id);
     if (!winner) return;
 
-    console.log(`${winner.name} ka bërë ZION!`);
+    // --- RREGULLI I RI I JACKPOT-IT ---
+    // Kontrollojmë nëse mbyllja është legjitime (ose Zion normal ose Zion me Jackpot)
+    // data.cards vjen nga frontend-i (renditja që ka bërë lojtari me gisht)
+    const cardsToVerify = data.cards || winner.cards; 
 
-    // 1. Llogarit pikët e të gjithë lojtarëve
+    console.log(`${winner.name} kërkoi mbylljen e raundit.`);
+
+    // 1. Llogarit pikët për të gjithë
     players.forEach(p => {
         if (p.id !== winner.id) {
-            // Llogarisim pikët bazuar në letrat që i kanë mbetur në dorë
+            // Humbësit llogarisin letrat që u kanë mbetur në dorë
             let roundPoints = calculateScore(p.cards); 
             p.score += roundPoints;
             p.history.push(roundPoints);
+            
+            // Kontrollojmë nëse lojtari është eliminuar (>= 71)
+            if (p.score >= 71) p.isOut = true;
         } else {
-            // Fituesi shënohet me "X" në histori
+            // Fituesi shënohet me "X"
             p.history.push("X"); 
         }
     });
 
-    // 2. Dërgojmë sinjalin te të gjithë që raundi mbaroi (për të shfaqur tabelën)
+    // 2. Njoftojmë të gjithë për rezultatet
     io.emit('roundOver', {
         winnerName: winner.name,
         updatedPlayers: players.map(p => ({
@@ -269,13 +303,24 @@ socket.on('playerClosed', (data) => {
         }))
     });
 
-    // 3. NDRYSHIMI I DEALER-IT (Stafeta kalon te lojtari tjetër)
+    // 3. NDRYSHIMI I DEALER-IT (Rotacioni)
+    // Kalojmë te lojtari tjetër. Nëse lojtari tjetër është 'isOut', e kalojmë te pasardhësi.
     dealerIndex = (dealerIndex + 1) % players.length;
+    
+    // Opsionale: Skip lojtarët që kanë dalë nga loja
+    let attempts = 0;
+    while(players[dealerIndex].isOut && attempts < players.length) {
+        dealerIndex = (dealerIndex + 1) % players.length;
+        attempts++;
+    }
 
-    // 4. FILLIMI I RAUNDIT TË RI (Me vonesë 3 sekonda)
-    // Kjo u jep kohë lojtarëve të shohin kush fitoi para se të vijnë letrat e reja
+    // 4. PASTRIMI I TAVOLINËS (Përgatitja për raundin e ri)
+    jackpotCard = null; // Sigurohemi që Jackpot-i i vjetër fshihet
+    discardPile = [];   // Pastrojmë letrat në tokë
+
+    // 5. FILLIMI I RAUNDIT TË RI (Pas 3 sekondave)
     setTimeout(() => {
-        console.log("Duke nisur raundin e ri...");
+        console.log("Duke nisur raundin e ri me Dealer-in e ri...");
         startNewRound();
     }, 3000); 
 });
