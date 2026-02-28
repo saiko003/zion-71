@@ -190,21 +190,30 @@ io.on('connection', (socket) => {
 // KODI I SAKTË PËR SERVER.JS
 // --- UPDATE PËR SERVER.JS ---
 socket.on('startGame', () => {
-    if(players.length < 2) console.log("Solo test");
-    if(players.length > 5) { socket.emit('errorMsg', "Maksimumi është 5 lojtarë!"); return; }
+    // Nëse po luan vetëm për test, kodi duhet të vazhdojë
+    if(players.length < 1) { 
+        socket.emit('errorMsg', "Nuk ka lojtarë!"); 
+        return; 
+    }
+
+    if(players.length > 5) { 
+        socket.emit('errorMsg', "Maksimumi është 5 lojtarë!"); 
+        return; 
+    }
 
     try {
         gameStarted = true;
-        activePlayerIndex = 0;
-        activePlayerId = players[activePlayerIndex].id;
-
-        startNewRound(); // duhet të caktojë player.cards dhe jackpotCard
-
-        broadcastState(); // dërgon updateGameState
-
-        // Dërgon letrat individuale
-
-        console.log("Loja u nis me sukses!");
+        // Sigurohemi që lojtari i parë ekziston para se t'i marrim ID-në
+        if (players.length > 0) {
+            activePlayerIndex = 0;
+            activePlayerId = players[activePlayerIndex].id;
+            
+            startNewRound(); 
+            broadcastState();
+            console.log("Loja u nis me sukses!");
+        } else {
+            console.log("Nuk ka lojtarë në listë!");
+        }
 
     } catch (error) {
         console.error("Gabim gjatë nisjes:", error);
