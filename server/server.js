@@ -198,34 +198,41 @@ io.on('connection', (socket) => {
 // KODI I SAKTË PËR SERVER.JS
 // --- UPDATE PËR SERVER.JS ---
 socket.on('startGame', () => {
-    // Nëse po luan vetëm për test, kodi duhet të vazhdojë
-    if(players.length < 1) { 
-        socket.emit('errorMsg', "Nuk ka lojtarë!"); 
-        return; 
+    // 1. Kontrollet e sigurisë
+    if (players.length < 1) { // Mund ta bësh < 2 nëse s'do të luash vetëm
+        socket.emit('errorMsg', "Nuk ka lojtarë të mjaftueshëm!");
+        return;
     }
 
-    if(players.length > 5) { 
-        socket.emit('errorMsg', "Maksimumi është 5 lojtarë!"); 
-        return; 
+    if (players.length > 5) {
+        socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
+        return;
     }
 
     try {
+        console.log("🚀 Duke nisur lojën...");
         gameStarted = true;
-        // Sigurohemi që lojtari i parë ekziston para se t'i marrim ID-në
-        if (players.length > 0) {
-            activePlayerIndex = 0;
-            activePlayerId = players[activePlayerIndex].id;
-            
-            startNewRound(); 
-            broadcastState();
-            console.log("Loja u nis me sukses!");
-        } else {
-            console.log("Nuk ka lojtarë në listë!");
-        }
+        
+        // 2. Caktojmë lojtarin e parë që e ka radhën
+        activePlayerIndex = 0;
+        activePlayerId = players[activePlayerIndex].id;
+
+        // 3. Nisim raundin e ri (përzierja e letrave, shpërndarja etj.)
+        // Kjo supozohet se mbush variablat e lojës në server
+        startNewRound(); 
+
+        // 4. Lajmërojmë TË GJITHË lojtarët që loja nisi
+        // Dërgojmë 'initGame' që të ndryshojë pamja nga Lobby te Game Table
+        io.emit('initGame');
+
+        // 5. Dërgojmë gjendjen e lojës (letrat, radhën, pikët) te të gjithë
+        broadcastState();
+
+        console.log(`✅ Loja u nis me sukses! Radhën e ka: ${players[activePlayerIndex].name}`);
 
     } catch (error) {
-        console.error("Gabim gjatë nisjes:", error);
-        socket.emit('errorMsg', "Gabim në server gjatë nisjes së lojës.");
+        console.error("❌ Gabim kritik gjatë nisjes së lojës:", error);
+        socket.emit('errorMsg', "Ndodhi një gabim teknik në server.");
     }
 });
     
