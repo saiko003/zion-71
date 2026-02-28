@@ -523,30 +523,39 @@ function checkTurnLogic() {
 
 // ALGORITMI I VERIFIKIMIT (Thjeshtuar për momentin)
 function verifyZionRules(cards) {
-    // 1. Rregulli Special i Jackpot-it (Simboli i njëjtë)
-    // Marrim simbolin direkt nga teksti i elementit HTML 'jackpot'
-    const jackpotElement = document.getElementById('jackpot');
-    
-    if (cards.length === 11 && jackpotElement && jackpotElement.innerText !== "") {
-        // Marrim karakterin e fundit (simbolin: ♥, ♦, ♣, ♠)
-        const text = jackpotElement.innerText.trim();
-        const jackpotSuit = text.charAt(text.length - 1); 
+    // Kontrolli fillestar: Duhet t'i kemi 11 letra për të menduar mbylljen
+    if (!cards || cards.length !== 11) return false;
 
-        // Numërojmë letrat me simbolin e njëjtë ose Xhokerin
-        const sameSuitCount = cards.filter(c => c.s === jackpotSuit || c.v === '★').length;
+    // =========================================================
+    // 1. RREGULLI I FLUSH-it (10 letra me simbol të njëjtë + 1 për ta hedhur)
+    // =========================================================
+    const suits = ['♠', '♣', '♥', '♦'];
+    // Numërojmë xhokerat që kemi në dorë
+    const jokers = cards.filter(c => c.v === '★' || c.v === 'Xhoker').length;
 
-        // Nëse kemi 10 letra me atë simbol (përfshirë xhokerin) + 1 letër tepër për ta hedhur
-        if (sameSuitCount >= 10) {
-            console.log("ZION me simbol! Jackpot Suit:", jackpotSuit);
+    for (let s of suits) {
+        // Numërojmë letrat normale të këtij simboli
+        const sameSuitNormal = cards.filter(c => c.s === s && c.v !== '★' && c.v !== 'Xhoker').length;
+        
+        // Nëse (Letrat normale + Xhokerat) >= 10, kemi mbyllje FLUSH
+        if (sameSuitNormal + jokers >= 10) {
+            console.log("ZION FLUSH! Simbol fitues:", s);
             return true; 
         }
     }
 
-    // 2. Rregulli Normal (Vargjet dhe Grupet)
-    // Ky kontrollon nëse lojtari i ka bërë letrat rresht/grupe (canSolve)
+    // =========================================================
+    // 2. RREGULLI NORMAL (Vargjet dhe Grupet - canSolve)
+    // =========================================================
+    // Provojmë të heqim secilën letër (si letër mbyllëse) dhe shohim
+    // nëse 10 letrat e mbetura formojnë grupe të vlefshme.
     for (let i = 0; i < cards.length; i++) {
+        // Krijojmë një dorë testuese me 10 letra
         let testHand = cards.filter((_, idx) => idx !== i);
+        
+        // Nëse funksioni canSolve ekziston dhe thotë "PO", ndizet butoni
         if (typeof canSolve === "function" && canSolve(testHand)) {
+            console.log("ZION NORMAL! Grupet/Vargjet janë gati.");
             return true;
         }
     }
@@ -555,15 +564,122 @@ function verifyZionRules(cards) {
 }
 
 // Funksioni që kontrollon nëse 10 letra janë të lidhura (Pika 5)
+/**
+ * Funksioni kryesor që kontrollon nëse 10 letra janë të lidhura.
+ */
 function canSolve(hand) {
-    // Këtu do të vendoset algoritmi i plotë që kontrollon:
-    // 1. Grupet (3-4 letra me vlerë të njëjtë)
-    // 2. Rreshtat (3+ letra në radhë, i njëjti simbol)
-    // 3. Përdorimin e Xhokerit (★)
+    if (!hand || hand.length !== 10) return false;
+
+    // 1. Ndajmë Xhokerat nga letrat normale
+    const jokers = hand.filter(c => c.v === '★' || c.v === 'Xhoker').length;
+    const normalCards = hand.filter(c => c.v !== '★' && c.v !== 'Xhoker');
+
+    // 2. Provojmë të gjitha kombinimet me anë të rekursionit
+    return checkRecursive(normalCards, jokers);
+}
+
+/**
+ * Algoritmi që provon të gjejë Grupe ose Rradhë në mënyrë rekursive.
+ */
+function checkRecursive(cards, jokers) {
+    // Nëse nuk ka më letra normale, kemi fituar (xhokerat e mbetur janë "wild")
+    if (cards.length === 0) return true;
+
+    const first = cards[0];
+
+    // --- PROVO GRUPIN (Vlera e njëjtë, simbole të çfarëdoshme) ---
+    // Një grup mund të ketë 3 ose 4 letra
+    const sameValue = cards.filter(c => c.v === first.v);
     
-    // Për momentin, po e lëmë që të kthejë true nëse lojtari ka bërë renditjen
-    // (Do ta pasurojmë këtë pjesë në hapin tjetër me logjikën matematike)
-    return false; 
+    for (let size = 3; size <= 4; size++) {
+        for (let jUsed = 0; jUsed <= jokers; jUsed++) {
+            let normalNeeded = size - jUsed;
+            if (normalNeeded > 0 && normalNeeded <= sameValue.length) {
+                // Heqim letrat që përdorëm për këtë grup
+                const used = sameValue.slice(0, normalNeeded);
+                const remaining = cards.filter(c => !used.includes(c));
+                
+                // Vazhdojmë kontrollin për letrat që mbetën
+                if (checkRecursive(remaining, jokers - jUsed)) return true;
+            }
+        }
+    }
+
+    // --- PROVO RRADHËN (Vlera pasuese, DUHET SIMBOL I NJËJTË) ---
+    const sameSuit = cards.filter(c => c.s === first.s);
+    if (sameSuit.length + jokers >= 3) {
+        // Provojmë rradhë me gjatësi të ndryshme (3 deri në 10)
+        for (let len = 3; len <= 10; len++) {
+            const sequenceResult = findAndRemoveSequence(sameSuit, len, jokers);
+            if (sequenceResult) {
+                const remaining = cards.filter(c => !sequenceResult.usedCards.includes(c));
+                if (checkRecursive(remaining, jokers - sequenceResult.jokersUsed)) return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Gjen një rradhë valide duke llogaritur Asin (1 dhe 14) dhe Xhokerat.
+ */
+function findAndRemoveSequence(suitCards, len, availableJokers) {
+    // Rendisim vlerat (Asi trajtohet si 1 fillimisht)
+    let vals = suitCards.map(c => ({ val: getVal(c), card: c }));
+    
+    // Provon dy konfigurime për Asin: si 1 (A-2-3) dhe si 14 (Q-K-A)
+    let configs = [vals.map(v => v.val)];
+    if (vals.some(v => v.val === 1)) {
+        configs.push(vals.map(v => v.val === 1 ? 14 : v.val));
+    }
+
+    for (let config of configs) {
+        config.sort((a, b) => a - b);
+        let uniqueVals = [...new Set(config)];
+
+        for (let startVal of uniqueVals) {
+            let usedCardsInSeq = [];
+            let currentJokers = availableJokers;
+            let currentVal = startVal;
+            let count = 0;
+
+            while (count < len) {
+                let foundCard = suitCards.find(c => {
+                    let v = getVal(c);
+                    if (config.includes(14) && v === 1) v = 14;
+                    return v === currentVal;
+                });
+
+                if (foundCard && !usedCardsInSeq.includes(foundCard)) {
+                    usedCardsInSeq.push(foundCard);
+                } else if (currentJokers > 0) {
+                    currentJokers--;
+                } else {
+                    break; // Nuk mund ta vazhdojmë rradhën
+                }
+                
+                currentVal++;
+                count++;
+                if (count === len) {
+                    return { usedCards: usedCardsInSeq, jokersUsed: availableJokers - currentJokers };
+                }
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * Kthen vlerën numerike të letrës.
+ */
+function getVal(card) {
+    const v = card.v;
+    if (v === 'A') return 1; 
+    if (v === 'J') return 11;
+    if (v === 'Q') return 12;
+    if (v === 'K') return 13;
+    return parseInt(v);
 }
 
 // EVENTI I MBYLLJES (Kur klikon butonin MBYLL)
