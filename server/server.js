@@ -151,40 +151,48 @@ function startNewRound() {
 // 2. KOMUNIKIMI ME LOJTARËT
 // ==========================================
 io.on('connection', (socket) => {
-    console.log("Lojtar i ri u lidh:", socket.id);
+    console.log("--- Tentativë lidhjeje ---");
+    console.log("Socket ID e re:", socket.id);
 
-    // KORRIGJUAR: socket (jo ssocket)
     socket.on('joinGame', (playerName) => {
-    // 1. KONTROLLI: Mos lejo hyrjen nëse loja ka nisur (për siguri)
-    if (gameStarted) {
-        socket.emit('errorMsg', 'Loja ka filluar, nuk mund të hysh tani!');
-        return;
-    }
+        // 1. KONTROLLI I STATUSIT TË LOJËS
+        if (gameStarted) {
+            socket.emit('errorMsg', 'Loja ka filluar, nuk mund të hysh tani!');
+            return;
+        }
 
-        
-    // 2. KONTROLLI: Maksimumi 5 lojtarë
-    if (players.length >= 5) {
-        socket.emit('errorMsg', 'Dhoma është e plotë (Maksimumi 5 lojtarë)!');
-        console.log(`Tentativë refuzuar: ${playerName} - Dhoma plot.`);
-        return;
-    }
+        // 2. KONTROLLI I DUPLIKIMIT (Mos e shto nëse ID ekziston në listë)
+        const alreadyExists = players.find(p => p.id === socket.id);
+        if (alreadyExists) {
+            console.log(`Lojtari ${alreadyExists.name} është tashmë në listë.`);
+            return;
+        }
 
-    // 3. KRIJIMI I LOJTARIT (Kodi yt origjinal i ruajtur plotësisht)
-    const newPlayer = {
-        id: socket.id,
-        name: playerName || "Lojtar i panjohur",
-        cards: [],
-        score: 0,
-        history: [],
-        isOut: false
-    };
+        // 3. KONTROLLI I LIMITIT (Maksimumi 5)
+        if (players.length >= 5) {
+            socket.emit('errorMsg', 'Dhoma është e plotë!');
+            return;
+        }
+
+        // 4. KRIJIMI I LOJTARIT
+        const newPlayer = {
+            id: socket.id,
+            name: playerName || `Lojtar ${players.length + 1}`,
+            cards: [],
+            score: 0,
+            history: [],
+            isOut: false
+        };
+
+        players.push(newPlayer);
         
-    players.push(newPlayer);
-    console.log(`${newPlayer.name} u shtua në lojë. Totali: ${players.length}`);
-    io.emit('updateLobbyCount', players.length);
-    // 4. NJOFTIMI I TË GJITHËVE
-    broadcastState(); 
-});
+        console.log(`✅ U SHTUA: ${newPlayer.name}`);
+        console.log(`📊 Totali në dhomë: ${players.length} lojtarë.`);
+
+        // 5. NJOFTIMI I TË GJITHËVE
+        io.emit('updateLobbyCount', players.length);
+        broadcastState(); 
+    });
 });
    
 // KODI I SAKTË PËR SERVER.JS
