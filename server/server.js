@@ -410,12 +410,12 @@ function calculateScore(cards) {
     return score;
 }
 function broadcastState() {
-    if(players.length === 0) return;
+    if (players.length === 0) return;
 
     console.log("Statusi i lojës që po dërgohet:", gameStarted);
     console.log("DEBUG: activePlayerIndex =", activePlayerIndex, "Players length =", players.length);
 
-    // 📌 Shtojmë mesazhin e lobby
+    // 1. Përgatitja e mesazhit të Lobby
     const activePlayers = players.filter(p => !p.isOut).length;
     let lobbyMsg = "ZION 71\nNIS LOJËN (START)\n";
     if (!gameStarted) {
@@ -425,10 +425,10 @@ function broadcastState() {
             lobbyMsg += `${activePlayers} lojtarë janë aktivë. Mund të nisni lojën!`;
         }
     }
- }
-    io.emit('lobbyMessage', lobbyMsg); // Ky është event i ri për mesazhin
 
-    // 🔹 Më pas vazhdojmë me updateGameState
+    // 2. Dërgimi i eventeve (Të gjitha BRENDA funksionit)
+    io.emit('lobbyMessage', lobbyMsg);
+
     io.emit('updateGameState', {
         gameStarted: gameStarted,
         players: players.map(p => ({
@@ -444,9 +444,11 @@ function broadcastState() {
         jackpotCard: jackpotCard
     });
 
+    // 3. Letrat individuale
     players.forEach(player => {
         io.to(player.id).emit('yourCards', player.cards);
     });
+} // Mbyllja e saktë e broadcastState
 
 // Funksioni profesional për përzierjen e letrave
 function shuffle(array) {
@@ -455,4 +457,4 @@ function shuffle(array) {
         [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
-});
+} 
