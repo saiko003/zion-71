@@ -41,33 +41,27 @@ let tookJackpotThisTurn = false;
 socket.on('updateGameState', (data) => {
     console.log("Mora gjendjen e lojës:", data);
     
-    // 1. KONTROLLI I LOBBY-T DHE TAVOLINËS
+    // 1. KONTROLLI I LOBBY-T DHE TAVOLINËS (FIXED BRACKETS)
     const lobby = document.getElementById('lobby-controls');
     const table = document.getElementById('game-table');
     
     if (data.gameStarted) {
-    console.log("URRA! Serveri tha që loja nisi."); // Do e shohësh këtë në Console
-    
-    const lobby = document.getElementById('lobby-controls');
-    const table = document.getElementById('game-table');
-
-    if (lobby) {
-        lobby.style.display = 'none';
-        console.log("Lobby u fsheh me sukses.");
+        console.log("URRA! Serveri tha që loja nisi.");
+        if (lobby) {
+            lobby.style.display = 'none';
+            console.log("Lobby u fsheh.");
+        }
+        if (table) {
+            table.style.display = 'block';
+            console.log("Tavolina u shfaq.");
+        }
+        document.body.classList.add('game-active');
     } else {
-        console.error("GABIM: Nuk po e gjej elementin me ID 'lobby-controls' në HTML!");
+        // Kthejmë Lobby-n nëse loja nuk ka nisur ende
+        if (lobby) lobby.style.display = 'flex';
+        if (table) table.style.display = 'none';
     }
 
-    if (table) {
-        table.style.display = 'block';
-        console.log("Tavolina u shfaq me sukses.");
-    } else {
-        console.error("GABIM: Nuk po e gjej elementin me ID 'game-table' në HTML!");
-    }
-    
-    document.body.classList.add('game-active');
-}
-    
     // 2. SHFAQJA E LETRËS NË TOKË (Discard Pile)
     const discardPileElement = document.getElementById('discard-pile');
     if (discardPileElement) {
@@ -91,7 +85,6 @@ socket.on('updateGameState', (data) => {
             jackpotElement.style.color = isRedJackpot ? 'red' : 'white';
             jackpotElement.style.display = 'block';
         } else {
-            // Nëse nuk ka letër Jackpot (p.sh. është marrë), fshihet
             jackpotElement.style.display = 'none';
         }
     }
@@ -105,32 +98,29 @@ socket.on('updateGameState', (data) => {
         updateScoreboard(data.players, data.activePlayerId);
     }
 
-    // 6. UPDATE I LETRAVE (Mbrojtja për renditjen manuale)
-    // Kontrollojmë nëse data.players ekziston para se të bëjmë .find
-if (data.players && Array.isArray(data.players)) {
-    const me = data.players.find(p => p.id === socket.id);
+    // 6. UPDATE I LETRAVE (Me mbrojtje për renditjen manuale)
+    if (data.players && Array.isArray(data.players)) {
+        const me = data.players.find(p => p.id === socket.id);
 
-    if (me && me.cards) {
-        // SHTO KËTË LOG: Të tregon saktë çfarë po vjen nga serveri
-        console.log("Letrat e mia nga serveri:", me.cards.length);
+        if (me && me.cards) {
+            console.log("Letrat nga serveri:", me.cards.length);
+            
+            // Përditësojmë dorën vetëm nëse ka ndryshim sasie ose nëse sapo ka nisur
+            const kaNdryshimNumri = me.cards.length !== doraImeData.length;
+            const doraEshteBosh = doraImeData.length === 0;
 
-        // Kushti i përmirësuar
-        const kaNdryshimNumri = me.cards.length !== doraImeData.length;
-        const doraEshteBosh = doraImeData.length === 0;
-
-        if (doraEshteBosh || kaNdryshimNumri) {
-            doraImeData = [...me.cards]; // Përdorim spread operator për siguri
-            if (typeof renderHand === "function") {
-                renderHand();
-                console.log("Dora u vizatua (render) me sukses.");
-            } else {
-                console.error("GABIM: Funksioni renderHand nuk ekziston!");
+            if (doraEshteBosh || kaNdryshimNumri) {
+                doraImeData = [...me.cards]; 
+                if (typeof renderHand === "function") {
+                    renderHand();
+                    console.log("Dora u vizatua me sukses.");
+                }
             }
         }
     }
-}
     
-    // 7. PËRDITËSO RRJEDHËN (Dritat e Deck-ut etj.)
+    // 7. PËRDITËSO RRJEDHËN E LOJËS (Deck lights, Turn logic)
+    // Këto funksione ekzistojnë poshtë në kodin tënd, po i thërrasim këtu:
     if (typeof updateGameFlow === "function") {
         updateGameFlow(data);
     }
