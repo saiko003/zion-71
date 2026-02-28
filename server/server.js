@@ -206,46 +206,39 @@ io.on('connection', (socket) => {
         broadcastState(); 
     });
 
-   
-// KODI I SAKTË PËR SERVER.JS
-// --- UPDATE PËR SERVER.JS ---
 socket.on('startGame', () => {
+    console.log("--- TENTATIVË STARTI ---");
+    console.log("Lojtarë në dhomë:", players.length); 
+
     // 1. Kontrollet e sigurisë
     if (players.length < 1) { 
-        console.log("DEBUG: Ndalova këtu sepse players.length është 0");
+        console.log("❌ Gabim: Nuk ka lojtarë!");
         socket.emit('errorMsg', "Nuk ka lojtarë të mjaftueshëm!");
         return;
     }
 
     if (players.length > 5) {
+        console.log("❌ Gabim: Shumë lojtarë (mbi 5)");
         socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
         return;
     }
 
     try {
-        console.log("🚀 Duke nisur lojën...");
+        console.log("🚀 Duke thirrur startNewRound()...");
         gameStarted = true;
         
-        // 2. Caktojmë lojtarin e parë që e ka radhën
-        activePlayerIndex = 0;
-        activePlayerId = players[activePlayerIndex].id;
-
-        // 3. Nisim raundin e ri (përzierja e letrave, shpërndarja etj.)
-        // Kjo supozohet se mbush variablat e lojës në server
+        // Ky funksion duhet të jetë i definuar diku në server.js
         startNewRound(); 
 
-        // 4. Lajmërojmë TË GJITHË lojtarët që loja nisi
-        // Dërgojmë 'initGame' që të ndryshojë pamja nga Lobby te Game Table
+        console.log("📢 Duke dërguar initGame te të gjithë...");
         io.emit('initGame');
-
-        // 5. Dërgojmë gjendjen e lojës (letrat, radhën, pikët) te të gjithë
+        
         broadcastState();
-
-        console.log(`✅ Loja u nis me sukses! Radhën e ka: ${players[activePlayerIndex].name}`);
+        console.log("✅ Çdo gjë përfundoi me sukses!");
 
     } catch (error) {
-        console.error("❌ Gabim kritik gjatë nisjes së lojës:", error);
-        socket.emit('errorMsg', "Ndodhi një gabim teknik në server.");
+        console.error("❌ GABIM KRITIK GJATË STARTIT:", error.message);
+        socket.emit('errorMsg', "Gabim teknik: " + error.message);
     }
 });
    
