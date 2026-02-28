@@ -210,16 +210,6 @@ function updateGameFlow(data) {
     }
 }
 
-const btnStart = document.getElementById('btn-start'); 
-
-if (btnStart) {
-    btnStart.addEventListener('click', () => {
-        console.log("Po dërgoj startGame te serveri...");
-        socket.emit('startGame');
-    });
-}
-
-
 socket.on('cardDrawn', (newCard) => {
     animateCardDraw();
     doraImeData.push(newCard);
@@ -285,7 +275,8 @@ function renderHand() {
             const touch = e.touches[0];
             div.style.left = (touch.clientX - parseFloat(div.dataset.offsetX)) + 'px';
             div.style.top = (touch.clientY - parseFloat(div.dataset.offsetY)) + 'px';
-        }, { passive: true });
+            e.preventDefault(); // parandalon scroll
+        }, { passive: false });
 
         div.addEventListener('touchend', (e) => {
             div.classList.remove('dragging');
@@ -465,12 +456,6 @@ function animateCardDraw() {
     setTimeout(() => tempCard.remove(), 500);
 }
 
-// Marrja e letrës së re nga serveri
-socket.on('cardDrawn', (newCard) => {
-    doraImeData.push(newCard); // Shtohet letra e 11-të
-    renderHand();              // Rifreskohet pamja
-    checkTurnLogic();          // Kontrollohet nëse mund të mbyllet (Pika 15)
-});
 // ==========================================
 // 6. HEDHJA E LETRËS (Discard)
 // ==========================================
@@ -619,48 +604,7 @@ function verifyZionRules(cards) {
     return false;
 }
 
-/**
- * Algoritmi që provon të gjejë Grupe ose Rradhë në mënyrë rekursive.
- */
-function checkRecursive(cards, jokers) {
-    // Nëse nuk ka më letra normale, kemi fituar (xhokerat e mbetur janë "wild")
-    if (cards.length === 0) return true;
 
-    const first = cards[0];
-
-    // --- PROVO GRUPIN (Vlera e njëjtë, simbole të çfarëdoshme) ---
-    // Një grup mund të ketë 3 ose 4 letra
-    const sameValue = cards.filter(c => c.v === first.v);
-    
-    for (let size = 3; size <= 4; size++) {
-        for (let jUsed = 0; jUsed <= jokers; jUsed++) {
-            let normalNeeded = size - jUsed;
-            if (normalNeeded > 0 && normalNeeded <= sameValue.length) {
-                // Heqim letrat që përdorëm për këtë grup
-                const used = sameValue.slice(0, normalNeeded);
-                const remaining = cards.filter(c => !used.includes(c));
-                
-                // Vazhdojmë kontrollin për letrat që mbetën
-                if (checkRecursive(remaining, jokers - jUsed)) return true;
-            }
-        }
-    }
-
-    // --- PROVO RRADHËN (Vlera pasuese, DUHET SIMBOL I NJËJTË) ---
-    const sameSuit = cards.filter(c => c.s === first.s);
-    if (sameSuit.length + jokers >= 3) {
-        // Provojmë rradhë me gjatësi të ndryshme (3 deri në 10)
-        for (let len = 3; len <= 10; len++) {
-            const sequenceResult = findAndRemoveSequence(sameSuit, len, jokers);
-            if (sequenceResult) {
-                const remaining = cards.filter(c => !sequenceResult.usedCards.includes(c));
-                if (checkRecursive(remaining, jokers - sequenceResult.jokersUsed)) return true;
-            }
-        }
-    }
-
-    return false;
-}
 
 /**
  * Gjen një rradhë valide duke llogaritur Asin (1 dhe 14) dhe Xhokerat.
@@ -766,54 +710,44 @@ function canSolve(hand) {
 }
 
 function checkRecursive(cards, jokers) {
-    if (cards.length === 0) return true; 
+    // Nëse nuk ka më letra normale, kemi fituar (xhokerat e mbetur janë "wild")
+    if (cards.length === 0) return true;
 
     const first = cards[0];
 
-    // --- 1. PROVO GRUPIN (Vlera e njëjtë - psh. tre 7-sha) ---
+    // --- 1. PROVO GRUPIN (Vlera e njëjtë, simbole të çfarëdoshme) ---
+    // Një grup mund të ketë 3 ose 4 letra
     const sameValue = cards.filter(c => c.v === first.v);
     
-    // Provojmë grupe me madhësi 3 ose 4
     for (let size = 3; size <= 4; size++) {
         for (let jUsed = 0; jUsed <= jokers; jUsed++) {
             let normalNeeded = size - jUsed;
-            // Nëse kemi mjaftueshëm letra normale për këtë madhësi grupi
             if (normalNeeded > 0 && normalNeeded <= sameValue.length) {
+                // Heqim letrat që përdorëm për këtë grup
                 const used = sameValue.slice(0, normalNeeded);
                 const remaining = cards.filter(c => !used.includes(c));
+                
+                // Kontrollojmë recursiv letrat që mbetën
                 if (checkRecursive(remaining, jokers - jUsed)) return true;
             }
         }
     }
 
-    // --- 2. PROVO RRADHËN (Psh. 5-6-7 me të njëjtin simbol) ---
+    // --- 2. PROVO RRADHËN (Vlera pasuese, duhet simbol i njëjtë) ---
     const sameSuit = cards.filter(c => c.s === first.s);
     if (sameSuit.length + jokers >= 3) {
-        // Provojmë vargje nga 3 deri në 10 letra
+        // Provojmë vargje me gjatësi të ndryshme (3 deri 10)
         for (let len = 3; len <= 10; len++) {
-            const res = findAndRemoveSequence(sameSuit, len, jokers);
-            if (res) {
-                const remaining = cards.filter(c => !res.usedCards.includes(c));
-                if (checkRecursive(remaining, jokers - res.jokersUsed)) return true;
+            const sequenceResult = findAndRemoveSequence(sameSuit, len, jokers);
+            if (sequenceResult) {
+                const remaining = cards.filter(c => !sequenceResult.usedCards.includes(c));
+                if (checkRecursive(remaining, jokers - sequenceResult.jokersUsed)) return true;
             }
         }
     }
 
     return false;
 }
-
-// Funksion ndihmës për të gjetur vlerën numerike
-function getVal(card) {
-    const v = card.v;
-    if (v === 'A') return 1; 
-    if (v === 'J') return 11;
-    if (v === 'Q') return 12;
-    if (v === 'K') return 13;
-    return parseInt(v);
-}
-// ==========================================
-// 10. MBYLLJA E RAUNDIT & REZULTATET
-// ==========================================
 
 // Kur një lojtar mbyll lojën (ZION!)
 socket.on('roundOver', (data) => {
