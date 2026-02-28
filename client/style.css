@@ -258,6 +258,6 @@ body.game-active #lobby-controls {
     display: none !important;
 }
 
-body.game-active #game-table {
-    display: block !important;
+#game-table {
+    display: none;
 }
