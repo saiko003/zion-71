@@ -523,14 +523,34 @@ function checkTurnLogic() {
 
 // ALGORITMI I VERIFIKIMIT (Thjeshtuar për momentin)
 function verifyZionRules(cards) {
-    // Rregulli: Duhet të kemi 11 letra për të kontrolluar mbylljen
-    // Ne provojmë të heqim secilën letër (si letër mbyllëse) 
-    // dhe shohim nëse 10 letrat e mbetura formojnë grupe/rreshta
+    // 1. Rregulli Special i Jackpot-it (Simboli i njëjtë)
+    // Marrim simbolin direkt nga teksti i elementit HTML 'jackpot'
+    const jackpotElement = document.getElementById('jackpot');
     
+    if (cards.length === 11 && jackpotElement && jackpotElement.innerText !== "") {
+        // Marrim karakterin e fundit (simbolin: ♥, ♦, ♣, ♠)
+        const text = jackpotElement.innerText.trim();
+        const jackpotSuit = text.charAt(text.length - 1); 
+
+        // Numërojmë letrat me simbolin e njëjtë ose Xhokerin
+        const sameSuitCount = cards.filter(c => c.s === jackpotSuit || c.v === '★').length;
+
+        // Nëse kemi 10 letra me atë simbol (përfshirë xhokerin) + 1 letër tepër për ta hedhur
+        if (sameSuitCount >= 10) {
+            console.log("ZION me simbol! Jackpot Suit:", jackpotSuit);
+            return true; 
+        }
+    }
+
+    // 2. Rregulli Normal (Vargjet dhe Grupet)
+    // Ky kontrollon nëse lojtari i ka bërë letrat rresht/grupe (canSolve)
     for (let i = 0; i < cards.length; i++) {
         let testHand = cards.filter((_, idx) => idx !== i);
-        if (canSolve(testHand)) return true;
+        if (typeof canSolve === "function" && canSolve(testHand)) {
+            return true;
+        }
     }
+    
     return false;
 }
 
