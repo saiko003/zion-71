@@ -210,13 +210,13 @@ function updateGameFlow(data) {
     }
 }
 
-const btnStart = document.getElementById('btn-start');
+const btnStart = document.getElementById('btn-start'); 
 
 if (btnStart) {
-    btnStart.onclick = () => {
-        console.log("Duke kërkuar nisjen e lojës...");
+    btnStart.addEventListener('click', () => {
+        console.log("Po dërgoj startGame te serveri...");
         socket.emit('startGame');
-    };
+    });
 }
 
 
