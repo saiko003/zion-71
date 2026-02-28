@@ -420,21 +420,19 @@ function saveNewOrder() {
 // 5. TËRHEQJA NGA STIVA (Pika 12 & 3)
 // ==========================================
 
-// script.js
-deckElement.addEventListener('click', () => {
-    if (!isMyTurn) return; // Nëse nuk është radha jote, nuk bën dot asgjë
-    
-    // Rregulli: Mund të marrësh letër vetëm nëse ke 10 letra në dorë
-    if (doraImeData.length === 10) {
-        
-        // --- UPDATE: Sigurohemi që mbyllja nuk do të jetë me Jackpot (x1) ---
-        tookJackpotThisTurn = false; 
 
-        socket.emit('drawCard');
-    } else {
-        alert("Ti i ke 11 letra, duhet të hedhësh një në tokë!");
-    }
-});
+if (deckElement) {
+    deckElement.addEventListener('click', () => {
+        if (!isMyTurn) return;
+
+        if (doraImeData.length === 10) {
+            tookJackpotThisTurn = false;
+            socket.emit('drawCard');
+        } else {
+            alert("Ti i ke 11 letra, duhet të hedhësh një në tokë!");
+        }
+    });
+}
 
 // Animacioni i letrës që lëviz nga Deck te Dora
 function animateCardDraw() {
@@ -613,21 +611,6 @@ function verifyZionRules(cards) {
     }
     
     return false;
-}
-
-// Funksioni që kontrollon nëse 10 letra janë të lidhura (Pika 5)
-/**
- * Funksioni kryesor që kontrollon nëse 10 letra janë të lidhura.
- */
-function canSolve(hand) {
-    if (!hand || hand.length !== 10) return false;
-
-    // 1. Ndajmë Xhokerat nga letrat normale
-    const jokers = hand.filter(c => c.v === '★' || c.v === 'Xhoker').length;
-    const normalCards = hand.filter(c => c.v !== '★' && c.v !== 'Xhoker');
-
-    // 2. Provojmë të gjitha kombinimet me anë të rekursionit
-    return checkRecursive(normalCards, jokers);
 }
 
 /**
