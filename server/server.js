@@ -155,35 +155,34 @@ io.on('connection', (socket) => {
 });
 
    
+// KODI I SAKTË PËR SERVER.JS
 socket.on('startGame', () => {
     console.log("Tentativa për nisje... Lojtarë të lidhur:", players.length);
 
-    // 1. Kontrolli i numrit të lojtarëve
+    // Kontrolli 1: Minimumi i lojtarëve
     if (players.length < 2) {
         socket.emit('errorMsg', "Duhen të paktën 2 lojtarë!");
         return; 
     }
 
+    // Kontrolli 2: Maksimumi i lojtarëve
     if (players.length > 5) {
         socket.emit('errorMsg', "Maksimumi është 5 lojtarë!");
         return;
     }
 
-    // 2. Markojmë që loja nisi
+    // Nise lojën
     gameStarted = true;
+    dealerIndex = 0; 
+    
     console.log("Loja po nis zyrtarisht...");
 
-    // 3. Kush e nis i pari (Raundi i parë)
-    dealerIndex = 0; 
-
-    // 4. Thërrasim funksionin që ndan letrat
-    // SIGUROHU që ky funksion ekziston në server.js
+    // Thërrasim funksionin që ndan letrat
     startNewRound(); 
     
-    // Edhe pse the që startNewRound e thërret vetë, 
-    // shtoje një broadcastState këtu për siguri që të ndryshojë ekrani i klientit
+    // Njoftojmë të gjithë që të ndryshojë ekrani nga Lobby te Tavolina
     broadcastState();
-}); // KËTU mbyllet startGame
+});
     
     // TËRHEQJA E LETRËS (Pika 12)
     socket.on('drawCard', () => {
