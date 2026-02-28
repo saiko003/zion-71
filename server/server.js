@@ -78,50 +78,57 @@ function createDeck() {
     return newDeck.sort(() => Math.random() - 0.5);
 }
 function startNewRound() {
-    // 1. Krijojmë dhe përziejmë dekun
+    console.log("==== Duke nisur raund të ri ====");
+
+    // 1️⃣ Krijojmë dhe përziejmë dekun
     gameDeck = createDeck(); 
     shuffle(gameDeck);
     discardPile = []; // Pastrojmë letrat në tokë
+    console.log("Deku u krijua dhe u përzgjodh.");
 
-    // KORRIGJIM: Përdorim 'dealerIndex' që e ke deklaruar në fillim të serverit
-    // Nëse nuk është caktuar asnjëherë, e nisim nga 0
+    // 2️⃣ Kontroll i dealerIndex
     if (typeof dealerIndex === 'undefined' || dealerIndex === null) {
         dealerIndex = 0;
     }
 
+    // 3️⃣ Shpërndarja e letrave te lojtarët
     players.forEach((player, index) => {
         // RESET: Fshijmë letrat e vjetra
         player.cards = []; 
 
-        // 2. KRIJOJMË XHOKERIN (1 për çdo lojtar)
+        // Krijojmë Xhokerin
         const myJoker = { v: '★', s: 'Xhoker' };
 
-        // 3. SHPËRNDARJA: Dealer-i merr 10 nga deku, të tjerët 9
-        // Kujdes: Këtu përdorim dealerIndex për krahasim
+        // Dealer merr 10 letra, të tjerët 9
         let sasiaNgaDeck = (index === dealerIndex) ? 10 : 9;
-        
-        // Marrim letrat nga gameDeck
         let letratNgaDeck = gameDeck.splice(0, sasiaNgaDeck);
 
-        // 4. BASHKIMI: Xhokeri + letrat e deçkës
+        // Bashkojmë Xhoker + letra nga deku
         player.cards = [myJoker, ...letratNgaDeck];
 
-        console.log(`DEBUG: ${player.name} (Index: ${index}) - Mori: ${player.cards.length} letra.`);
+        console.log(`DEBUG: ${player.name} (Index: ${index}) - Mori ${player.cards.length} letra:`, 
+                    player.cards.map(c => `${c.v}${c.s}`));
     });
 
-    // 5. JACKPOT: Letra e parë që mbetet në deçkë
+    // 4️⃣ Jackpot: letra e parë që mbetet
     jackpotCard = gameDeck.pop();
-    
-    // 6. KUSH E KA RADHËN? Ai që ka 11 letra (Dealer-i aktual)
-    activePlayerIndex = dealerIndex; 
-    
-    if (!players[activePlayerIndex]) {
-    activePlayerIndex = 0; // default
-    activePlayerId = players[0]?.id || null;
-}
+    console.log("Jackpot-i është:", jackpotCard ? `${jackpotCard.v}${jackpotCard.s}` : "Bosh");
 
-    // Njoftojmë të gjithë lojtarët për gjendjen e re
-    broadcastState(); 
+    // 5️⃣ Vendosim lojtarin aktiv (Dealer-i fillestar)
+    activePlayerIndex = dealerIndex;
+
+    if (!players[activePlayerIndex]) {
+        console.warn("Nuk u gjet lojtari aktiv! Duke vendosur default te 0.");
+        activePlayerIndex = 0;
+    }
+    activePlayerId = players[activePlayerIndex]?.id || null;
+
+    console.log("Lojtari aktiv:", players[activePlayerIndex]?.name, "me ID:", activePlayerId);
+
+    // 6️⃣ Broadcast gjendja për të gjithë lojtarët
+    broadcastState();
+
+    console.log("Raundi i ri është gati, gjendja u dërgua te lojtarët.");
 }
 // ==========================================
 // 2. KOMUNIKIMI ME LOJTARËT
