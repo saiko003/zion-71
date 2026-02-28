@@ -33,6 +33,17 @@ let isMyTurn = false;
 let doraImeData = [];
 let tookJackpotThisTurn = false;
 
+socket.on('lobbyMessage', (msg) => {
+    const lobbyText = document.getElementById('lobby-text');
+    if (lobbyText) lobbyText.innerText = msg;
+});
+socket.on('updateLobbyCount', (count) => {
+    const lobbyText = document.getElementById('lobby-text');
+    if(lobbyText) {
+        lobbyText.innerText = `Prit lojtarët e tjerë të futen... (${count} lojtar/e)`;
+    }
+});
+
 const btnStart = document.getElementById('btn-start');
 btnStart.addEventListener('click', () => {
     console.log("Po dërgoj startGame te serveri...");
