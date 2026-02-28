@@ -272,26 +272,46 @@ function renderHand() {
             pile.classList.toggle('over', over);
         }, { passive: false });
         
-        // TOUCH END
-        div.addEventListener('touchend', e => {
-            div.classList.remove('dragging');
-            const touch = e.changedTouches[0];
-            const pile = document.getElementById('discard-pile');
-            const rect = pile.getBoundingClientRect();
-            const tolerance = 20;
-            const isOver = touch.clientX > rect.left - tolerance &&
-                           touch.clientX < rect.right + tolerance &&
-                           touch.clientY > rect.top - tolerance &&
-                           touch.clientY < rect.bottom + tolerance;
+// TOUCH END
+div.addEventListener('touchend', e => {
+    div.classList.remove('dragging');
+    const touch = e.changedTouches[0];
+    const pile = document.getElementById('discard-pile');
+    const rect = pile.getBoundingClientRect();
+    const tolerance = 20;
+    
+    const isOver = touch.clientX > rect.left - tolerance &&
+                   touch.clientX < rect.right + tolerance &&
+                   touch.clientY > rect.top - tolerance &&
+                   touch.clientY < rect.bottom + tolerance;
 
-            pile.classList.remove('over');
+    pile.classList.remove('over');
 
-            if (isOver && isMyTurn && doraImeData.length === 11) {
-                processDiscard(div);
-            } else {
-                resetCardStyles(div);
-            }
+    if (isOver && isMyTurn && doraImeData.length === 11) {
+        processDiscard(div);
+    } else {
+        // --- KJO ËSHTË PJESA QË DUHET TË SHTOSH ---
+        
+        // 1. Marrim të gjitha letrat ashtu siç janë renditur tani në ekran (DOM)
+        const handContainer = document.getElementById('player-hand');
+        const currentCardsInDOM = [...handContainer.querySelectorAll('.card')];
+
+        // 2. Krijojmë listën e re të të dhënave bazuar në renditjen e re vizuale
+        const newOrderedData = currentCardsInDOM.map(cardEl => {
+            // Përdorim dataset.v dhe dataset.s për të gjetur letrën korrekte te doraImeData
+            return { v: cardEl.dataset.v, s: cardEl.dataset.s };
         });
+
+        // 3. Përditësojmë variablën globale të dorës
+        doraImeData = newOrderedData;
+
+        // 4. Pastrojmë stilet (position: fixed, etj) dhe bëjmë render të pastër
+        resetCardStyles(div);
+        renderHand(); 
+        
+        // --- FUNDI I PJESËS SË SHTUAR ---
+    }
+});
 
         handContainer.appendChild(div);
     });
@@ -313,40 +333,40 @@ function resetCardStyles(el) {
     });
 }
 
-// --- KONTROLLI GLOBAL I LËVIZJES (TouchMove) ---
-document.addEventListener('touchmove', (e) => {
-    // 1. Gjejmë letrën që po lëvizim (Kritike!)
-    const draggingCard = document.querySelector('.card.dragging');
-    if (!draggingCard) return; // Nëse nuk po lëvizim asgjë, ndalo këtu.
-
-    if (e.cancelable) e.preventDefault();
+// TOUCH MOVE
+div.addEventListener('touchmove', e => {
+    if (!div.classList.contains('dragging')) return;
     const touch = e.touches[0];
-
-    // 2. Lëvizim letrën nëpër ekran
-    const offsetX = parseFloat(draggingCard.dataset.offsetX) || 0;
-    const offsetY = parseFloat(draggingCard.dataset.offsetY) || 0;
-    draggingCard.style.left = (touch.clientX - offsetX) + 'px';
-    draggingCard.style.top = (touch.clientY - offsetY) + 'px';
-
-    // 3. TANI përdorim listën e letrave të tjera për t'i renditur (Reorder)
-    const otherCards = Array.from(handContainer.children).filter(c => !c.classList.contains('dragging'));
     
-    // Logjika e renditjes:
-    otherCards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        // Nëse letra që po lëvizim kalon mesin e një letre tjetër
-        if (touch.clientX > rect.left && touch.clientX < rect.right) {
-            // Këtu ndodh shkëmbimi i vendeve
-            if (touch.clientX < rect.left + rect.width / 2) {
-                handContainer.insertBefore(draggingCard, card);
-            } else {
-                handContainer.insertBefore(draggingCard, card.nextSibling);
-            }
-        }
+    // 1. Kjo mban letrën nën gisht (Kodin që ke pasur)
+    div.style.left = (touch.clientX - parseFloat(div.dataset.offsetX)) + 'px';
+    div.style.top = (touch.clientY - parseFloat(div.dataset.offsetY)) + 'px';
+    e.preventDefault();
+
+    // --- SHTO KËTË PJESË KËTU ---
+    const handContainer = document.getElementById('player-hand');
+    const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+    
+    // Gjejmë letrën që kemi përbri gishtit
+    const nextSibling = siblings.find(sibling => {
+        const rect = sibling.getBoundingClientRect();
+        return touch.clientX <= rect.left + rect.width / 2;
     });
 
+    // Zhvendosim letrën në HTML (kjo bën efektin e renditjes live)
+    if (nextSibling) {
+        handContainer.insertBefore(div, nextSibling);
+    } else {
+        handContainer.appendChild(div);
+    }
+    // --- FUNDI I PJESËS SË SHTUAR ---
+
+    // Feedback vizual për discard-pile (Kodi yt vazhdon këtu...)
+    const pile = document.getElementById('discard-pile');
+    // ... rest of your code
 }, { passive: false });
 // FUNKSIONI QË NDËRRON VENDET E LETRAVE
+
 function handleReorder(clientX) {
     const draggingCard = document.querySelector('.card.dragging');
     if (!draggingCard) return;
