@@ -65,24 +65,45 @@ if (deckElement) {
 socket.on('updateGameState', (data) => {
     console.log("Mora gjendjen e lojës:", data);
 
-    // 1. Ruajmë statusin e lojës
-    const lojënNisi = data.gameStarted;
-
-    // 2. Marrim elementet nga HTML
     const lobby = document.getElementById('lobby-controls');
     const table = document.getElementById('game-table');
 
-    // 3. LOGJIKA E SHFAQJES
-    if (lojënNisi === true) {
-        console.log("Sapo mori konfirmimin: Loja po niset!");
-        if (lobby) lobby.style.display = 'none'; // Fsheh butonin dhe titullin
-        if (table) table.style.display = 'block'; // Shfaq tavolinën e lojës
+    // 1. Shfaqja/Fshehja e Lobit
+    if (data.gameStarted) {
+        if (lobby) lobby.style.display = 'none';
+        if (table) table.style.display = 'block';
     } else {
         if (lobby) lobby.style.display = 'flex';
         if (table) table.style.display = 'none';
+        return; // Stop këtu nëse loja s'ka nisur
     }
 
-    // Vazhdo me pjesën tjetër të update-it (score, letrat etj.)
+    // 2. THIRRJA E FUNKSIONIT TËND TË TABELËS
+    // Ky rresht lidh datat që vijnë nga serveri me funksionin që më dërgove
+    updateScoreboard(data.players, data.activePlayerId);
+
+    // 3. Përditëso letrën në mes (Discard Pile)
+    const discardPileElement = document.getElementById('discard-pile');
+    if (discardPileElement && data.discardPileTop) {
+        const k = data.discardPileTop;
+        const ngjyra = (k.s === '♥' || k.s === '♦') ? 'red' : 'black';
+        discardPileElement.innerHTML = `
+            <div class="card-on-table" style="color: ${ngjyra}">
+                ${k.v}<br>${k.s}
+            </div>`;
+    }
+
+    // 4. Përditëso dritën dhe tekstin e rradhës
+    const isMyTurn = (data.activePlayerId === socket.id);
+    const statusTeksti = document.getElementById('status-teksti');
+    const statusDrita = document.getElementById('status-drita');
+
+    if (statusTeksti) {
+        statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
+    }
+    if (statusDrita) {
+        statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
+    }
 });
 
     gameStarted = data.gameStarted;
