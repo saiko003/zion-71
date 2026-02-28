@@ -391,9 +391,14 @@ function calculateScore(cards) {
         io.to(player.id).emit('yourCards', player.cards);
     });
 }
+// Funksioni profesional për përzierjen e letrave
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
+        // Zgjedhim një indeks të rastësishëm nga 0 deri te i
         const j = Math.floor(Math.random() * (i + 1));
+        
+        // Ndërrojmë vendet e letrave [i] dhe [j]
         [array[i], array[j]] = [array[j], array[i]];
     }
+    return array;
 }
