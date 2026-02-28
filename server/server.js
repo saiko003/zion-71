@@ -386,10 +386,11 @@ socket.on('playerClosed', (data) => {
 });
 
     socket.on('disconnect', () => {
-    console.log('Lojtar u shkëput:', socket.id); 
-    players = players.filter(p => p.id !== socket.id);
-    broadcastState();
-});
+        console.log("❌ Lojtari u shkëput:", socket.id);
+        players = players.filter(p => p.id !== socket.id);
+        io.emit('updateLobbyCount', players.length);
+        broadcastState();
+    });
 
 
 const PORT = process.env.PORT || 3000;
