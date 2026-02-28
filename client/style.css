@@ -254,3 +254,10 @@ body {
     font-size: 1.5rem;
     line-height: 1;
 }
+body.game-active #lobby-controls {
+    display: none !important;
+}
+
+body.game-active #game-table {
+    display: block !important;
+}
