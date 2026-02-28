@@ -65,45 +65,67 @@ if (deckElement) {
 socket.on('updateGameState', (data) => {
     console.log("Mora gjendjen e lojës:", data);
 
-    const lobby = document.getElementById('lobby-controls');
-    const table = document.getElementById('game-table');
-
-    // 1. Shfaqja/Fshehja e Lobit
+    // 1. Kontrolli i Lobby-t
     if (data.gameStarted) {
-        if (lobby) lobby.style.display = 'none';
-        if (table) table.style.display = 'block';
+        if (lobbyControls) lobbyControls.style.display = 'none';
+        if (gameTable) gameTable.style.display = 'block';
+        document.body.classList.add('game-active');
     } else {
-        if (lobby) lobby.style.display = 'flex';
-        if (table) table.style.display = 'none';
-        return; // Stop këtu nëse loja s'ka nisur
+        if (lobbyControls) lobbyControls.style.display = 'flex';
+        if (gameTable) gameTable.style.display = 'none';
+        return; // Ndalo këtu nëse loja s'ka nisur
     }
 
-    // 2. THIRRJA E FUNKSIONIT TËND TË TABELËS
-    // Ky rresht lidh datat që vijnë nga serveri me funksionin që më dërgove
-    updateScoreboard(data.players, data.activePlayerId);
+    // 2. Përditëso Tabelën e Pikëve
+    if (typeof updateScoreboard === "function") {
+        updateScoreboard(data.players, data.activePlayerId);
+    }
 
-    // 3. Përditëso letrën në mes (Discard Pile)
+    // 3. Përditëso Letrën në Tokë (Discard Pile)
     const discardPileElement = document.getElementById('discard-pile');
-    if (discardPileElement && data.discardPileTop) {
-        const k = data.discardPileTop;
-        const ngjyra = (k.s === '♥' || k.s === '♦') ? 'red' : 'black';
-        discardPileElement.innerHTML = `
-            <div class="card-on-table" style="color: ${ngjyra}">
-                ${k.v}<br>${k.s}
-            </div>`;
+    if (discardPileElement) {
+        if (data.discardPileTop) {
+            const isRed = ['♥', '♦'].includes(data.discardPileTop.s);
+            discardPileElement.innerHTML = `
+                <div class="card-on-table" style="color: ${isRed ? 'red' : 'black'}">
+                    ${data.discardPileTop.v}<br>${data.discardPileTop.s}
+                </div>`;
+        } else {
+            discardPileElement.innerHTML = '<span class="label">HEDH KËTU</span>';
+        }
     }
 
-    // 4. Përditëso dritën dhe tekstin e rradhës
-    const isMyTurn = (data.activePlayerId === socket.id);
-    const statusTeksti = document.getElementById('status-teksti');
-    const statusDrita = document.getElementById('status-drita');
+    // 4. Përditëso Jackpot-in
+    if (jackpotElement) {
+        if (data.jackpotCard) {
+            const isRedJackpot = ['♥', '♦'].includes(data.jackpotCard.s);
+            jackpotElement.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
+            jackpotElement.style.color = isRedJackpot ? 'red' : 'white';
+            jackpotElement.style.display = 'block';
+        } else {
+            jackpotElement.style.display = 'none';
+        }
+    }
 
-    if (statusTeksti) {
-        statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
+    // 5. Kontrolli i Radhës (Glow & Status)
+    isMyTurn = (data.activePlayerId === socket.id);
+    document.body.classList.toggle('my-turn-glow', isMyTurn);
+    
+    if (statusTeksti) statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
+    if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
+
+    // 6. Update i Letrave në dorë (vetëm nëse ka ndryshim)
+    if (data.players) {
+        const me = data.players.find(p => p.id === socket.id);
+        if (me && me.cards && (doraImeData.length === 0 || me.cards.length !== doraImeData.length)) {
+            doraImeData = [...me.cards];
+            renderHand();
+        }
     }
-    if (statusDrita) {
-        statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
-    }
+
+    // 7. Thirr funksionet ndihmëse
+    if (typeof updateGameFlow === "function") updateGameFlow(data);
+    if (typeof checkTurnLogic === "function") checkTurnLogic();
 });
 
     gameStarted = data.gameStarted;
