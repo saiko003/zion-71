@@ -318,23 +318,41 @@ function renderHand() {
             });
         }, { passive: true  });
 
-        // TOUCH MOVE
-        div.addEventListener('touchmove', e => {
-            if (!div.classList.contains('dragging')) return;
-            const touch = e.touches[0];
-            div.style.left = (touch.clientX - parseFloat(div.dataset.offsetX)) + 'px';
-            div.style.top = (touch.clientY - parseFloat(div.dataset.offsetY)) + 'px';
-            e.preventDefault();
+        // MBANI VETËM KËTË - Ky bën çdo gjë: Lëvizjen, Renditjen dhe Feedback-un e Piles
+div.addEventListener('touchmove', e => {
+    if (!div.classList.contains('dragging')) return;
+    const touch = e.touches[0];
+    
+    // 1. Pozicionimi i letrës nën gisht
+    div.style.left = (touch.clientX - parseFloat(div.dataset.offsetX)) + 'px';
+    div.style.top = (touch.clientY - parseFloat(div.dataset.offsetY)) + 'px';
+    e.preventDefault();
 
-            // Feedback vizual për drop-zone
-            const pile = document.getElementById('discard-pile');
-            const rect = pile.getBoundingClientRect();
-            const over = touch.clientX > rect.left &&
-                         touch.clientX < rect.right &&
-                         touch.clientY > rect.top &&
-                         touch.clientY < rect.bottom;
-            pile.classList.toggle('over', over);
-        }, { passive: false });
+    // 2. Logjika e renditjes (Kjo mungon te kodi i dytë!)
+    const handContainer = document.getElementById('player-hand'); // Sigurohu që kjo variabël ekziston
+    const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+    const nextSibling = siblings.find(sibling => {
+        const r = sibling.getBoundingClientRect();
+        return touch.clientX <= r.left + r.width / 2;
+    });
+
+    if (nextSibling) {
+        handContainer.insertBefore(div, nextSibling);
+    } else {
+        handContainer.appendChild(div);
+    }
+
+    // 3. Feedback vizual për discard-pile
+    const pile = document.getElementById('discard-pile');
+    const rectPile = pile.getBoundingClientRect();
+    const isOverPile = touch.clientX > rectPile.left &&
+                       touch.clientX < rectPile.right &&
+                       touch.clientY > rectPile.top &&
+                       touch.clientY < rectPile.bottom;
+                       
+    pile.classList.toggle('over', isOverPile);
+    
+}, { passive: false });
         
 // TOUCH END
 div.addEventListener('touchend', e => {
@@ -397,38 +415,6 @@ function resetCardStyles(el) {
     });
 }
 
-// TOUCH MOVE
-div.addEventListener('touchmove', e => {
-    if (!div.classList.contains('dragging')) return;
-    const touch = e.touches[0];
-    
-    // 1. Kjo mban letrën nën gisht (Kodin që ke pasur)
-    div.style.left = (touch.clientX - parseFloat(div.dataset.offsetX)) + 'px';
-    div.style.top = (touch.clientY - parseFloat(div.dataset.offsetY)) + 'px';
-    e.preventDefault();
-
-    // --- SHTO KËTË PJESË KËTU ---
-    const handContainer = document.getElementById('player-hand');
-    const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
-    
-    // Gjejmë letrën që kemi përbri gishtit
-    const nextSibling = siblings.find(sibling => {
-        const rect = sibling.getBoundingClientRect();
-        return touch.clientX <= rect.left + rect.width / 2;
-    });
-
-    // Zhvendosim letrën në HTML (kjo bën efektin e renditjes live)
-    if (nextSibling) {
-        handContainer.insertBefore(div, nextSibling);
-    } else {
-        handContainer.appendChild(div);
-    }
-    // --- FUNDI I PJESËS SË SHTUAR ---
-
-    // Feedback vizual për discard-pile (Kodi yt vazhdon këtu...)
-    const pile = document.getElementById('discard-pile');
-    // ... rest of your code
-}, { passive: false });
 // FUNKSIONI QË NDËRRON VENDET E LETRAVE
 
 function handleReorder(clientX) {
