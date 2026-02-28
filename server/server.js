@@ -115,10 +115,10 @@ function startNewRound() {
     // 6. KUSH E KA RADHËN? Ai që ka 11 letra (Dealer-i aktual)
     activePlayerIndex = dealerIndex; 
     
-    if (players[activePlayerIndex]) {
-        // Përditësojmë ID-në e lojtarit aktiv për komunikim me frontendin
-        activePlayerId = players[activePlayerIndex].id;
-    }
+    if (!players[activePlayerIndex]) {
+    activePlayerIndex = 0; // default
+    activePlayerId = players[0]?.id || null;
+}
 
     // Njoftojmë të gjithë lojtarët për gjendjen e re
     broadcastState(); 
