@@ -65,6 +65,26 @@ if (deckElement) {
 socket.on('updateGameState', (data) => {
     console.log("Mora gjendjen e lojës:", data);
 
+    // 1. Ruajmë statusin e lojës
+    const lojënNisi = data.gameStarted;
+
+    // 2. Marrim elementet nga HTML
+    const lobby = document.getElementById('lobby-controls');
+    const table = document.getElementById('game-table');
+
+    // 3. LOGJIKA E SHFAQJES
+    if (lojënNisi === true) {
+        console.log("Sapo mori konfirmimin: Loja po niset!");
+        if (lobby) lobby.style.display = 'none'; // Fsheh butonin dhe titullin
+        if (table) table.style.display = 'block'; // Shfaq tavolinën e lojës
+    } else {
+        if (lobby) lobby.style.display = 'flex';
+        if (table) table.style.display = 'none';
+    }
+
+    // Vazhdo me pjesën tjetër të update-it (score, letrat etj.)
+});
+
     gameStarted = data.gameStarted;
     // 1. KONTROLLI I LOBBY-T DHE TAVOLINËS (FIXED BRACKETS)
     const lobby = document.getElementById('lobby-controls');
