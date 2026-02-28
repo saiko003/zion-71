@@ -232,24 +232,21 @@ function checkZionCondition() {
 function renderHand() {
     const handContainer = document.getElementById('player-hand');
     if (!handContainer) return;
-    handContainer.innerHTML = ''; 
+    handContainer.innerHTML = '';
 
     doraImeData.forEach((card, index) => {
-        const div = document.createElement('div'); 
+        const div = document.createElement('div');
         div.className = 'card';
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
-        
-        // --- VETËM KJO PJESË NDRYSHON PËR JOKERIN ---
+
         if (card.v === '★') {
             div.classList.add('joker');
             div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
-            div.style.color = 'gold'; // Ta bëjmë xhokerin të dallohet
         } else {
-            // Letrat normale
-            if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
             div.innerHTML = `${card.v}<br>${card.s}`;
+            if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
         }
         // -------------------------------------------
 
@@ -268,26 +265,44 @@ function renderHand() {
                 width: rect.width + 'px',
                 height: rect.height + 'px'
             });
+        }, { passive: true  });
+
+        // TOUCH MOVE
+        div.addEventListener('touchmove', e => {
+            if (!div.classList.contains('dragging')) return;
+            const touch = e.touches[0];
+            div.style.left = (touch.clientX - parseFloat(div.dataset.offsetX)) + 'px';
+            div.style.top = (touch.clientY - parseFloat(div.dataset.offsetY)) + 'px';
+            e.preventDefault();
+
+            // Feedback vizual për drop-zone
+            const pile = document.getElementById('discard-pile');
+            const rect = pile.getBoundingClientRect();
+            const over = touch.clientX > rect.left &&
+                         touch.clientX < rect.right &&
+                         touch.clientY > rect.top &&
+                         touch.clientY < rect.bottom;
+            pile.classList.toggle('over', over);
         }, { passive: false });
         
-        div.addEventListener('touchend', (e) => {
+        // TOUCH END
+        div.addEventListener('touchend', e => {
             div.classList.remove('dragging');
-
             const touch = e.changedTouches[0];
             const pile = document.getElementById('discard-pile');
             const rect = pile.getBoundingClientRect();
-            const tolerance = 20; // pixel ekstra për t’ju lejuar pak gabim
+            const tolerance = 20;
+            const isOver = touch.clientX > rect.left - tolerance &&
+                           touch.clientX < rect.right + tolerance &&
+                           touch.clientY > rect.top - tolerance &&
+                           touch.clientY < rect.bottom + tolerance;
 
-            const isOverPile =
-                touch.clientX > rect.left - tolerance &&
-                touch.clientX < rect.right + tolerance &&
-                touch.clientY > rect.top - tolerance &&
-                touch.clientY < rect.bottom + tolerance;
+            pile.classList.remove('over');
 
-            if (isOverPile && isMyTurn && doraImeData.length === 11) {
+            if (isOver && isMyTurn && doraImeData.length === 11) {
                 processDiscard(div);
             } else {
-                resetCardStyles(div); // letra kthehet në pozicion
+                resetCardStyles(div);
             }
         });
 
@@ -295,9 +310,20 @@ function renderHand() {
     });
 
     // E zhvendosa këtë jashtë loop-it (forEach) që të mos thirret 11 herë
-    if (typeof checkZionCondition === "function") {
-        checkZionCondition();
-    }
+    if (typeof checkZionCondition === "function") checkZionCondition();
+}
+
+function resetCardStyles(el) {
+    Object.assign(el.style, {
+        position: '',
+        left: '',
+        top: '',
+        width: '',
+        height: '',
+        zIndex: '',
+        pointerEvents: 'auto',
+        transform: ''
+    });
 }
 
 // --- KONTROLLI GLOBAL I LËVIZJES (TouchMove) ---
@@ -387,19 +413,6 @@ document.addEventListener('touchend', (e) => {
     discardPile.style.borderColor = "#777"; 
 }, { passive: false });
 
-
-function resetCardStyles(el) {
-    Object.assign(el.style, {
-        position: '', 
-        left: '', 
-        top: '', 
-        width: '', 
-        height: '', 
-        zIndex: '', 
-        pointerEvents: 'auto',
-        transform: '' // Shto këtë për të hequr çdo mbetje të transformimeve
-    });
-}
 function saveNewOrder() {
     const currentCards = [...handContainer.querySelectorAll('.card')];
     
