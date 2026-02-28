@@ -235,8 +235,72 @@ function renderHand() {
             div.innerHTML = `${card.v}<br>${card.s}`;
             if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
         }
-        // -------------------------------------------
+        
+       div.addEventListener('mousedown', (e) => {
+    const rect = div.getBoundingClientRect();
+    div.dataset.offsetX = e.clientX - rect.left;
+    div.dataset.offsetY = e.clientY - rect.top;
+    div.classList.add('dragging');
+    
+    Object.assign(div.style, {
+        position: 'fixed',
+        zIndex: '1000',
+        pointerEvents: 'none',
+        width: rect.width + 'px',
+        height: rect.height + 'px'
+    });
 
+    // Krijojmë lëvizjen dhe lëshimin specifike për mausin
+    const onMouseMove = (e) => {
+        if (!div.classList.contains('dragging')) return;
+        
+        div.style.left = (e.clientX - parseFloat(div.dataset.offsetX)) + 'px';
+        div.style.top = (e.clientY - parseFloat(div.dataset.offsetY)) + 'px';
+
+        // Logjika e renditjes (e njëjtë si te touchmove)
+        const handContainer = document.getElementById('player-hand');
+        const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+        const nextSibling = siblings.find(sibling => {
+            const r = sibling.getBoundingClientRect();
+            return e.clientX <= r.left + r.width / 2;
+        });
+
+        if (nextSibling) handContainer.insertBefore(div, nextSibling);
+        else handContainer.appendChild(div);
+
+        // Feedback për discard-pile
+        const pile = document.getElementById('discard-pile');
+        const pRect = pile.getBoundingClientRect();
+        const over = e.clientX > pRect.left && e.clientX < pRect.right &&
+                     e.clientY > pRect.top && e.clientY < pRect.bottom;
+        pile.classList.toggle('over', over);
+    };
+
+    const onMouseUp = (e) => {
+        div.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+
+        const pile = document.getElementById('discard-pile');
+        const pRect = pile.getBoundingClientRect();
+        const isOver = e.clientX > pRect.left - 20 && e.clientX < pRect.right + 20 &&
+                       e.clientY > pRect.top - 20 && e.clientY < pRect.bottom + 20;
+
+        if (isOver && isMyTurn && doraImeData.length === 11) {
+            processDiscard(div);
+        } else {
+            // Ruajmë renditjen e re
+            const handContainer = document.getElementById('player-hand');
+            const cardsInDOM = [...handContainer.querySelectorAll('.card')];
+            doraImeData = cardsInDOM.map(cardEl => doraImeData[parseInt(cardEl.dataset.index)]);
+            resetCardStyles(div);
+            renderHand();
+        }
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+});
         // TOUCH START
         div.addEventListener('touchstart', (e) => {
             const t = e.touches[0]; 
