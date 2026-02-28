@@ -560,7 +560,6 @@ function verifyZionRules(cards) {
     
     // Nëse asnjë kombinim (nga 11 provat) nuk nxori fitues
     return false;
-}
 
     
     // =========================================================
