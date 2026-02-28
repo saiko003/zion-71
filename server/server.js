@@ -205,7 +205,7 @@ io.on('connection', (socket) => {
         io.emit('updateLobbyCount', players.length);
         broadcastState(); 
     });
-});
+
    
 // KODI I SAKTË PËR SERVER.JS
 // --- UPDATE PËR SERVER.JS ---
@@ -248,6 +248,7 @@ socket.on('startGame', () => {
         socket.emit('errorMsg', "Ndodhi një gabim teknik në server.");
     }
 });
+   
     
     // TËRHEQJA E LETRËS (Pika 12)
     socket.on('drawCard', () => {
@@ -411,7 +412,7 @@ socket.on('playerClosed', (data) => {
         io.emit('updateLobbyCount', players.length);
         broadcastState();
     });
-
+});
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Serveri po punon në portën ${PORT}`));
