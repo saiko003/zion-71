@@ -63,20 +63,23 @@ if (deckElement) {
 
 
 socket.on('updateGameState', (data) => {
-    console.log("Mora gjendjen e lojës:", data);
+    console.log("DEBUG: gameStarted është:", data.gameStarted);
 
     // 1. Kontrolli i Lobby-t
-    if (data.gameStarted) {
+    if (data.gameStarted === true) {
+        console.log("Loja nisi! Duke fshehur lobby-n...");
         if (lobbyControls) lobbyControls.style.display = 'none';
         if (gameTable) gameTable.style.display = 'block';
         document.body.classList.add('game-active');
     } else {
+        console.log("Loja nuk ka nisur ende.");
         if (lobbyControls) lobbyControls.style.display = 'flex';
         if (gameTable) gameTable.style.display = 'none';
-        return; // Ndalo këtu nëse loja s'ka nisur
+        return; // Ky return është i rrezikshëm nëse data.gameStarted vjen gabim
     }
 
-    // 2. Përditëso Tabelën e Pikëve
+    // 2. Përditëso Scoreboard
+    console.log("Duke përditësuar tabelën e pikëve...");
     if (typeof updateScoreboard === "function") {
         updateScoreboard(data.players, data.activePlayerId);
     }
