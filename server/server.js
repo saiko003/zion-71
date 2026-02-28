@@ -185,7 +185,7 @@ io.on('connection', (socket) => {
     // 4. NJOFTIMI I TË GJITHËVE
     broadcastState(); 
 });
-}
+});
    
 // KODI I SAKTË PËR SERVER.JS
 // --- UPDATE PËR SERVER.JS ---
