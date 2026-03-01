@@ -10,44 +10,42 @@
 <body>
 
     <div id="lobby-controls">
-    <h1>ZION 71</h1>
-    <div class="input-group">
-        <button id="btn-start">NIS LOJËN (START)</button>
-    </div>
-    <!-- Kjo është për mesazhin e lobby-së -->
-    <p id="lobby-text">Prit lojtarët e tjerë të futen...</p>
+        <h1>ZION 71</h1>
+        <div class="input-group">
+            <button id="btn-start">NIS LOJËN (START)</button>
+        </div>
+        <p id="lobby-text">Prit lojtarët e tjerë të futen...</p>
     </div>
     
     <div id="game-table" style="display: none;">
         
         <div id="scoreboard-container">
-            <table id="score-table">
+            <table id="side-score-table"> 
                 <thead>
                     <tr>
                         <th>Lojtari</th>
-                        <th>Raundet (Historia)</th> 
+                        <th>Historia</th> 
                         <th>Total</th>
                     </tr>
                 </thead>
-                <tbody id="score-body"></tbody>
+                <tbody id="side-score-body"></tbody>
             </table>
         </div>
 
         <div class="center-area">
-    <div class="deck-wrapper" style="position: relative;">
-        <div id="deck-zion" class="card-stack">ZION</div>
-        
-        <div id="victory-drop-zone" class="victory-zone" style="display: none;">
-            <span>MBYLL<br>ZION</span>
+            <div class="deck-wrapper" style="position: relative;">
+                <div id="deck-zion" class="card-stack">ZION</div>
+                <div id="victory-drop-zone" class="victory-zone" style="display: none;">
+                    <span>MBYLL<br>ZION</span>
+                </div>
+            </div>
+
+            <div id="jackpot" class="card" style="display: none;"></div>
+
+            <div id="discard-pile" class="drop-zone">
+                <span class="label">HEDH KËTU</span>
+            </div>
         </div>
-    </div>
-
-    <div id="jackpot" class="card" style="display: none;"></div>
-
-    <div id="discard-pile" class="drop-zone">
-        <span class="label">HEDH KËTU</span>
-    </div>
-</div>
 
         <div id="asistenti-container">
             <div id="status-drita" class="led-red"></div>
@@ -60,17 +58,10 @@
         <div id="player-hand" class="hand-area"></div>
     </div>
 
-    <div id="round-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; color: white; text-align: center; padding-top: 50px;">
-        <h1 id="round-winner-text" style="color: gold;">MBYLLJE ZION!</h1>
-        <div id="round-results-list" style="font-size: 20px; margin: 20px;"></div>
-        <p>Loja e radhës fillon së shpejti...</p>
-    </div>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script src="script.js"></script>
-<div id="score-modal" class="modal-overlay" style="display: none;">
+    <div id="score-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>📊 Rezultatet e Raundit</h2>
-            <table id="score-table">
+            <table id="modal-score-table">
                 <thead>
                     <tr>
                         <th>Lojtari</th>
@@ -79,17 +70,14 @@
                         <th>Statusi</th>
                     </tr>
                 </thead>
-                <tbody id="score-body">
-                    </tbody>
-            </table>
+                <tbody id="score-body"></tbody> </table>
             <div class="modal-footer">
                 <p id="next-round-timer">Raundi i ri nis pas pak...</p>
             </div>
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="script.js"></script>
-    
 </body>
 </html>
