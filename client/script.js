@@ -571,6 +571,7 @@ function processDiscard(cardElement) {
         alert("Xhokeri nuk hidhet në tokë!");
         isMyTurn = true; // Ia kthejmë radhën që të provojë letër tjetër
         resetCardStyles(cardElement);
+        renderHand();
         return;
     }
 
@@ -586,11 +587,21 @@ function processDiscard(cardElement) {
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
 
-        cardElement.style.position = 'fixed';
-        cardElement.style.left = rect.left + 'px';
-        cardElement.style.top = rect.top + 'px';
-        cardElement.style.zIndex = '1000';
-        cardElement.style.pointerEvents = 'none'; // Sigurohemi që nuk klikohet më
+        Object.assign(cardElement.style, {
+            position: 'fixed',
+            left: rect.left + 'px',
+            top: rect.top + 'px',
+            zIndex: '2000',
+            pointerEvents: 'none',
+            transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
+        });
+
+        requestAnimationFrame(() => {
+            cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
+            cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
+            cardElement.style.transform = "scale(0.3) rotate(30deg)";
+            cardElement.style.opacity = "0";
+        });
         
         setTimeout(() => {
             cardElement.style.transition = "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)";
@@ -603,7 +614,7 @@ function processDiscard(cardElement) {
         // 4. Njoftojmë serverin
         setTimeout(() => {
             socket.emit('cardDiscarded', { v, s });
-            renderHand(); // Fshin DIV-in e vjetër dhe vizaton dorën e re me 10 letra
+            renderHand(); //
             
             // Nëse ke një funksion që kontrollon UI-në e radhës
             if (typeof checkTurnLogic === "function") checkTurnLogic();
@@ -612,7 +623,7 @@ function processDiscard(cardElement) {
         // Nëse diçka dështon, ia kthejmë radhën
         isMyTurn = true;
     }
-} // Kllapa mbyllëse e saktë
+} //
 // ==========================================
 // 7. ASISTENTI ZION & TURN LOGIC (Pika 7, 15)
 // ==========================================
