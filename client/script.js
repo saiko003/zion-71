@@ -232,20 +232,22 @@ function updateScoreboard(players, activeId) {
 function updateGameFlow(data) {
     isMyTurn = (data.activePlayerId === socket.id);
     
-    // Vizualizimi i radhës (Pika 15)
+    // Vizualizimi i radhës
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
-    // Kontrolli i Deck-ut (Stiva) - Pika 12
+    // Kontrolli i Deck-ut (Stiva)
     const deck = document.getElementById('deck');
-    if (isMyTurn && doraImeData.length === 10) {
-        deck.classList.add('active-deck'); // Bëhet me dritë që të tërheqësh letrën
-    } else {
-        deck.classList.remove('active-deck');
+    if (deck) { // SHTO KËTË KONTROLL
+        if (isMyTurn && doraImeData.length === 10) {
+            deck.classList.add('active-deck');
+        } else {
+            deck.classList.remove('active-deck');
+        }
     }
 
-    // Përditësojmë Jackpot-in (Pika 6)
+    // Përditësojmë Jackpot-in
     const jackpot = document.getElementById('jackpot');
-    if (data.jackpotCard) {
+    if (jackpot && data.jackpotCard) { // SHTO KONTROLLIN 'jackpot &&'
         jackpot.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
         jackpot.style.color = ['♥', '♦'].includes(data.jackpotCard.s) ? 'red' : 'white';
         jackpot.style.display = 'block';
@@ -1128,8 +1130,21 @@ window.addEventListener('beforeunload', () => {
 
 socket.on('initGame', () => {
     console.log("Loja nisi! Po fsheh Lobby-n...");
-    document.getElementById('lobby-screen').classList.add('hidden');
-    document.getElementById('game-table').classList.remove('hidden');
+    
+    const lobby = document.getElementById('lobby-screen');
+    const table = document.getElementById('game-table');
+
+    if (lobby) {
+        lobby.classList.add('hidden');
+    } else {
+        console.warn("Elementi 'lobby-screen' nuk u gjet!");
+    }
+
+    if (table) {
+        table.classList.remove('hidden');
+    } else {
+        console.warn("Elementi 'game-table' nuk u gjet!");
+    }
 });
 
 socket.on('yourCards', (cards) => {
