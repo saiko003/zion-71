@@ -234,7 +234,42 @@ body {
     background-color: rgba(255, 255, 0, 0.2); /* Ngjyrë e verdhë e lehtë kur je sipër */
     border: 2px dashed #ffcc00;
 }
-   
+/* Stili i zonës së mbylljes mbi dekun */
+.victory-zone {
+    position: absolute;
+    top: -8px;    /* Pak më lart se deku */
+    left: -8px;   /* Pak më anash se deku */
+    width: 96px;  /* Pak më e gjerë se 80px e dekut */
+    height: 126px; /* Pak më e lartë se 110px e dekut */
+    background: rgba(46, 204, 113, 0.5); /* Ngjyrë e gjelbër transparente */
+    border: 3px solid #2ecc71;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    z-index: 500; /* Mbi dekun */
+    box-shadow: 0 0 25px #2ecc71;
+    animation: pulseVictory 1s infinite alternate;
+    pointer-events: none; /* Në fillim nuk e pengon klikimin e dekut */
+    transition: all 0.3s ease;
+}
+
+/* Kur letra është mbi këtë zonë gjatë tërheqjes */
+.victory-zone.over {
+    background: rgba(46, 204, 113, 0.9);
+    transform: scale(1.1);
+    box-shadow: 0 0 40px #27ae60;
+}
+
+@keyframes pulseVictory {
+    from { opacity: 0.7; transform: scale(1); }
+    to { opacity: 1; transform: scale(1.05); }
+}
+
 body.dragging-active {
     cursor: grabbing !important;
 }
