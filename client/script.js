@@ -59,22 +59,34 @@ if (deckElement) {
     };
 }
 
+// 1. LIDHJA E KLIKIMIT TË DEKUT (ZION)
+const deckZion = document.getElementById('deck-zion'); 
+
+if (deckZion) {
+    deckZion.onclick = () => {
+        // Kontrollojmë: A është radha ime dhe a kam 10 letra?
+        if (isMyTurn && doraImeData.length === 10) {
+            socket.emit('drawCard');
+            console.log("U dërgua kërkesa për të marrë letër nga deku.");
+        } else if (doraImeData.length === 11) {
+            alert("Ti e ke marrë letrën! Tani duhet të hedhësh një në tokë.");
+        }
+    };
+}
 
 socket.on('updateGameState', (data) => {
     console.log("DEBUG: gameStarted është:", data.gameStarted);
 
     // 1. Kontrolli i Lobby-t
     if (data.gameStarted === true) {
-    if (lobbyControls) lobbyControls.style.display = 'none';
-    if (gameTable) gameTable.style.display = 'block';
-} else {
-    if (lobbyControls) lobbyControls.style.display = 'flex';
-    if (gameTable) gameTable.style.display = 'none';
-    // Hiqe return-in këtu!
-}
+        if (lobbyControls) lobbyControls.style.display = 'none';
+        if (gameTable) gameTable.style.display = 'block';
+    } else {
+        if (lobbyControls) lobbyControls.style.display = 'flex';
+        if (gameTable) gameTable.style.display = 'none';
+    }
 
-// 6. Update i Letrave (I rregulluar që të jetë më i shpejtë)
-// 6. Update i Letrave (Këtu sigurohu që kllapat janë OK)
+    // 6. Update i Letrave (I rregulluar që të jetë më i shpejtë)
     if (data.players) {
         const me = data.players.find(p => p.id === socket.id);
         if (me && me.cards) {
@@ -92,10 +104,28 @@ socket.on('updateGameState', (data) => {
         updateScoreboard(data.players, data.activePlayerId);
     }
 
-    // 3. Përditëso Letrën në Tokë (Discard Pile)
+    // 3. Përditëso Letrën në Tokë (Discard Pile / Historia)
     const discardPileElement = document.getElementById('discard-pile');
     if (discardPileElement) {
-        if (data.discardPileTop) {
+        // Kontrollojmë nëse kemi listën e plotë të letrave (discardPile)
+        if (data.discardPile && data.discardPile.length > 0) {
+            discardPileElement.innerHTML = ''; // Pastrojmë për të vizatuar historinë e re
+            
+            data.discardPile.forEach((card, index) => {
+                const isRed = ['♥', '♦'].includes(card.s);
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card-on-table';
+                cardDiv.style.color = isRed ? 'red' : 'black';
+                
+                // I rendisim pak mbi njëra-tjetrën (psh 15px diferencë)
+                cardDiv.style.position = 'absolute';
+                cardDiv.style.left = (index * 15) + 'px'; 
+                
+                cardDiv.innerHTML = `${card.v}<br>${card.s}`;
+                discardPileElement.appendChild(cardDiv);
+            });
+        } else if (data.discardPileTop) {
+            // Backup nëse vjen vetëm letra e fundit
             const isRed = ['♥', '♦'].includes(data.discardPileTop.s);
             discardPileElement.innerHTML = `
                 <div class="card-on-table" style="color: ${isRed ? 'red' : 'black'}">
@@ -124,7 +154,6 @@ socket.on('updateGameState', (data) => {
     
     if (statusTeksti) statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
     if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
-
 
     // 7. Thirr funksionet ndihmëse
     if (typeof updateGameFlow === "function") updateGameFlow(data);
