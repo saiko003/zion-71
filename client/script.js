@@ -698,17 +698,19 @@ function processDiscard(cardElement) {
 
         // 4. Njoftojmë serverin
         setTimeout(() => {
+            // TANI e heqim nga array lokal (pasi ka mbaruar animacioni)
+            doraImeData.splice(cardIndex, 1); 
+
             socket.emit('cardDiscarded', { v, s });
-            renderHand(); //
+            renderHand(); 
             
-            // Nëse ke një funksion që kontrollon UI-në e radhës
             if (typeof checkTurnLogic === "function") checkTurnLogic();
         }, 400);
     } else {
         // Nëse diçka dështon, ia kthejmë radhën
         isMyTurn = true;
     }
-} //
+}
 // ==========================================
 // 7. ASISTENTI ZION & TURN LOGIC (Pika 7, 15)
 // ==========================================
