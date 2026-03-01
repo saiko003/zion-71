@@ -652,7 +652,7 @@ function processDiscard(cardElement) {
     const s = cardElement.dataset.s;
 
     // 1. Rregulli i Xhokerit
-    if (v === '★' || v === 'Xhoker' || v === 'joker') {
+    if (v === '★' || v === 'Jokeri' || v === 'joker' || v === 'Xhoker') {
         alert("Xhokeri nuk hidhet në tokë!");
         isMyTurn = true; // Ia kthejmë radhën që të provojë letër tjetër
         resetCardStyles(cardElement);
