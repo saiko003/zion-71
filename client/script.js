@@ -88,15 +88,37 @@ socket.on('updateGameState', (data) => {
 
     // 6. Update i Letrave (I rregulluar që të jetë më i shpejtë)
     if (data.players) {
-        const me = data.players.find(p => p.id === socket.id);
-        if (me && me.cards) {
-            const cardsChanged = JSON.stringify(me.cards) !== JSON.stringify(doraImeData);
-            if (cardsChanged) {
-                doraImeData = [...me.cards];
-                renderHand(); 
+    const me = data.players.find(p => p.id === socket.id);
+    if (me && me.cards) {
+        
+        // A) I japim ID letrave që vijnë nga serveri (nëse nuk i kanë)
+        const serverCardsWithIds = me.cards.map((card, index) => ({
+            ...card,
+            id: card.id || `${card.v}-${card.s}-${index}` 
+        }));
+
+        // B) Kontrollojmë nëse numri i letrave ka ndryshuar (kemi marrë ose gjuajtur letër)
+        // ose nëse dora është bosh (fillimi i lojës)
+        if (doraImeData.length === 0 || doraImeData.length !== serverCardsWithIds.length) {
+            
+            // Nëse po marrim letër të re (nga 10 në 11)
+            if (serverCardsWithIds.length > doraImeData.length) {
+                const newCard = serverCardsWithIds.find(sc => !doraImeData.some(my => my.id === sc.id));
+                if (newCard) {
+                    doraImeData.push(newCard); // E shtojmë në fund, renditja jote mbetet!
+                } else {
+                    doraImeData = [...serverCardsWithIds]; // Backup nëse s'e gjejmë dot
+                }
+            } 
+            // Nëse po gjuajmë letër (nga 11 në 10)
+            else {
+                doraImeData = doraImeData.filter(my => serverCardsWithIds.some(sc => sc.id === my.id));
             }
+
+            renderHand();
         }
     }
+}
 
     // 2. Përditëso Scoreboard
     console.log("Duke përditësuar tabelën e pikëve...");
@@ -232,10 +254,24 @@ function updateGameFlow(data) {
 
 socket.on('cardDrawn', (newCard) => {
     animateCardDraw();
-    doraImeData.push(newCard);
+
+    // 1. I japim letrës së re një ID unike që të mos ngatërrohet me të tjerat
+    const cardWithId = {
+        ...newCard,
+        id: `card-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
+    };
+
+    // 2. E shtojmë në fund të dorës sate (kështu nuk preken ato që i ke rendit vetë)
+    doraImeData.push(cardWithId);
+
+    // 3. Vizatojmë dorën dhe kontrollojmë Zion-in
     renderHand();
-    checkZionCondition();
+    
+    // Nëse checkZionCondition() e ke brenda renderHand, 
+    // rreshtin më poshtë mund ta fshish fare.
+    checkZionCondition(); 
 });
+
 function checkZionCondition() {
     const btnMbyll = document.getElementById('btn-mbyll');
     const statusDrita = document.getElementById('status-drita');
@@ -293,6 +329,9 @@ function renderHand() {
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
+        
+        // SHTO KËTË RRESHT KËTU:
+        div.dataset.id = card.id; 
 
         if (card.v === '★') {
             div.classList.add('joker');
@@ -301,6 +340,10 @@ function renderHand() {
             div.innerHTML = `${card.v}<br>${card.s}`;
             if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
         }
+        
+        // Shto div-in në container
+        handContainer.appendChild(div);
+    });
         
        div.addEventListener('mousedown', (e) => {
     const rect = div.getBoundingClientRect();
@@ -544,7 +587,7 @@ div.addEventListener('touchend', e => {
 });
 
         handContainer.appendChild(div);
-    });
+    
 
     // E zhvendosa këtë jashtë loop-it (forEach) që të mos thirret 11 herë
     if (typeof checkZionCondition === "function") checkZionCondition();
@@ -744,29 +787,28 @@ function animateCardDraw() {
 // ==========================================
 
 function processDiscard(cardElement) {
-    // 0. Bllokojmë menjëherë radhën që mos të hedhë dot letër tjetër gjatë animacionit
+    // 0. Bllokojmë menjëherë radhën
     isMyTurn = false; 
 
+    // MARRIM ID-në (Kjo është kryesorja për renditjen)
+    const cardId = cardElement.dataset.id; 
     const v = cardElement.dataset.v;
     const s = cardElement.dataset.s;
 
     // 1. Rregulli i Xhokerit
     if (v === '★' || v === 'Jokeri' || v === 'joker' || v === 'Xhoker') {
         alert("Xhokeri nuk hidhet në tokë!");
-        isMyTurn = true; // Ia kthejmë radhën që të provojë letër tjetër
-        resetCardStyles(cardElement);
+        isMyTurn = true; 
+        if (typeof resetCardStyles === "function") resetCardStyles(cardElement);
         renderHand();
         return;
     }
 
-    // 2. Gjejmë indeksin
-    const cardIndex = doraImeData.findIndex(c => c.v === v && c.s === s);
+    // 2. Gjejmë indeksin saktësisht përmes ID-së
+    const cardIndex = doraImeData.findIndex(c => c.id === cardId);
     
     if (cardIndex !== -1) {
-        // Heqim letrën nga array lokal
-        doraImeData.splice(cardIndex, 1);
-
-        // 3. Animacioni
+        // --- MBURRJA E ANIMACIONIT (Struktura jote e paprekur) ---
         const discardZone = document.getElementById('discard-pile');
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
@@ -792,21 +834,20 @@ function processDiscard(cardElement) {
             cardElement.style.left = targetRect.left + 'px';
             cardElement.style.top = targetRect.top + 'px';
             cardElement.style.transform = "scale(0.5) rotate(15deg)";
-            cardElement.style.opacity = "0.2"; // E bëjmë më transparente kur "hyn" në stivë
+            cardElement.style.opacity = "0.2";
         }, 10);
 
-        // 4. Njoftojmë serverin
+        // 4. Njoftojmë serverin dhe pastrojmë listën
         setTimeout(() => {
-            // TANI e heqim nga array lokal (pasi ka mbaruar animacioni)
+            // Hiqet vetëm letra që u zgjodh me ID (ruhet renditja e të tjerave)
             doraImeData.splice(cardIndex, 1); 
 
-            socket.emit('cardDiscarded', { v, s });
+            socket.emit('cardDiscarded', { v, s, id: cardId });
             renderHand(); 
             
             if (typeof checkZionCondition === "function") checkZionCondition();
         }, 400);
     } else {
-        // Nëse diçka dështon, ia kthejmë radhën
         isMyTurn = true;
     }
 }
@@ -1097,4 +1138,29 @@ socket.on('yourCards', (cards) => {
         checkZionCondition();    
     }
 });
+
+// --- FUNDI I SCRIPT.JS ---
+
+// Sigurohemi që DOM është gati para se të aktivizojmë Sortable
+document.addEventListener('DOMContentLoaded', () => {
+    const handContainer = document.getElementById('player-hand');
+
+    if (handContainer && typeof Sortable !== 'undefined') {
+        new Sortable(handContainer, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function (evt) {
+                // 1. Ndryshojmë renditjen në array (shumë e rëndësishme!)
+                const movedCard = doraImeData.splice(evt.oldIndex, 1)[0];
+                doraImeData.splice(evt.newIndex, 0, movedCard);
+                
+                // 2. Rifreskojmë vizatimin dhe kontrollojmë Zion-in
+                renderHand();
+                
+                console.log("Renditja u përditësua në memorie!");
+            }
+        });
+    }
+});
+
 console.log("Lidhja HTML -> Script: OK ✅");
