@@ -933,24 +933,64 @@ function checkRecursive(cards, jokers) {
 
 // Kur një lojtar mbyll lojën (ZION!)
 socket.on('roundOver', (data) => {
-    // data përmban: winnerName, loserPoints, updatedPlayers
+    // 1. SHFAQJA E TABELËS MODALE (E re!)
+    const modal = document.getElementById('score-modal');
+    const tableBody = document.getElementById('score-body');
+    if (modal && tableBody) {
+        tableBody.innerHTML = ''; // Pastrojmë rreshtat e vjetër
+
+        data.updatedPlayers.forEach(p => {
+            const lastScore = p.history[p.history.length - 1]; // "X", "15", ose "30!"
+            const isEliminated = p.score >= 71;
+            
+            // Përcaktojmë klasën për ngjyrën e pikëve (nëse ka "!" është Jackpot)
+            let scoreClass = "";
+            if (lastScore === 'X') scoreClass = "winner-x";
+            else if (typeof lastScore === 'string' && lastScore.includes('!')) scoreClass = "jackpot-points";
+
+            const row = document.createElement('tr');
+            if (p.id === socket.id) row.className = 'active-row'; // Rreshti yt ndriçohet
+
+            row.innerHTML = `
+                <td class="${isEliminated ? 'eliminated' : ''}">${p.name}</td>
+                <td class="${scoreClass}">${lastScore}</td>
+                <td style="font-weight: bold;">${p.score} / 71</td>
+                <td>${isEliminated ? '💀 I ELIMINUAR' : '✅ Në Lojë'}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        modal.style.display = 'flex'; // SHFAQET TABELA
+    }
+
+    // 2. LOGJIKA JOTE EKZISTUESE (E ruajtur plotësisht)
+    console.log(`ZION! ${data.winnerName} e mbylli raundin!`);
     
-    // 1. Shfaq njoftimin e fitores (Pika 7)
-    alert(`ZION! ${data.winnerName} e mbylli raundin!`);
+    // Përditëso scoreboard-in anësor (nëse e ke atë funksion)
+    if (typeof updateScoreboard === "function") {
+        updateScoreboard(data.updatedPlayers, null);
+    }
 
-    // 2. Përditëso scoreboard-in me pikët e reja (Pika 17)
-    updateScoreboard(data.updatedPlayers, null);
-
-    // 3. Pastro tavolinën për raundin tjetër (Pika 16)
+    // 3. Pastrimi i tavolinës (I ruajtur)
     doraImeData = [];
     renderHand();
-    discardPile.innerHTML = '';
-    jackpotElement.style.display = 'none';
+    
+    // Pastrojmë vizualisht elementet
+    const discardPileElement = document.getElementById('discard-pile');
+    if (discardPileElement) discardPileElement.innerHTML = '';
+    
+    const jackpotElement = document.getElementById('jackpot-card'); // Kontrollo ID-në
+    if (jackpotElement) jackpotElement.style.display = 'none';
 
-    // 4. Shfaq butonin "Vazhdo" ose "Raundi i Ri" (vetëm për Host-in)
+    // 4. Kontrolli i mbylljes finale
     if (data.isGameOver) {
         alert(`Loja përfundoi! Fituesi final është: ${data.finalWinner}`);
     }
+
+    // 5. AUTO-MBYLLJA E TABELËS (Pas 4 sekondave)
+    setTimeout(() => {
+        if (modal) modal.style.display = 'none';
+    }, 4000);
 });
 
 // Kur një lojtar eliminohet (Pika 9)
