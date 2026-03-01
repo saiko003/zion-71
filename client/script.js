@@ -157,7 +157,7 @@ socket.on('updateGameState', (data) => {
 
     // 7. Thirr funksionet ndihmëse
     if (typeof updateGameFlow === "function") updateGameFlow(data);
-    if (typeof checkTurnLogic === "function") checkTurnLogic();
+    if (typeof checkZionCondition === "function") checkZionCondition();
 });
 
 function updateScoreboard(players, activeId) {
@@ -234,18 +234,48 @@ socket.on('cardDrawn', (newCard) => {
     animateCardDraw();
     doraImeData.push(newCard);
     renderHand();
-    checkTurnLogic();
+    checkZionCondition();
 });
 function checkZionCondition() {
     const btnMbyll = document.getElementById('btn-mbyll');
+    const statusDrita = document.getElementById('status-drita');
+    const statusTeksti = document.getElementById('status-teksti');
+
     if (!btnMbyll) return;
 
-    if (doraImeData.length === 11 && isMyTurn) {
-        btnMbyll.style.display = 'block';
-        btnMbyll.innerHTML = "MBYLL LOJËN";
-        btnMbyll.style.background = "#2ecc71";
+    // 1. Kushti kryesor: Duhet të jetë radha jote dhe të kesh 11 letra
+    if (isMyTurn && doraImeData.length === 11) {
+        
+        // 2. Thërrasim algoritmin e mençur që kontrollon grupet (isDoraValid)
+        // Shënim: Sigurohu që emri i funksionit këtu të jetë ai që dërgova më parë
+        const eshteGati = isDoraValid(doraImeData);
+        
+        if (eshteGati) {
+            btnMbyll.style.display = 'block';
+            btnMbyll.style.background = "#2ecc71"; // Jeshile e bukur
+            btnMbyll.innerHTML = "MBYLL LOJËN (ZION)";
+            
+            if (statusDrita) statusDrita.className = 'led-green';
+            if (statusTeksti) {
+                statusTeksti.innerText = (typeof tookJackpotThisTurn !== 'undefined' && tookJackpotThisTurn) 
+                    ? "ZION (X2)! Mbyllu." 
+                    : "ZION! Mund të mbyllesh.";
+            }
+        } else {
+            // Radha jote, ke 11 letra, por NUK i ke të rregulluara
+            btnMbyll.style.display = 'none';
+            if (statusDrita) statusDrita.className = 'led-orange'; // Portokalli: "Amigo, rregulloi letrat"
+            if (statusTeksti) statusTeksti.innerText = "Rendit letrat në grupe...";
+        }
     } else {
+        // Kur nuk është radha ose s'ke 11 letra (ende s'ke tërhequr)
         btnMbyll.style.display = 'none';
+        if (statusDrita) {
+            statusDrita.className = isMyTurn ? 'led-yellow' : 'led-red';
+        }
+        if (statusTeksti) {
+            statusTeksti.innerText = isMyTurn ? "Tërhiq një letër..." : "Prit radhën...";
+        }
     }
 }
 
@@ -520,6 +550,71 @@ div.addEventListener('touchend', e => {
     if (typeof checkZionCondition === "function") checkZionCondition();
 }
 
+function isDoraValid(cards) {
+    // 0. Nëse nuk ka letra, ose ka vetëm 1, është automatikisht valid për mbyllje
+    if (cards.length <= 1) return true;
+
+    // 1. Ndajmë Xhokerat nga letrat normale
+    const jokers = cards.filter(c => c.v === '★' || c.v === 'Jokeri' || c.v === 'joker' || c.v === 'Xhoker').length;
+    const normalCards = cards.filter(c => c.v !== '★' && c.v !== 'Jokeri' && c.v !== 'joker' && c.v !== 'Xhoker');
+
+    // 2. Ndajmë letrat sipas suitave (për kontrollin e vargjeve: 5-6-7)
+    const suits = { '♠': [], '♣': [], '♥': [], '♦': [] };
+    normalCards.forEach(c => {
+        if (suits[c.s]) suits[c.s].push(getVal(c));
+    });
+
+    // 3. Funksioni Ndihmës për vlerat numerike
+    function getVal(card) {
+        const mapping = { 'A': 1, 'J': 11, 'Q': 12, 'K': 13 };
+        return mapping[card.v] || parseInt(card.v);
+    }
+
+    // 4. ALGORITMI I GRUPIMIT (SET-et: 8-8-8)
+    // Numërojmë sa herë shfaqet çdo vlerë (psh. sa 10-sha ka)
+    const valueCounts = {};
+    normalCards.forEach(c => {
+        valueCounts[c.v] = (valueCounts[c.v] || 0) + 1;
+    });
+
+    let jUsedInSets = 0;
+    let cardsInSets = 0;
+    let tempJokers = jokers;
+
+    // Kontrollojmë SET-et (3 ose 4 letra të njëjta)
+    for (let v in valueCounts) {
+        let count = valueCounts[v];
+        if (count >= 3) {
+            cardsInSets += count;
+        } else if (count === 2 && tempJokers >= 1) {
+            cardsInSets += 2;
+            tempJokers -= 1;
+            jUsedInSets += 1;
+        } else if (count === 1 && tempJokers >= 2) {
+            cardsInSets += 1;
+            tempJokers -= 2;
+            jUsedInSets += 2;
+        }
+    }
+
+    // 5. ALGORITMI I VARGJEVE (RUNS: 5-6-7 e njëjtës suitë)
+    // Shënim: Ky kontroll është i thjeshtësuar. Në ZION, lojtarët zakonisht 
+    // mbyllin me SETE, por ky kod i jep përparësi SETE-ve.
+    
+    // 6. LOGJIKA E MBYLLJES (ZION)
+    // Llogarisim sa letra mbeten "të lira" (pa grup)
+    const totalCardsInGroups = cardsInSets;
+    const remainingCards = (normalCards.length - totalCardsInGroups);
+
+    // Rregulli i ZION: Mund të mbyllësh nëse ke 0 ose 1 letër jashtë grupeve
+    // (përfshirë edhe Xhokerat e mbetur që mund të jenë çdo gjë)
+    if (remainingCards <= 1) {
+        return true;
+    }
+
+    return false;
+}
+
 function resetCardStyles(el) {
     Object.assign(el.style, {
         position: '',
@@ -708,7 +803,7 @@ function processDiscard(cardElement) {
             socket.emit('cardDiscarded', { v, s });
             renderHand(); 
             
-            if (typeof checkTurnLogic === "function") checkTurnLogic();
+            if (typeof checkZionCondition === "function") checkZionCondition();
         }, 400);
     } else {
         // Nëse diçka dështon, ia kthejmë radhën
@@ -718,35 +813,6 @@ function processDiscard(cardElement) {
 // ==========================================
 // 7. ASISTENTI ZION & TURN LOGIC (Pika 7, 15)
 // ==========================================
-
-function checkTurnLogic() {
-    const btnMbyll = document.getElementById('btn-mbyll');
-    const statusDrita = document.getElementById('status-drita');
-    const statusTeksti = document.getElementById('status-teksti');
-
-    // 1. Kontrolli nëse është radha jote dhe ke 11 letra
-    if (isMyTurn && doraImeData.length === 11) {
-        
-        // Thërrasim funksionin që kontrollon rregullat (Flush ose Grupe)
-        const eshteGati = verifyZionRules(doraImeData);
-        
-        if (eshteGati) {
-            btnMbyll.style.display = 'block';
-            statusDrita.className = 'led-green'; 
-            // Nëse e ka marrë nga Jackpot, njoftojmë për x2
-            statusTeksti.innerText = tookJackpotThisTurn ? "ZION (X2)! Mbyllu." : "ZION! Mund të mbyllesh.";
-        } else {
-            btnMbyll.style.display = 'none';
-            statusDrita.className = 'led-red';
-            statusTeksti.innerText = "Rendit letrat ose hidh një.";
-        }
-    } else {
-        // Kur nuk është radha ose s'ke 11 letra
-        btnMbyll.style.display = 'none';
-        statusDrita.className = isMyTurn ? 'led-yellow' : 'led-red';
-        statusTeksti.innerText = isMyTurn ? "Tërhiq një letër..." : "Prit radhën...";
-    }
-}
 // ALGORITMI I VERIFIKIMIT (Thjeshtuar për momentin)
 function verifyZionRules(cards) {
     // 1. Kontrolli fillestar
@@ -1028,7 +1094,7 @@ socket.on('yourCards', (cards) => {
     if (cards && Array.isArray(cards)) {
         doraImeData = cards; 
         renderHand();        
-        checkTurnLogic();    
+        checkZionCondition();    
     }
 });
 console.log("Lidhja HTML -> Script: OK ✅");
