@@ -233,10 +233,13 @@ socket.on('cardDrawn', (newCard) => {
     checkTurnLogic();
 });
 function checkZionCondition() {
-    // Për momentin, po e bëjmë që butoni të shfaqet nëse lojtari ka 11 letra
-    // (Më vonë do të shtojmë logjikën që kontrollon nëse janë rresht/grupe)
-    if (doraImeData.length === 11) {
+    const btnMbyll = document.getElementById('btn-mbyll');
+    if (!btnMbyll) return;
+
+    if (doraImeData.length === 11 && isMyTurn) {
         btnMbyll.style.display = 'block';
+        btnMbyll.innerHTML = "MBYLL LOJËN";
+        btnMbyll.style.background = "#2ecc71";
     } else {
         btnMbyll.style.display = 'none';
     }
@@ -280,7 +283,7 @@ function renderHand() {
     });
 
     // Krijojmë lëvizjen dhe lëshimin specifike për mausin
-    const onMouseMove = (e) => {
+   const onMouseMove = (e) => {
         if (!div.classList.contains('dragging')) return;
         
         div.style.left = (e.clientX - parseFloat(div.dataset.offsetX)) + 'px';
@@ -297,13 +300,30 @@ function renderHand() {
         if (nextSibling) handContainer.insertBefore(div, nextSibling);
         else handContainer.appendChild(div);
 
-        // Feedback për discard-pile
+        // 1. Feedback për discard-pile (Stiva normale)
         const pile = document.getElementById('discard-pile');
         const pRect = pile.getBoundingClientRect();
         const over = e.clientX > pRect.left && e.clientX < pRect.right &&
                      e.clientY > pRect.top && e.clientY < pRect.bottom;
         pile.classList.toggle('over', over);
+
+        // 2. Feedback për victory-drop-zone (Mbyllja ZION mbi dekun)
+        const victoryZone = document.getElementById('victory-drop-zone');
+        if (victoryZone) {
+            // E shfaqim vetëm nëse lojtari ka 11 letra dhe është radha e tij
+            if (isMyTurn && doraImeData.length === 11) {
+                victoryZone.style.display = 'flex';
+                const vRect = victoryZone.getBoundingClientRect();
+                const overVictory = e.clientX > vRect.left && e.clientX < vRect.right &&
+                                    e.clientY > vRect.top && e.clientY < vRect.bottom;
+                victoryZone.classList.toggle('over', overVictory);
+            } else {
+                victoryZone.style.display = 'none';
+            }
+        }
     };
+
+
 
     const onMouseUp = (e) => {
         div.classList.remove('dragging');
@@ -315,18 +335,42 @@ function renderHand() {
         const isOver = e.clientX > pRect.left - 20 && e.clientX < pRect.right + 20 &&
                        e.clientY > pRect.top - 20 && e.clientY < pRect.bottom + 20;
 
-        if (isOver && isMyTurn && doraImeData.length === 11) {
+        // Kontrollojmë edhe Victory Zone
+        const victoryZone = document.getElementById('victory-drop-zone');
+        const isOverVictory = victoryZone && victoryZone.classList.contains('over');
+
+        if (isOverVictory && isMyTurn && doraImeData.length === 11) {
+            // RASTI 1: MBYLLJA ZION
+            if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
+                socket.emit('declareZion', { 
+                    discardedCard: { v: div.dataset.v, s: div.dataset.s },
+                    hand: doraImeData.filter((_, i) => i !== parseInt(div.dataset.index))
+                });
+            } else {
+                resetCardStyles(div);
+                renderHand();
+            }
+        } else if (isOver && isMyTurn && doraImeData.length === 11) {
+            // RASTI 2: HEDHJA NORMALE
             processDiscard(div);
         } else {
-            // Ruajmë renditjen e re
+            // RASTI 3: RENDITJA E RE NË DORË
             const handContainer = document.getElementById('player-hand');
             const cardsInDOM = [...handContainer.querySelectorAll('.card')];
-            doraImeData = cardsInDOM.map(cardEl => doraImeData[parseInt(cardEl.dataset.index)]);
+            doraImeData = cardsInDOM.map(cardEl => {
+                return { v: cardEl.dataset.v, s: cardEl.dataset.s };
+            });
             resetCardStyles(div);
             renderHand();
         }
-    };
 
+        // Fshehim Rubikun pasi lëshojmë letrën
+        if (victoryZone) {
+            victoryZone.classList.remove('over');
+            victoryZone.style.display = 'none';
+        }
+    };
+           
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
 });
@@ -357,8 +401,8 @@ div.addEventListener('touchmove', e => {
     div.style.top = (touch.clientY - parseFloat(div.dataset.offsetY)) + 'px';
     e.preventDefault();
 
-    // 2. Logjika e renditjes (Kjo mungon te kodi i dytë!)
-    const handContainer = document.getElementById('player-hand'); // Sigurohu që kjo variabël ekziston
+    // 2. Logjika e renditjes
+    const handContainer = document.getElementById('player-hand');
     const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
     const nextSibling = siblings.find(sibling => {
         const r = sibling.getBoundingClientRect();
@@ -371,7 +415,7 @@ div.addEventListener('touchmove', e => {
         handContainer.appendChild(div);
     }
 
-    // 3. Feedback vizual për discard-pile
+    // 3. Feedback vizual për discard-pile (Stiva normale)
     const pile = document.getElementById('discard-pile');
     const rectPile = pile.getBoundingClientRect();
     const isOverPile = touch.clientX > rectPile.left &&
@@ -380,48 +424,89 @@ div.addEventListener('touchmove', e => {
                        touch.clientY < rectPile.bottom;
                        
     pile.classList.toggle('over', isOverPile);
+
+    // 4. Feedback vizual për victory-drop-zone (Mbyllja ZION mbi dekun)
+    const victoryZone = document.getElementById('victory-drop-zone');
+    if (victoryZone) {
+        if (isMyTurn && doraImeData.length === 11) {
+            victoryZone.style.display = 'flex';
+            const vRect = victoryZone.getBoundingClientRect();
+            const isOverVictory = touch.clientX > vRect.left &&
+                                 touch.clientX < vRect.right &&
+                                 touch.clientY > vRect.top &&
+                                 touch.clientY < vRect.bottom;
+            
+            victoryZone.classList.toggle('over', isOverVictory);
+        } else {
+            victoryZone.style.display = 'none';
+        }
+    }
     
-}, { passive: false });
+}, { passive: false });;
         
 // TOUCH END
 div.addEventListener('touchend', e => {
     div.classList.remove('dragging');
     const touch = e.changedTouches[0];
+    
+    // 1. Kontrolli për Discard Pile (Stiva normale)
     const pile = document.getElementById('discard-pile');
     const rect = pile.getBoundingClientRect();
     const tolerance = 20;
-    
-    const isOver = touch.clientX > rect.left - tolerance &&
-                   touch.clientX < rect.right + tolerance &&
-                   touch.clientY > rect.top - tolerance &&
-                   touch.clientY < rect.bottom + tolerance;
+    const isOverPile = touch.clientX > rect.left - tolerance &&
+                       touch.clientX < rect.right + tolerance &&
+                       touch.clientY > rect.top - tolerance &&
+                       touch.clientY < rect.bottom + tolerance;
 
+    // 2. Kontrolli për Victory Zone (Rubiku mbi deku)
+    const victoryZone = document.getElementById('victory-drop-zone');
+    let isOverVictory = false;
+    if (victoryZone && victoryZone.style.display !== 'none') {
+        const vRect = victoryZone.getBoundingClientRect();
+        isOverVictory = touch.clientX > vRect.left - tolerance &&
+                        touch.clientX < vRect.right + tolerance &&
+                        touch.clientY > vRect.top - tolerance &&
+                        touch.clientY < vRect.bottom + tolerance;
+    }
+
+    // Pastrojmë vizualisht klasat 'over'
     pile.classList.remove('over');
+    if (victoryZone) victoryZone.classList.remove('over');
 
-    if (isOver && isMyTurn && doraImeData.length === 11) {
+    // --- LOGJIKA E VENDIMMARRJES ---
+
+    if (isOverVictory && isMyTurn && doraImeData.length === 11) {
+        // RASTI A: MBYLLJA ZION
+        if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
+            socket.emit('declareZion', { 
+                discardedCard: { v: div.dataset.v, s: div.dataset.s },
+                hand: doraImeData.filter((_, i) => i !== parseInt(div.dataset.index))
+            });
+        } else {
+            resetCardStyles(div);
+            renderHand();
+        }
+    } 
+    else if (isOverPile && isMyTurn && doraImeData.length === 11) {
+        // RASTI B: HEDHJA NORMALE
         processDiscard(div);
-    } else {
-        // --- KJO ËSHTË PJESA QË DUHET TË SHTOSH ---
-        
-        // 1. Marrim të gjitha letrat ashtu siç janë renditur tani në ekran (DOM)
+    } 
+    else {
+        // RASTI C: RENDITJA E RE (Pjesa që kërkove të shtohej)
         const handContainer = document.getElementById('player-hand');
         const currentCardsInDOM = [...handContainer.querySelectorAll('.card')];
 
-        // 2. Krijojmë listën e re të të dhënave bazuar në renditjen e re vizuale
         const newOrderedData = currentCardsInDOM.map(cardEl => {
-            // Përdorim dataset.v dhe dataset.s për të gjetur letrën korrekte te doraImeData
             return { v: cardEl.dataset.v, s: cardEl.dataset.s };
         });
 
-        // 3. Përditësojmë variablën globale të dorës
         doraImeData = newOrderedData;
-
-        // 4. Pastrojmë stilet (position: fixed, etj) dhe bëjmë render të pastër
         resetCardStyles(div);
         renderHand(); 
-        
-        // --- FUNDI I PJESËS SË SHTUAR ---
     }
+
+    // Fshehim zonën e fitores në fund
+    if (victoryZone) victoryZone.style.display = 'none';
 });
 
         handContainer.appendChild(div);
