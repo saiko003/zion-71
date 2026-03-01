@@ -345,7 +345,7 @@ body:has(.dragging) {
     font-weight: bold;
 }
 
-.card.joker {
+.card .joker {
     background-color: #1a1a1a !important;
     border: 2px solid gold !important;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
