@@ -442,18 +442,16 @@ function renderHand() {
                     s: cardEl.dataset.s, 
                     id: cardEl.dataset.id  // MOS E HARRON KËTË!
                 };
-             };   
+             });   
             resetCardStyles(div);
             renderHand();
-
+        }
         // Fshehim Rubikun pasi lëshojmë letrën
         if (victoryZone) {
             victoryZone.classList.remove('over');
             victoryZone.style.display = 'none';
-        }
-    };
-           
-});
+        }       
+};
         // TOUCH START
         div.addEventListener('touchstart', (e) => {
             const t = e.touches[0]; 
