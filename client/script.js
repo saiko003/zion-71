@@ -357,7 +357,9 @@ function renderHand() {
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px'
-    }
+    });
+     document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
 });
     // Krijojmë lëvizjen dhe lëshimin specifike për mausin
    const onMouseMove = (e) => {
@@ -451,8 +453,6 @@ function renderHand() {
         }
     };
            
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
 });
         // TOUCH START
         div.addEventListener('touchstart', (e) => {
