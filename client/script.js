@@ -531,24 +531,28 @@ function animateCardDraw() {
 // ==========================================
 
 function processDiscard(cardElement) {
+    // 0. Bllokojmë menjëherë radhën që mos të hedhë dot letër tjetër gjatë animacionit
+    isMyTurn = false; 
+
     const v = cardElement.dataset.v;
     const s = cardElement.dataset.s;
 
-    // 1. Rregulli i Xhokerit (Pika 5)
-    if (v === '★' || v === 'Xhoker') {
+    // 1. Rregulli i Xhokerit
+    if (v === '★' || v === 'Xhoker' || v === 'joker') {
         alert("Xhokeri nuk hidhet në tokë!");
-        resetCardStyles(cardElement); // Ktheje letrën në pozicionin fillestar
+        isMyTurn = true; // Ia kthejmë radhën që të provojë letër tjetër
+        resetCardStyles(cardElement);
         return;
     }
 
-    // 2. Gjejmë indeksin e saktë në array duke krahasuar vlerën dhe simbolin
+    // 2. Gjejmë indeksin
     const cardIndex = doraImeData.findIndex(c => c.v === v && c.s === s);
     
     if (cardIndex !== -1) {
-        // Heqim letrën nga të dhënat tona
+        // Heqim letrën nga array lokal
         doraImeData.splice(cardIndex, 1);
 
-        // 3. Animacioni vizual drejt stivës së hedhjes
+        // 3. Animacioni
         const discardZone = document.getElementById('discard-pile');
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
@@ -557,24 +561,29 @@ function processDiscard(cardElement) {
         cardElement.style.left = rect.left + 'px';
         cardElement.style.top = rect.top + 'px';
         cardElement.style.zIndex = '1000';
+        cardElement.style.pointerEvents = 'none'; // Sigurohemi që nuk klikohet më
         
-        // Fluturimi drejt stivës
         setTimeout(() => {
             cardElement.style.transition = "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)";
             cardElement.style.left = targetRect.left + 'px';
             cardElement.style.top = targetRect.top + 'px';
             cardElement.style.transform = "scale(0.5) rotate(15deg)";
-            cardElement.style.opacity = "0.5";
+            cardElement.style.opacity = "0.2"; // E bëjmë më transparente kur "hyn" në stivë
         }, 10);
 
-        // 4. Njoftojmë serverin pas animacionit
+        // 4. Njoftojmë serverin
         setTimeout(() => {
             socket.emit('cardDiscarded', { v, s });
-            renderHand(); // Rifreskojmë dorën (tani me 10 letra)
-            checkTurnLogic();
+            renderHand(); // Fshin DIV-in e vjetër dhe vizaton dorën e re me 10 letra
+            
+            // Nëse ke një funksion që kontrollon UI-në e radhës
+            if (typeof checkTurnLogic === "function") checkTurnLogic();
         }, 400);
+    } else {
+        // Nëse diçka dështon, ia kthejmë radhën
+        isMyTurn = true;
     }
-}
+} // Kllapa mbyllëse e saktë
 // ==========================================
 // 7. ASISTENTI ZION & TURN LOGIC (Pika 7, 15)
 // ==========================================
