@@ -362,13 +362,17 @@ function renderHand() {
         width: rect.width + 'px',
         height: rect.height + 'px'
     });
-     document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
+       
 });
+        
+        
     // Krijojmë lëvizjen dhe lëshimin specifike për mausin
    const onMouseMove = (e) => {
+       if (e.type === 'touchmove') e.preventDefault();
         if (!div.classList.contains('dragging')) return;
-        
+       
         div.style.left = (e.clientX - parseFloat(div.dataset.offsetX)) + 'px';
         div.style.top = (e.clientY - parseFloat(div.dataset.offsetY)) + 'px';
 
@@ -409,14 +413,26 @@ function renderHand() {
 
 
     const onMouseUp = (e) => {
-        div.classList.remove('dragging');
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-
+       
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onTouchEnd);
+        div.classList.remove('dragging');
+    
         const pile = document.getElementById('discard-pile');
         const pRect = pile.getBoundingClientRect();
-        const isOver = e.clientX > pRect.left - 20 && e.clientX < pRect.right + 20 &&
-                       e.clientY > pRect.top - 20 && e.clientY < pRect.bottom + 20;
+        
+    div.classList.remove('dragging');
+
+    // MARRIM KOORDINATAT E SAKTA (Mouse ose Touch)
+    const clientX = e.type.includes('touch') ? (e.changedTouches[0]?.clientX || 0) : e.clientX;
+    const clientY = e.type.includes('touch') ? (e.changedTouches[0]?.clientY || 0) : e.clientY;
+
+    const pile = document.getElementById('discard-pile');
+    const pRect = pile.getBoundingClientRect();
+    const isOver = clientX > pRect.left - 20 && clientX < pRect.right + 20 &&
+                   clientY > pRect.top - 20 && clientY < pRect.bottom + 20;;
 
         // Kontrollojmë edhe Victory Zone
         const victoryZone = document.getElementById('victory-drop-zone');
@@ -458,20 +474,29 @@ function renderHand() {
 };
         // TOUCH START
         div.addEventListener('touchstart', (e) => {
-            const t = e.touches[0]; 
-            const rect = div.getBoundingClientRect();
-            div.dataset.offsetX = t.clientX - rect.left;
-            div.dataset.offsetY = t.clientY - rect.top;
-            div.classList.add('dragging');
-            
-            Object.assign(div.style, {
-                position: 'fixed',
-                zIndex: '1000',
-                pointerEvents: 'none',
-                width: rect.width + 'px',
-                height: rect.height + 'px'
-            });
-        }, { passive: true  });
+    // 1. Marrim touch-in e parë
+    const t = e.touches[0]; 
+    const rect = div.getBoundingClientRect();
+    
+    div.dataset.offsetX = t.clientX - rect.left;
+    div.dataset.offsetY = t.clientY - rect.top;
+    div.classList.add('dragging');
+    
+    Object.assign(div.style, {
+        position: 'fixed',
+        zIndex: '1000',
+        pointerEvents: 'none',
+        width: rect.width + 'px',
+        height: rect.height + 'px'
+    });
+
+    // 2. SHTO KËTO: Duhet t'i tregosh telefonit çfarë të bëjë kur gishti lëviz ose hiqet
+    // Përdorim të njëjtat funksione si te mausi (onMouseMove dhe onMouseUp) 
+    // sepse i bëmë "inteligjente" që të kuptojnë edhe touch-in.
+    document.addEventListener('touchmove', onMouseMove, { passive: false });
+    document.addEventListener('touchend', onMouseUp);
+
+}, { passive: false }); // NDRYSHOJE KËTË NË FALSE
 
         // MBANI VETËM KËTË - Ky bën çdo gjë: Lëvizjen, Renditjen dhe Feedback-un e Piles
 div.addEventListener('touchmove', e => {
