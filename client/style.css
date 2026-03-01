@@ -88,26 +88,41 @@ body {
     color: white;
     cursor: pointer;
 }
-.active-deck { box-shadow: 0 0 20px #f1c40f; border-color: #f1c40f; } /* Pika 12: Glow stiva */
+.active-deck { 
+    box-shadow: 0 0 25px #f1c40f !important; 
+    border-color: #f1c40f !important;
+    animation: pulseGlow 1.5s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from { transform: scale(1); box-shadow: 0 0 15px #f1c40f; }
+    to { transform: scale(1.05); box-shadow: 0 0 30px #f1c40f; }
+}
 
 /* STILI PËR LETRËN QË QËNDRON NË TOKË (DISCARD PILE) */
 .card-on-table {
-    width: 65px;         /* Pak më e vogël se zona që ta rrethojë një kornizë */
+    width: 65px;
     height: 95px;
     background: white;
     border-radius: 5px;
     display: flex;
-    flex-direction: column; /* Për të rreshtuar vlerën mbi simbolin */
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     font-size: 22px;
     font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5); /* Hije që të duket sikur rri mbi tavolinë */
-    pointer-events: none;  /* Që të mos e kapësh dot me drag gabimisht */
-    animation: dropEffect 0.2s ease-out; /* Animacion i vogël kur "bie" në tokë */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    pointer-events: none; 
+    
+    /* NDRYSHIMET: */
+    position: absolute;    /* Kjo i lejon JS-it t'i vendosë te 'left: index * 15px' */
+    top: 7px;              /* Që të jetë në mes të kutisë vertikalisht */
+    border: 1px solid #ccc; /* Një kornizë e hollë që të dallohen letrat e bardha mbi njëra-tjetrën */
+    
+    animation: dropEffect 0.2s ease-out;
 }
 
-/* Animacioni kur letra shfaqet në tokë */
+/* Animacioni që ke përmendur (sigurohu ta kesh të shkruar) */
 @keyframes dropEffect {
     0% { transform: scale(1.5); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
@@ -118,9 +133,18 @@ body {
     background: rgba(0, 0, 0, 0.2);
     border: 2px dashed rgba(255, 255, 255, 0.3);
     position: relative;
-    overflow: hidden; /* Siguron që letra mos të dalë jashtë kornizës */
+    
+    /* NDRYSHIMET: */
+    min-width: 150px;       /* Gjerësia minimale */
+    height: 110px;         /* Pak më e lartë se letra (95px) */
+    display: block;        /* Që position: absolute brenda saj të punojë mirë */
+    overflow-x: auto;      /* Nëse mbushet plot, lejon scroll-in anash */
+    overflow-y: hidden;    /* Mos lejo scroll lart-poshtë */
+    padding: 5px;
+    white-space: nowrap;   /* I mban letrat në një rresht */
 }
 
+}
 .drop-zone {
     background: rgba(255, 255, 255, 0.1);
     border: 2px dashed #777;
@@ -181,8 +205,8 @@ body {
 .card {
     width: 70px;
     height: 110px;
-    background: #222;
-    color: white;
+    background: #fff;
+    color: black;
     border-radius: 8px;
     border: 1px solid #999;
     margin-left: -25px; /* Kjo bën që letrat të hapen si "lepe-lepe" */
@@ -194,13 +218,13 @@ body {
     box-shadow: -3px 0 10px rgba(0,0,0,0.4);
     font-weight: bold;
     cursor: grab;
-    transition: transform 0.2s;
+    transition: transform 0.2s, margin 0.2s;
+   }
 
    .card.dragging {
     cursor: grabbing;
     opacity: 0.9;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
-    transform: scale(1.05); /* E rrit pak letrën kur e kap */
+    box-shadow: 0 15px 30px rgba(0,0,0,0.8);
     transform: scale(1.1) rotate(0deg); /* E rritim pak që të duket që u kap */
     z-index: 1000 !important;
     margin-left: 0 !important; /* E heqim "lepe-lepe" kur e kemi te gishti */
@@ -231,8 +255,42 @@ body:has(.dragging) {
 
   
 /* Glow kur lojtari e ka radhën (Pika 15) */
-.my-turn-glow { box-shadow: inset 0 0 50px rgba(46, 204, 113, 0.3); }
-
+.my-turn-glow {
+    box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.2);
+    border: 2px solid #00ff00;
+}
+#deck-zion {
+    width: 80px;
+    height: 120px;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    background: linear-gradient(135deg, #444, #111);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 18px;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+    transition: all 0.2s ease;
+}
+   
+#deck-zion:hover {
+    transform: translateY(-5px);
+    /* Shto këtë rresht që të ruhet shkëlqimi nëse është aktiv */
+    box-shadow: 6px 6px 15px rgba(0,0,0,0.6), 0 0 20px currentColor; 
+    filter: brightness(1.2);
+}
+   
+#status-teksti {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 5px;
+}
 #btn-mbyll {
     background: #27ae60;
     color: white;
