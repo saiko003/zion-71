@@ -143,7 +143,7 @@ function startNewRound() {
         player.cards = []; 
 
         // Xhokeri (Ylli i Zionit)
-        const myJoker = { v: '★', s: 'Xhoker' };
+        const myJoker = { v: '★', s: 'Jokeri' };
 
         // Rregulli yt: Dealer merr 10 nga deck (+1 xhoker = 11), të tjerët 9 (+1 xhoker = 10)
         let sasiaNgaDeck = (index === dealerIndex) ? 10 : 9;
@@ -334,8 +334,10 @@ socket.on('cardDiscarded', (card) => {
 
     // 2. MBROJTJA E XHOKERIT (★)
     // Sigurohemi që nuk po hedh yllin që i dhamë në fillim.
-    if (card.v === '★' || card.v === 'Xhoker') {
-        console.log("Xhokeri nuk lejohet të hidhet në tokë!");
+    const v = card.v;
+    if (v === '★' || v === 'Jokeri' || v === 'joker' || v === 'Xhoker') {
+        console.log(`Tentativë e bllokuar: ${player.name} deshi të hidhte Xhokerin!`);
+        socket.emit('errorMsg', "Xhokeri (Ylli) nuk mund të hidhet në tokë!");
         return; 
     }
 
@@ -470,15 +472,15 @@ function calculateScore(cards) {
     if (!cards || cards.length === 0) return 0;
 
     cards.forEach(card => {
-        // 1. Xhokeri nuk shton asgjë (0 pikë)
-        if (card.v === '★' || card.v === 'Xhoker') {
-            score += 0; 
+        // 1. Kontrolli i "blinduar" për Xhokerin (i kap të gjitha variantet)
+        if (card.v === '★' || card.v === 'Jokeri' || card.v === 'Xhoker' || card.v === 'joker') {
+            score += 0; // Nuk shton pikë (0 pikë)
         } 
-        // 2. Letrat e rënda vlejnë 10
+        // 2. Letrat e rënda (10, J, Q, K, A) vlejnë 10 pikë
         else if (['A', 'K', 'Q', 'J', '10'].includes(card.v)) {
             score += 10;
         } 
-        // 3. Letrat 2-9 vlejnë sa numri
+        // 3. Letrat 2-9 vlejnë sa numri i tyre
         else {
             let val = parseInt(card.v);
             if (!isNaN(val)) score += val;
