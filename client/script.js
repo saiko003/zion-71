@@ -981,9 +981,9 @@ socket.on('roundOver', (data) => {
     
     // Pastrojmë vizualisht elementet
     const discardPileElement = document.getElementById('discard-pile');
-    if (discardPileElement) discardPileElement.innerHTML = '';
+    if (discardPileElement) discardPileElement.innerHTML = '<span class="label">HEDH KËTU</span>';
     
-    const jackpotElement = document.getElementById('jackpot-card'); // Kontrollo ID-në
+    const jackpotElement = document.getElementById('jackpot');
     if (jackpotElement) jackpotElement.style.display = 'none';
 
     // 4. Kontrolli i mbylljes finale
