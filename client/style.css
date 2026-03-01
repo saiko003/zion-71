@@ -51,11 +51,64 @@ body {
     max-height: 150px;
     overflow-y: auto;
 }
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 9999;
+    display: flex; justify-content: center; align-items: center;
+}
 
-#score-table { border-collapse: collapse; width: 100%; }
-#score-table th, #score-table td { padding: 5px 10px; text-align: center; border-bottom: 1px solid #444; }
-.active-row { background: rgba(255, 255, 0, 0.2); font-weight: bold; }
-.eliminated { color: #ff4d4d; text-decoration: line-through; }
+.modal-content {
+    background: #2c3e50; color: white; padding: 20px;
+    border-radius: 15px; border: 2px solid #f1c40f; width: 90%; max-width: 500px;
+}
+
+#score-table { 
+    border-collapse: collapse; 
+    width: 100%; 
+    margin: 15px 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#score-table th {
+    background-color: #34495e;
+    color: #f1c40f; /* Ngjyrë ari për kokën e tabelës */
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 1px;
+}
+
+#score-table th, #score-table td { 
+    padding: 12px 10px; /* Pak më shumë hapësirë */
+    text-align: center; 
+    border-bottom: 1px solid #444; 
+}
+
+/* Rreshti i lojtarit aktual (veta e parë) */
+.active-row { 
+    background: rgba(255, 255, 0, 0.15); 
+    border-left: 4px solid #f1c40f; 
+}
+
+/* Lojtarët e eliminuar */
+.eliminated { 
+    color: #ff4d4d; 
+    text-decoration: line-through; 
+    opacity: 0.6; /* I bëjmë pak më të zbehtë */
+}
+
+/* Stili për fituesin (X) */
+.winner-x {
+    color: #2ecc71;
+    font-weight: bold;
+    font-size: 1.2em;
+    text-shadow: 0 0 5px rgba(46, 204, 113, 0.5);
+}
+
+/* Stili për pikët me Jackpot (!) */
+.jackpot-points {
+    color: #e67e22;
+    font-weight: bold;
+}
 
 /* ==========================================
    4. ELEMENTET E LOJËS (Deck, Jackpot, Discard)
