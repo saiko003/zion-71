@@ -1133,16 +1133,20 @@ window.addEventListener('beforeunload', () => {
 socket.on('initGame', () => {
     console.log("Loja nisi! Po fsheh Lobby-n...");
     
-    const lobby = document.getElementById('lobby-screen');
+    // RREGULLIMI 1: Ndryshojmë ID-në që të përputhet me HTML-në tënde
+    const lobby = document.getElementById('lobby-controls'); 
     const table = document.getElementById('game-table');
 
     if (lobby) {
+        // Përdorim style.display për siguri nëse klasa .hidden nuk punon
+        lobby.style.display = 'none'; 
         lobby.classList.add('hidden');
     } else {
-        console.warn("Elementi 'lobby-screen' nuk u gjet!");
+        console.warn("Elementi 'lobby-controls' nuk u gjet!");
     }
 
     if (table) {
+        table.style.display = 'block';
         table.classList.remove('hidden');
     } else {
         console.warn("Elementi 'game-table' nuk u gjet!");
