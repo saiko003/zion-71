@@ -87,38 +87,40 @@ socket.on('updateGameState', (data) => {
     }
 
     // 6. Update i Letrave (I rregulluar që të jetë më i shpejtë)
+// 6. Update i Letrave (I rregulluar)
     if (data.players) {
-    const me = data.players.find(p => p.id === socket.id);
-    if (me && me.cards) {
-        
-        // A) I japim ID letrave që vijnë nga serveri (nëse nuk i kanë)
-        const serverCardsWithIds = me.cards.map((card, index) => ({
-            ...card,
-            id: card.id || `${card.v}-${card.s}-${index}` 
-        }));
-
-        // B) Kontrollojmë nëse numri i letrave ka ndryshuar (kemi marrë ose gjuajtur letër)
-        // ose nëse dora është bosh (fillimi i lojës)
-        if (doraImeData.length === 0 || doraImeData.length !== serverCardsWithIds.length) {
+        const me = data.players.find(p => p.id === socket.id);
+        if (me && me.cards) {
             
-            // Nëse po marrim letër të re (nga 10 në 11)
-            if (serverCardsWithIds.length > doraImeData.length) {
-                const newCard = serverCardsWithIds.find(sc => !doraImeData.some(my => my.id === sc.id));
-                if (newCard) {
-                    doraImeData.push(newCard); // E shtojmë në fund, renditja jote mbetet!
-                } else {
-                    doraImeData = [...serverCardsWithIds]; // Backup nëse s'e gjejmë dot
-                }
-            } 
-            // Nëse po gjuajmë letër (nga 11 në 10)
-            else {
-                doraImeData = doraImeData.filter(my => serverCardsWithIds.some(sc => sc.id === my.id));
-            }
+            const serverCardsWithIds = me.cards.map((card, index) => ({
+                ...card,
+                id: card.id || `${card.v}-${card.s}-${index}` 
+            }));
 
-            renderHand();
+            // KORRIGJIMI KËTU:
+            // Nëse dora ime është bosh, ose ka ndryshuar numri i letrave
+            if (!doraImeData || doraImeData.length === 0 || doraImeData.length !== serverCardsWithIds.length) {
+                
+                // Nëse është fillimi i lojës ose reset, merri të gjitha
+                if (doraImeData.length === 0) {
+                    doraImeData = [...serverCardsWithIds];
+                } 
+                // Nëse po marrim letër të re (nga 10 në 11)
+                else if (serverCardsWithIds.length > doraImeData.length) {
+                    const newCard = serverCardsWithIds.find(sc => !doraImeData.some(my => my.id === sc.id));
+                    if (newCard) doraImeData.push(newCard);
+                    else doraImeData = [...serverCardsWithIds];
+                } 
+                // Nëse po gjuajmë letër
+                else {
+                    doraImeData = doraImeData.filter(my => serverCardsWithIds.some(sc => sc.id === my.id));
+                }
+
+                console.log("Duke vizatuar dorën me", doraImeData.length, "letra");
+                renderHand();
+            }
         }
     }
-}
 
     // 2. Përditëso Scoreboard
     console.log("Duke përditësuar tabelën e pikëve...");
