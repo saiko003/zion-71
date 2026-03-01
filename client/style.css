@@ -502,3 +502,6 @@ body.game-active #lobby-controls {
     transition: transform 0.2s, border-color 0.2s;
 }
 
+.hidden {
+    display: none !important;
+}
