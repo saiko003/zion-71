@@ -195,20 +195,41 @@ body {
     font-weight: bold;
     cursor: grab;
     transition: transform 0.2s;
-}
-.card.dragging {
+
+   .card.dragging {
     cursor: grabbing;
     opacity: 0.9;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+    transform: scale(1.05); /* E rrit pak letrën kur e kap */
+    transform: scale(1.1) rotate(0deg); /* E rritim pak që të duket që u kap */
+    z-index: 1000 !important;
+    margin-left: 0 !important; /* E heqim "lepe-lepe" kur e kemi te gishti */
+}
+
+   #discard-pile.over {
+    background-color: rgba(255, 255, 0, 0.2); /* Ngjyrë e verdhë e lehtë kur je sipër */
+    border: 2px dashed #ffcc00;
+}
+   
+body.dragging-active {
+    cursor: grabbing !important;
+}
+body:has(.dragging) {
+    cursor: grabbing !important;
 }
 .card:hover {
     transform: translateY(-30px);
     z-index: 200;
 }
-
+ #player-hand {
+    display: flex;
+    transition: all 0.2s ease; /* Kjo i bën letrat të rrëshqasin butë */
+}
+   
 .card:first-child { margin-left: 0; }
 .card:active { cursor: grabbing; }
 
+  
 /* Glow kur lojtari e ka radhën (Pika 15) */
 .my-turn-glow { box-shadow: inset 0 0 50px rgba(46, 204, 113, 0.3); }
 
@@ -292,7 +313,4 @@ body.game-active #lobby-controls {
     justify-content: center;
     transition: transform 0.2s, border-color 0.2s;
 }
-#player-hand {
-    display: flex;
-    transition: all 0.2s ease; /* Kjo i bën letrat të rrëshqasin butë */
-}
+
