@@ -27,6 +27,7 @@ const io = new Server(server, {
 // 1. VARIABLAT E LOJËS (Pika 1, 2)
 // ==========================================
 let activePlayerId = null; 
+let deck = [];
 let discardPile = [];
 let jackpotCard = null;
 let activePlayerIndex = 0;
@@ -35,7 +36,9 @@ let gameDeck = [];
 let players = [];
 let dealerIndex = 0;
 function endRound(winnerId) {
-    // Përdorim direkt listën 'players' që kemi në server
+    console.log("==== Përfundimi i Raundit ====");
+
+    // 1️⃣ Llogaritja e pikëve (Kodi yt origjinal i paprekur)
     players.forEach(player => {
         if (player.id === winnerId) {
             // Fituesi (ai që bëri ZION)
@@ -43,7 +46,6 @@ function endRound(winnerId) {
             player.history.push('X');
         } else {
             // HUMBËSIT: Llogarit pikët e letrave që nuk janë lidhur në grupe
-            // Funksioni calculateScore që kemi më poshtë i mbledh këto vlera
             let penalty = calculateScore(player.cards); 
             
             player.score += penalty;
@@ -53,23 +55,36 @@ function endRound(winnerId) {
         // Rregulli i eliminimit në 71
         if (player.score >= 71) {
             player.isOut = true;
-
-            const activePlayers = players.filter(p => !p.isOut);
-
-    if (activePlayers.length === 1) {
-        io.emit('gameOver', { winner: activePlayers[0].name });
-        return; // ndal ekzekutimin këtu
-    }
         }
     });
 
-    // Rrotullimi i Dealer-it (shmang lojtarët e eliminuar)
+    // 2️⃣ Kontrolli i fituesit final (GameOver)
+    const activePlayers = players.filter(p => !p.isOut);
+
+    if (activePlayers.length === 1) {
+        console.log("LOJA PËRFUNDOI! Fituesi:", activePlayers[0].name);
+        io.emit('gameOver', { winner: activePlayers[0].name });
+        return; // Ndal ekzekutimin, nuk ka më raunde
+    } else if (activePlayers.length === 0) {
+        // Rast i rrallë barazimi (të gjithë mbi 71)
+        io.emit('gameOver', { winner: "Barazim (Të gjithë u eliminuan)" });
+        return;
+    }
+
+    // 3️⃣ Rrotullimi i Dealer-it (Kodi yt origjinal)
     dealerIndex = (dealerIndex + 1) % players.length;
     let attempts = 0;
     while(players[dealerIndex].isOut && attempts < players.length) {
         dealerIndex = (dealerIndex + 1) % players.length;
         attempts++;
     }
+
+    // 4️⃣ NISJA E RAUNDIT TË RI
+    // I japim lojtarëve 5 sekonda kohë të shohin rezultatet në tabelë para se të fshihen letrat
+    console.log("Raundi tjetër nis pas 5 sekondave...");
+    setTimeout(() => {
+        startNewRound(); 
+    }, 5000);
 }
 // Krijimi i 2 pakove me letra (104 letra)
 function createDeck() {
@@ -90,18 +105,19 @@ function createDeck() {
     return newDeck.sort(() => Math.random() - 0.5);
 }
 function startNewRound() {
-    console.log("==== Duke nisur raund të ri ====");
+    console.log("==== Duke nisur raund të ri ZION 71 ====");
 
     // 1️⃣ Krijojmë dhe përziejmë dekun
     gameDeck = createDeck(); 
     shuffle(gameDeck);
+    
+    // RREGULLIM: Pastrojmë stivën vizuale (discardPile) në fillim të raundit
     discardPile = []; 
     console.log("Deku u krijua dhe u përzgjodh.");
 
     // 2️⃣ Kontroll i dealerIndex dhe siguro që është tek një lojtar aktiv
     if (typeof dealerIndex === 'undefined' || dealerIndex === null) dealerIndex = 0;
 
-    // Nëse dealer-i aktual është jashtë, gjej lojtarin e parë aktiv
     let attempts = 0;
     while (players[dealerIndex]?.isOut && attempts < players.length) {
         dealerIndex = (dealerIndex + 1) % players.length;
@@ -112,34 +128,38 @@ function startNewRound() {
     players.forEach((player, index) => {
         if (player.isOut) {
             player.cards = [];
-            return; // Skipo lojtarët që janë jashtë
+            return; 
         }
 
         // RESET letrat e vjetra
         player.cards = []; 
 
-        // Xhokeri
+        // Xhokeri (Ylli i Zionit)
         const myJoker = { v: '★', s: 'Xhoker' };
 
-        // Dealer merr 10 letra, të tjerët 9
+        // Rregulli: Dealer merr 10 nga deck (+1 xhoker = 11), të tjerët 9 (+1 xhoker = 10)
         let sasiaNgaDeck = (index === dealerIndex) ? 10 : 9;
         let letratNgaDeck = gameDeck.splice(0, sasiaNgaDeck);
 
-        // Bashkim
+        // Bashkim i letrave
         player.cards = [myJoker, ...letratNgaDeck];
 
-        console.log(`DEBUG: ${player.name} - Mori ${player.cards.length} letra:`,
-                    player.cards.map(c => `${c.v}${c.s}`));
+        console.log(`DEBUG: ${player.name} - Mori ${player.cards.length} letra.`);
     });
 
-    // 4️⃣ Jackpot: letra e parë që mbetet
+    // 4️⃣ Jackpot & Stiva Fillestare
+    // Marrim letrën e parë që mbetet në deku pas shpërndarjes
     jackpotCard = gameDeck.pop();
-    console.log("Jackpot-i është:", jackpotCard ? `${jackpotCard.v}${jackpotCard.s}` : "Bosh");
+    
+    // UPDATE: E shtojmë këtë letër edhe te discardPile që të jetë vizuale në tokë
+    if (jackpotCard) {
+        discardPile.push(jackpotCard); 
+        console.log("Jackpot-i fillestar (në tokë):", `${jackpotCard.v}${jackpotCard.s}`);
+    }
 
-    // 5️⃣ Vendosim lojtarin aktiv (lojtari me 11 letra = dealer)
+    // 5️⃣ Vendosim lojtarin aktiv (Dealer-i)
     activePlayerIndex = dealerIndex;
 
-    // Siguro që lojtar aktiv nuk është jashtë
     attempts = 0;
     while (players[activePlayerIndex]?.isOut && attempts < players.length) {
         activePlayerIndex = (activePlayerIndex + 1) % players.length;
@@ -147,17 +167,17 @@ function startNewRound() {
     }
 
     if (!players[activePlayerIndex]) {
-        console.warn("Nuk u gjet lojtari aktiv! Duke vendosur default te 0.");
+        console.warn("Nuk u gjet lojtari aktiv!");
         activePlayerIndex = 0;
     }
+    
     activePlayerId = players[activePlayerIndex]?.id || null;
+    console.log("Lojtari aktiv (Dealer):", players[activePlayerIndex]?.name);
 
-    console.log("Lojtari aktiv:", players[activePlayerIndex]?.name, "me ID:", activePlayerId);
-
-    // 6️⃣ Broadcast gjendja për të gjithë lojtarët
+    // 6️⃣ Broadcast gjendja (Tani përfshin edhe discardPile me letrën e parë)
     broadcastState();
 
-    console.log("Raundi i ri është gati, gjendja u dërgua te lojtarët.");
+    console.log("Raundi i ri është gati, gjendja u dërgua.");
 }
 // ==========================================
 // 2. KOMUNIKIMI ME LOJTARËT
@@ -447,21 +467,24 @@ function calculateScore(cards) {
 function broadcastState() {
     if (players.length === 0) return;
 
+    // 1. SINKRONIZIMI I ID-së (E rëndësishme që drita e radhës të ndizet saktë)
+    activePlayerId = players[activePlayerIndex]?.id || null;
+
     console.log("Statusi i lojës që po dërgohet:", gameStarted);
     console.log("DEBUG: activePlayerIndex =", activePlayerIndex, "Players length =", players.length);
 
-    // 1. Përgatitja e mesazhit të Lobby
-    const activePlayers = players.filter(p => !p.isOut).length;
+    // 2. Përgatitja e mesazhit të Lobby
+    const activePlayersCount = players.filter(p => !p.isOut).length;
     let lobbyMsg = "ZION 71\nNIS LOJËN (START)\n";
     if (!gameStarted) {
-        if (activePlayers < 2) {
+        if (activePlayersCount < 2) {
             lobbyMsg += "Prit lojtarët e tjerë të futen...";
         } else {
-            lobbyMsg += `${activePlayers} lojtarë janë aktivë. Mund të nisni lojën!`;
+            lobbyMsg += `${activePlayersCount} lojtarë janë aktivë. Mund të nisni lojën!`;
         }
     }
 
-    // 2. Dërgimi i eventeve (Të gjitha BRENDA funksionit)
+    // 3. Dërgimi i eventeve
     io.emit('lobbyMessage', lobbyMsg);
 
     io.emit('updateGameState', {
@@ -474,16 +497,22 @@ function broadcastState() {
             cardCount: p.cards.length,
             isOut: p.isOut
         })),
-        activePlayerId: activePlayerId || null,
+        activePlayerId: activePlayerId, // Përdorim variablin e sinkronizuar sipër
+        
+        // Dërgojmë të gjithë listën e letrave në tokë që të shihet historia
+        discardPile: discardPile, 
+        
+        // Letra e fundit për qasje të shpejtë
         discardPileTop: discardPile[discardPile.length - 1] || null,
+        
         jackpotCard: jackpotCard
     });
 
-    // 3. Letrat individuale
+    // 4. Letrat individuale për secilin lojtar
     players.forEach(player => {
         io.to(player.id).emit('yourCards', player.cards);
     });
-} // Mbyllja e saktë e broadcastState
+}
 
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
