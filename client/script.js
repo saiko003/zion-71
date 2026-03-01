@@ -607,20 +607,19 @@ function isDoraValid(cards) {
     const jokers = cards.filter(c => c.v === '★' || c.v === 'Jokeri' || c.v === 'joker' || c.v === 'Xhoker').length;
     const normalCards = cards.filter(c => c.v !== '★' && c.v !== 'Jokeri' && c.v !== 'joker' && c.v !== 'Xhoker');
 
+    // 3. Funksioni Ndihmës për vlerat numerike (E lëvizëm lart që të njihet nga hapi 2)
+    function getVal(card) {
+        const mapping = { 'A': 1, 'J': 11, 'Q': 12, 'K': 13 };
+        return mapping[card.v] || parseInt(card.v);
+    }
+
     // 2. Ndajmë letrat sipas suitave (për kontrollin e vargjeve: 5-6-7)
     const suits = { '♠': [], '♣': [], '♥': [], '♦': [] };
     normalCards.forEach(c => {
         if (suits[c.s]) suits[c.s].push(getVal(c));
     });
 
-    // 3. Funksioni Ndihmës për vlerat numerike
-    function getVal(card) {
-        const mapping = { 'A': 1, 'J': 11, 'Q': 12, 'K': 13 };
-        return mapping[card.v] || parseInt(card.v);
-    }
-
     // 4. ALGORITMI I GRUPIMIT (SET-et: 8-8-8)
-    // Numërojmë sa herë shfaqet çdo vlerë (psh. sa 10-sha ka)
     const valueCounts = {};
     normalCards.forEach(c => {
         valueCounts[c.v] = (valueCounts[c.v] || 0) + 1;
@@ -646,17 +645,16 @@ function isDoraValid(cards) {
         }
     }
 
-    // 5. ALGORITMI I VARGJEVE (RUNS: 5-6-7 e njëjtës suitë)
-    // Shënim: Ky kontroll është i thjeshtësuar. Në ZION, lojtarët zakonisht 
-    // mbyllin me SETE, por ky kod i jep përparësi SETE-ve.
+    // 5. ALGORITMI I VARGJEVE (I thjeshtësuar siç e kërkove)
     
     // 6. LOGJIKA E MBYLLJES (ZION)
-    // Llogarisim sa letra mbeten "të lira" (pa grup)
-    const totalCardsInGroups = cardsInSets;
-    const remainingCards = (normalCards.length - totalCardsInGroups);
+    // Letrat normale që mbetën pa u futur në asnjë SET
+    const normalCardsLeft = normalCards.length - cardsInSets;
+    
+    // ZION: Xhokerat që kanë mbetur (tempJokers) mbulojnë letrat e mbetura
+    const remainingCards = normalCardsLeft - tempJokers;
 
-    // Rregulli i ZION: Mund të mbyllësh nëse ke 0 ose 1 letër jashtë grupeve
-    // (përfshirë edhe Xhokerat e mbetur që mund të jenë çdo gjë)
+    // Rregulli: Mund të mbyllësh nëse ke 0 ose 1 letër jashtë grupeve
     if (remainingCards <= 1) {
         return true;
     }
