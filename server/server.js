@@ -447,17 +447,19 @@ server.listen(PORT, () => console.log(`Serveri po punon në portën ${PORT}`));
 // Ky funksion do të përdoret kur dikush thërret "ZION"
 function calculateScore(cards) {
     let score = 0;
-    if (!cards) return 0;
+    if (!cards || cards.length === 0) return 0;
 
     cards.forEach(card => {
-        // 1. Xhokeri (Ylli) vlen 0 pikë (nuk dënohesh)
-        if (card.v === '★' || card.v === 'Xhoker') return;
-
-        // 2. Letrat e rënda (A, K, Q, J, 10) vlejnë nga 10 pikë secila
-        if (['A', 'K', 'Q', 'J', '10'].includes(card.v)) {
+        // 1. Xhokeri nuk shton asgjë (0 pikë)
+        if (card.v === '★' || card.v === 'Xhoker') {
+            score += 0; 
+        } 
+        // 2. Letrat e rënda vlejnë 10
+        else if (['A', 'K', 'Q', 'J', '10'].includes(card.v)) {
             score += 10;
-        } else {
-            // 3. Letrat e tjera (2-9) vlejnë sa numri i tyre
+        } 
+        // 3. Letrat 2-9 vlejnë sa numri
+        else {
             let val = parseInt(card.v);
             if (!isNaN(val)) score += val;
         }
