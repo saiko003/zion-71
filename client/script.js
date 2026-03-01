@@ -343,7 +343,7 @@ function renderHand() {
         
         // Shto div-in në container
         handContainer.appendChild(div);
-    });
+    
         
        div.addEventListener('mousedown', (e) => {
     const rect = div.getBoundingClientRect();
@@ -357,8 +357,8 @@ function renderHand() {
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px'
-    });
-
+    }
+});
     // Krijojmë lëvizjen dhe lëshimin specifike për mausin
    const onMouseMove = (e) => {
         if (!div.classList.contains('dragging')) return;
@@ -435,8 +435,11 @@ function renderHand() {
             const handContainer = document.getElementById('player-hand');
             const cardsInDOM = [...handContainer.querySelectorAll('.card')];
             doraImeData = cardsInDOM.map(cardEl => {
-                return { v: cardEl.dataset.v, s: cardEl.dataset.s };
-            });
+                return { 
+                    v: cardEl.dataset.v, 
+                    s: cardEl.dataset.s, 
+                    id: cardEl.dataset.id  // MOS E HARRON KËTË!
+                };
             resetCardStyles(div);
             renderHand();
         }
@@ -574,8 +577,12 @@ div.addEventListener('touchend', e => {
         const currentCardsInDOM = [...handContainer.querySelectorAll('.card')];
 
         const newOrderedData = currentCardsInDOM.map(cardEl => {
-            return { v: cardEl.dataset.v, s: cardEl.dataset.s };
-        });
+        return { 
+        v: cardEl.dataset.v, 
+        s: cardEl.dataset.s,
+        id: cardEl.dataset.id // SHTOJE KËTË
+    };
+});
 
         doraImeData = newOrderedData;
         resetCardStyles(div);
@@ -584,14 +591,13 @@ div.addEventListener('touchend', e => {
 
     // Fshehim zonën e fitores në fund
     if (victoryZone) victoryZone.style.display = 'none';
-});
-
-        handContainer.appendChild(div);
     
-
-    // E zhvendosa këtë jashtë loop-it (forEach) që të mos thirret 11 herë
-    if (typeof checkZionCondition === "function") checkZionCondition();
-}
+    });
+});
+    if (typeof checkZionCondition === "function") {
+        checkZionCondition();
+    }
+ }
 
 function isDoraValid(cards) {
     // 0. Nëse nuk ka letra, ose ka vetëm 1, është automatikisht valid për mbyllje
