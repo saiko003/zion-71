@@ -161,17 +161,22 @@ socket.on('updateGameState', (data) => {
 });
 
 function updateScoreboard(players, activeId) {
-    const scoreBody = document.getElementById('score-body');
-    const scoreHeader = document.querySelector('#score-table thead tr');
-    if (!scoreBody || !scoreHeader) return;
+    // NDRYSHIMI I VETËM: Përdorim ID-në e re 'side-score-body' dhe 'side-score-table'
+    // që të mos përplaset me tabelën e modalit të rezultateve
+    const scoreBody = document.getElementById('side-score-body'); 
+    const scoreTable = document.getElementById('side-score-table');
+    if (!scoreBody || !scoreTable) return;
+    
+    const scoreHeader = scoreTable.querySelector('thead tr');
+    if (!scoreHeader) return;
 
-    // 1. Gjejmë numrin maksimal të raundeve (sigurohemi që history ekziston)
+    // 1. Gjejmë numrin maksimal të raundeve (Logjika jote e paprekur)
     let maxRounds = players.reduce((max, p) => {
         const historyLen = (p.history && Array.isArray(p.history)) ? p.history.length : 0;
         return Math.max(max, historyLen);
     }, 0);
 
-    // 2. Krijojmë Header-in
+    // 2. Krijojmë Header-in (Logjika jote e paprekur)
     let headerHTML = `<th>Lojtari</th>`;
     for (let i = 1; i <= maxRounds; i++) {
         headerHTML += `<th>R${i}</th>`;
@@ -179,20 +184,19 @@ function updateScoreboard(players, activeId) {
     headerHTML += `<th>Total</th>`;
     scoreHeader.innerHTML = headerHTML;
 
-    // 3. Mbushim rreshtat
+    // 3. Mbushim rreshtat (Logjika jote e paprekur)
     scoreBody.innerHTML = '';
     players.forEach(player => {
         const row = document.createElement('tr');
         
         // Klasat për stilim
         if (player.id === activeId) row.classList.add('active-row');
-        if (player.score >= 71) row.classList.add('eliminated'); // Zion: 71 e lartë eliminohesh
+        if (player.score >= 71) row.classList.add('eliminated'); 
 
         let nameCell = `<td>${player.name} ${player.id === socket.id ? '<small>(Ti)</small>' : ''}</td>`;
         
         let historyCells = '';
         for (let i = 0; i < maxRounds; i++) {
-            // Shfaqim vlerën, nëse është "X" (fituesi) e bëjmë me ngjyrë tjetër në CSS
             let pikaRaundi = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
             historyCells += `<td>${pikaRaundi}</td>`;
         }
