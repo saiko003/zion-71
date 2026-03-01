@@ -442,9 +442,9 @@ function renderHand() {
                     s: cardEl.dataset.s, 
                     id: cardEl.dataset.id  // MOS E HARRON KËTË!
                 };
+             };   
             resetCardStyles(div);
             renderHand();
-        }
 
         // Fshehim Rubikun pasi lëshojmë letrën
         if (victoryZone) {
