@@ -86,8 +86,7 @@ socket.on('updateGameState', (data) => {
         if (gameTable) gameTable.style.display = 'none';
     }
 
- // 6. Update i Letrave (I rregulluar me mbrojtje nga Dragging)
-// 6. Update i Letrave (I përmirësuar për të ruajtur renditjen lokale)
+// 6. Update i Letrave (Versioni që ruan renditjen dhe bën animacion)
 if (data.players) {
     const me = data.players.find(p => p.id === socket.id);
     if (me && me.cards) {
@@ -97,31 +96,27 @@ if (data.players) {
             id: card.id || `${card.v}-${card.s}-${index}` 
         }));
 
-        const isDraggingAnyCard = document.querySelector('.card.dragging');
+        const isDragging = document.querySelector('.card.dragging');
 
-        if (!isDraggingAnyCard) {
-            // RREGULLI I RI: Nëse kemi letër të re, shtoje në fund pa prishur renditjen tonë
-            if (doraImeData.length > 0 && serverCardsWithIds.length !== doraImeData.length) {
-                
-                if (serverCardsWithIds.length > doraImeData.length) {
-                    // Kemi marrë letër të re
-                    serverCardsWithIds.forEach(sCard => {
-                        const exists = doraImeData.some(myCard => myCard.id === sCard.id);
-                        if (!exists) {
-                            doraImeData.push(sCard); // E shton vetëm letrën e re në fund
-                        }
-                    });
-                } else {
-                    // Kemi hedhur letër - mbajmë vetëm ato që serveri thotë se i kemi akoma
-                    doraImeData = doraImeData.filter(myCard => 
-                        serverCardsWithIds.some(sCard => sCard.id === myCard.id)
-                    );
-                }
-                
-                console.log("Dora u përditësua duke ruajtur renditjen.");
-                renderHand();
+        if (!isDragging) {
+            // A kemi marrë letër të re? (Dora rritet psh nga 10 në 11)
+            if (doraImeData.length > 0 && serverCardsWithIds.length > doraImeData.length) {
+                serverCardsWithIds.forEach(sCard => {
+                    const exists = doraImeData.some(myCard => myCard.id === sCard.id);
+                    if (!exists) {
+                        // KETU THIRRET ANIMACIONI QE SHTUAM
+                        pickCardFromDeck(sCard); 
+                    }
+                });
             } 
-            // Nëse dora është bosh (fillimi i lojës), merre siç vjen
+            // A kemi hedhur letër? (Dora zvogëlohet)
+            else if (doraImeData.length > 0 && serverCardsWithIds.length < doraImeData.length) {
+                doraImeData = doraImeData.filter(myCard => 
+                    serverCardsWithIds.some(sCard => sCard.id === myCard.id)
+                );
+                renderHand();
+            }
+            // Fillimi i lojës (Kur dora është bosh)
             else if (doraImeData.length === 0) {
                 doraImeData = [...serverCardsWithIds];
                 renderHand();
@@ -650,11 +645,50 @@ function isDoraValid(cards) {
 
     return false;
 }
+unction pickCardFromDeck(newCardData) {
+    const deckElement = document.getElementById('deck-pile'); 
+    const handContainer = document.getElementById('player-hand');
+    
+    if (!deckElement || !handContainer) {
+        doraImeData.push(newCardData);
+        renderHand();
+        return;
+    }
 
-// ==========================================
-// 5. TËRHEQJA NGA STIVA (Pika 12 & 3)
-// ==========================================
+    const tempCard = document.createElement('div');
+    tempCard.className = 'temp-animating';
+    
+    const deckRect = deckElement.getBoundingClientRect();
+    
+    Object.assign(tempCard.style, {
+        position: 'fixed',
+        left: deckRect.left + 'px',
+        top: deckRect.top + 'px',
+        transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+    });
 
+    document.body.appendChild(tempCard);
+
+    const handRect = handContainer.getBoundingClientRect();
+    const targetLeft = handRect.right - 40; 
+    const targetTop = handRect.top;
+
+    requestAnimationFrame(() => {
+        tempCard.style.left = targetLeft + 'px';
+        tempCard.style.top = targetTop + 'px';
+        tempCard.style.transform = 'rotate(15deg) scale(0.8)';
+        tempCard.style.opacity = '0.7';
+    });
+
+    setTimeout(() => {
+        if (tempCard.parentNode) tempCard.remove();
+        const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
+        if (!alreadyExists) {
+            doraImeData.push(newCardData);
+            renderHand();
+        }
+    }, 600);
+}
 
 if (deckElement) {
     deckElement.addEventListener('click', () => {
