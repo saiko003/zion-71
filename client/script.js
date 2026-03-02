@@ -150,7 +150,7 @@ if (data.players) {
                 
                 // I rendisim pak mbi njëra-tjetrën (psh 15px diferencë)
                 cardDiv.style.position = 'absolute';
-                cardDiv.style.left = (index * 15) + 'px'; 
+                cardDiv.style.left = (Math.min(index, 10) * 15) + 'px'; // Max 10 letra duken, të tjerat palosen nën to
                 
                 cardDiv.innerHTML = `${card.v}<br>${card.s}`;
                 discardPileElement.appendChild(cardDiv);
