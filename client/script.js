@@ -349,10 +349,13 @@ function renderHand() {
         handContainer.appendChild(div);
     
         
-    div.addEventListener('mousedown', (e) => {
+div.addEventListener('mousedown', (e) => {
     const rect = div.getBoundingClientRect();
+    
+    // Ruajmë offset-in (distanca nga mausi te cepi i letrës)
     div.dataset.offsetX = e.clientX - rect.left;
     div.dataset.offsetY = e.clientY - rect.top;
+    
     div.classList.add('dragging');
     
     Object.assign(div.style, {
@@ -361,11 +364,11 @@ function renderHand() {
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px',
-        // Për mausin përdorim "e", jo "t"
-        left: rect.left + 'px',
-        top: rect.top + 'px'
+        // Kjo e mban letrën saktësisht aty ku është mausi
+        left: (e.clientX - (e.clientX - rect.left)) + 'px',
+        top: (e.clientY - (e.clientY - rect.top)) + 'px'
     });
-            
+
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
 });
