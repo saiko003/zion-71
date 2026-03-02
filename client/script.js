@@ -333,17 +333,19 @@ function renderHand() {
     const handContainer = document.getElementById('player-hand');
     if (!handContainer) return;
     
-    // 1. Pastrojmë kontejnerin që të mos dublohen letrat vizualisht
+    // 1. Pastrojmë dorën që të mos dublohen letrat
     handContainer.innerHTML = '';
 
     doraImeData.forEach((card, index) => {
         const div = document.createElement('div');
         div.className = 'card';
+        // Ruajmë të dhënat origjinale në dataset
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
         div.dataset.id = card.id; 
 
+        // Vizatimi i letrës (Joker ose Letër normale)
         if (card.v === '★') {
             div.classList.add('joker');
             div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
@@ -354,122 +356,133 @@ function renderHand() {
         
         handContainer.appendChild(div);
 
-        // Variabël për të parandaluar ekzekutimin e dyfishtë në telefon
-        let isProcessing = false;
+        // --- LOGJIKA E LËVIZJES (Të gjitha funksionet tuaja janë këtu) ---
 
         const onMove = (e) => {
             if (!div.classList.contains('dragging')) return;
-            if (e.type === 'touchmove') e.preventDefault();
+            if (e.cancelable) e.preventDefault();
 
-            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const t = e.type.includes('touch') ? e.touches[0] : e;
+            
+            // Rregullimi i pozicionit që të mos ikë letra prej gishtit
+            div.style.left = (t.clientX - parseFloat(div.dataset.offsetX)) + 'px';
+            div.style.top = (t.clientY - parseFloat(div.dataset.offsetY)) + 'px';
 
-            div.style.left = (clientX - parseFloat(div.dataset.offsetX)) + 'px';
-            div.style.top = (clientY - parseFloat(div.dataset.offsetY)) + 'px';
-
+            // 1. Logjika e renditjes në dorë (Shtohet/Lëvizet div-i)
             const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
             const nextSibling = siblings.find(sibling => {
                 const r = sibling.getBoundingClientRect();
-                return clientX <= r.left + r.width / 2;
+                return t.clientX <= r.left + r.width / 2;
             });
             if (nextSibling) handContainer.insertBefore(div, nextSibling);
             else handContainer.appendChild(div);
 
+            // 2. Feedback vizual për Piles (Discard dhe Victory)
             const pile = document.getElementById('discard-pile');
             const victoryZone = document.getElementById('victory-drop-zone');
             
             if (pile) {
                 const pRect = pile.getBoundingClientRect();
-                const over = clientX > pRect.left && clientX < pRect.right && clientY > pRect.top && clientY < pRect.bottom;
+                const over = t.clientX > pRect.left && t.clientX < pRect.right && 
+                             t.clientY > pRect.top && t.clientY < pRect.bottom;
                 pile.classList.toggle('over', over);
             }
+
             if (victoryZone && isMyTurn && doraImeData.length === 11) {
                 victoryZone.style.display = 'flex';
                 const vRect = victoryZone.getBoundingClientRect();
-                const overV = clientX > vRect.left && clientX < vRect.right && clientY > vRect.top && clientY < vRect.bottom;
+                const overV = t.clientX > vRect.left && t.clientX < vRect.right && 
+                              t.clientY > vRect.top && t.clientY < vRect.bottom;
                 victoryZone.classList.toggle('over', overV);
             }
         };
 
         const onEnd = (e) => {
-            // Nëse procesi ka filluar, mos e lejo të përsëritet (Zgjidhja për telefon)
-            if (isProcessing) return;
-            isProcessing = true;
-
-            div.classList.remove('dragging');
+            if (!div.classList.contains('dragging')) return;
             
-            // Koordinatat korrekte për telefon
-            const clientX = e.type.includes('touch') ? (e.changedTouches[0].clientX) : e.clientX;
-            const clientY = e.type.includes('touch') ? (e.changedTouches[0].clientY) : e.clientY;
+            const t = e.type.includes('touch') ? e.changedTouches[0] : e;
+            div.classList.remove('dragging');
 
+            // Hiqim dëgjuesit e eventeve
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onEnd);
             document.removeEventListener('touchmove', onMove);
             document.removeEventListener('touchend', onEnd);
 
+            // --- VENDIMMARRJA E FUNDIT (ZION / DISCARD / RENDITJE) ---
             const pile = document.getElementById('discard-pile');
             const victoryZone = document.getElementById('victory-drop-zone');
             const tolerance = 20;
 
             let isOverPile = false;
-            let isOverZion = false;
+            let isOverVictory = false;
 
             if (pile) {
                 const r = pile.getBoundingClientRect();
-                isOverPile = clientX > r.left - tolerance && clientX < r.right + tolerance && clientY > r.top - tolerance && clientY < r.bottom + tolerance;
+                isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
+                             t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
                 pile.classList.remove('over');
             }
+
             if (victoryZone && victoryZone.style.display !== 'none') {
                 const r = victoryZone.getBoundingClientRect();
-                isOverZion = clientX > r.left - tolerance && clientX < r.right + tolerance && clientY > r.top - tolerance && clientY < r.bottom + tolerance;
-                victoryZone.classList.remove('over');
+                isOverVictory = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
+                                t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
             }
 
-            if (isOverZion && isMyTurn && doraImeData.length === 11) {
-                if (confirm("A dëshiron të MBYLLËSH lojën (ZION)?")) {
+            // RASTI 1: MBYLLJA ZION (Funksioni yt origjinal)
+            if (isOverVictory && isMyTurn && doraImeData.length === 11) {
+                if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
                     socket.emit('declareZion', { 
                         discardedCard: { v: div.dataset.v, s: div.dataset.s },
                         hand: doraImeData.filter((_, i) => i !== parseInt(div.dataset.index))
                     });
-                    return;
+                    if (victoryZone) victoryZone.style.display = 'none';
+                    return; 
                 }
             } 
             
+            // RASTI 2: HEDHJA NORMALE (Funksioni yt processDiscard)
             if (isOverPile && isMyTurn && doraImeData.length === 11) {
                 processDiscard(div);
-            } else {
-                const currentCards = [...handContainer.querySelectorAll('.card')];
-                doraImeData = currentCards.map(c => ({ 
-                    v: c.dataset.v, 
-                    s: c.dataset.s, 
-                    id: c.dataset.id 
-                }));
-                resetCardStyles(div);
-                renderHand();
+            } 
+            // RASTI 3: RENDITJA E RE / KTHIMI NË DORË
+            else {
+                // Pastrojmë stilet e lëvizjes fiks
+                Object.assign(div.style, {
+                    position: '', zIndex: '', pointerEvents: '', width: '', height: '', left: '', top: ''
+                });
+
+                // Përditësojmë listën globale nga renditja e re në ekran
+                const cardsInDOM = [...handContainer.querySelectorAll('.card')];
+                doraImeData = cardsInDOM.map(cardEl => ({
+                    v: cardEl.dataset.v, 
+                    s: cardEl.dataset.s, 
+                    id: cardEl.dataset.id 
+                })); 
+                
+                renderHand(); // Rinvizatim për të pastruar çdo mbetje
             }
 
             if (victoryZone) victoryZone.style.display = 'none';
         };
 
         const onStart = (e) => {
-            // Ndalojmë shkaktimin e dyfishtë (Touch + Mouse)
-            if (e.type === 'touchstart') {
-                // e.preventDefault(); // E heqim komentin nese ka prap probleme
-            }
-            e.stopImmediatePropagation();
-            isProcessing = false; // Resetojmë gjendjen në fillim
-
+            if (e.type === 'touchstart') e.stopImmediatePropagation();
+            
             const t = e.type.includes('touch') ? e.touches[0] : e;
             const rect = div.getBoundingClientRect();
             
+            // Llogaritja e saktë e pikës së kapjes brenda div-it
             div.dataset.offsetX = t.clientX - rect.left;
             div.dataset.offsetY = t.clientY - rect.top;
+            
             div.classList.add('dragging');
 
             Object.assign(div.style, {
                 position: 'fixed',
                 zIndex: '1000',
-                pointerEvents: 'none',
+                pointerEvents: 'none', // Shumë e rëndësishme për të detektuar pile-n poshtë letrës
                 width: rect.width + 'px',
                 height: rect.height + 'px',
                 left: rect.left + 'px',
@@ -484,7 +497,10 @@ function renderHand() {
         div.addEventListener('touchstart', onStart, { passive: false });
     });
 
-    if (typeof checkZionCondition === "function") checkZionCondition();
+    // Thirrja e kontrollit Zion në fund të renderimit
+    if (typeof checkZionCondition === "function") {
+        checkZionCondition();
+    }
 }
 
 function isDoraValid(cards) {
