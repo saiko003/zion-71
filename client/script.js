@@ -536,26 +536,35 @@ function onDragEnd(e) {
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
-    // 2. KUSHTI PËR ZION (Logjika jote e paprekur)
-    if (isOverVictory && isMyTurn && doraImeData.length === 11) {
-        if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
-            if (typeof placeholder !== 'undefined' && placeholder) placeholder.remove();
-            socket.emit('declareZion', { 
-                discardedCard: { v: dragElement.dataset.v, s: dragElement.dataset.s },
-                hand: doraImeData.filter(c => c.id !== dragElement.dataset.id)
-            });
-            finalizeCleanup();
-            dragElement = null;
-            placeholder = null;
-            return;
-        }
-    } 
-
-    // 3. KUSHTI PËR HEDHJE (Logjika jote e paprekur)
-    if (isOverPile && isMyTurn && doraImeData.length === 11) {
+   // 2. KUSHTI PËR ZION
+if (isOverVictory && isMyTurn && doraImeData.length === 11) {
+    if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
+        isMyTurn = false; // Bllokoje menjëherë që të mos klikohet asgjë tjetër
         if (typeof placeholder !== 'undefined' && placeholder) placeholder.remove();
-        processDiscard(dragElement);
-    } else {
+        
+        socket.emit('declareZion', { 
+            discardedCard: { 
+                v: dragElement.dataset.v, 
+                s: dragElement.dataset.s, 
+                id: dragElement.dataset.id  // SHTO KËTË
+            }, 
+            hand: doraImeData.filter(c => c.id !== dragElement.dataset.id)
+        });
+        finalizeCleanup();
+        dragElement = null;
+        placeholder = null;
+        return;
+    }
+}
+
+    // 3. KUSHTI PËR HEDHJE
+if (isOverPile && isMyTurn && doraImeData.length === 11) {
+    isMyTurn = false; // JETIKE: E bëjmë false këtu që të mos bllokohet loja
+    if (typeof placeholder !== 'undefined' && placeholder) placeholder.remove();
+    
+    // Thërrasim funksionin për dërgim
+    processDiscard(dragElement);
+} else {
         // 4. KTHIMI DHE RUAJTJA (Me update për Placeholder)
         if (typeof placeholder !== 'undefined' && placeholder && placeholder.parentNode) {
             // E kthejmë te vendi që i ruajti placeholder-i
@@ -749,25 +758,32 @@ if (deckElement) {
 // ==========================================
 
 function processDiscard(cardElement) {
-    // 1. Marrim të dhënat nga DOM
+    if (!isMyTurn) return; // Mbrojtje e parë
+    isMyTurn = false; // Bllokoje menjëherë radhën
+
     const cardId = cardElement.dataset.id; 
     const v = cardElement.dataset.v;
     const s = cardElement.dataset.s;
 
-    // DEBUG: Shiko në konsolë (F12) nëse ID vjen e saktë
-    console.log("Duke provuar hedhjen:", {v, s, cardId});
+    if (!cardId) {
+        console.error("GABIM: Letra nuk ka ID!");
+        isMyTurn = true; // Ktheja radhën pasi dështoi
+        renderHand();
+        return;
+    }
 
-    // 2. Gjejmë indeksin në array-n e të dhënave
     const cardIndex = doraImeData.findIndex(c => c.id === cardId);
     
     if (cardIndex !== -1) {
-        isMyTurn = false; // Vetëm tani e bllokojmë radhën
+        // 1. Dërgojmë menjëherë sinjalin te serveri
+        // Mos prit 400ms për socket-in, dërgoje tani!
+        socket.emit('cardDiscarded', { v, s, id: cardId });
 
         const discardZone = document.getElementById('discard-pile');
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
 
-        // Stilizimi për animacion (letrën e kemi te body)
+        // Stilizimi për animacion
         Object.assign(cardElement.style, {
             position: 'fixed',
             left: rect.left + 'px',
@@ -784,20 +800,20 @@ function processDiscard(cardElement) {
             cardElement.style.opacity = "0";
         });
         
+        // 2. Pas animacionit vetëm fshijmë elementin vizual
         setTimeout(() => {
             doraImeData.splice(cardIndex, 1); 
-            socket.emit('cardDiscarded', { v, s, id: cardId });
             
-            // SHUMË E RËNDËSISHME: Hiqe elementin nga body pasi mbaron animacioni
             if (cardElement.parentNode) cardElement.remove();
             
             renderHand(); 
             if (typeof checkZionCondition === "function") checkZionCondition();
         }, 400);
+
     } else {
-        console.error("GABIM: Letra nuk u gjet në listë! ID:", cardId);
-        isMyTurn = true;
-        renderHand(); // Rindërto dorën që të mos mbetet letra te body
+        console.error("GABIM: Letra nuk u gjet! ID:", cardId);
+        isMyTurn = true; // Ktheja radhën pasi nuk u gjet letra
+        renderHand();
     }
 }
 // ==========================================
