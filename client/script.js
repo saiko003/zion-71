@@ -178,11 +178,16 @@ if (data.players) {
 }
 
 // 7. Kontrolli i dritës së Dekut (E SHTUAR)
-const deckElement = document.getElementById('deck-zion') || document.getElementById('deck-pile');
+    
+const deckElement = document.getElementById('deck-zion');
 
-// Kontrollojmë nëse deckElement ekziston DHE nëse doraImeData nuk është null
-if (deckElement && doraImeData) {
-    if (isMyTurn && doraImeData.length === 10) {
+if (deckElement) {
+    // Kontrollojmë nëse variablat janë të definuara që të mos kemi "ReferenceError"
+    const myTurn = typeof isMyTurn !== 'undefined' ? isMyTurn : false;
+    const myCards = typeof doraImeData !== 'undefined' ? doraImeData : [];
+
+    // Logjika: Nëse është radha ime dhe kam 10 letra (duhet të tërheq të 11-tën)
+    if (myTurn && myCards.length === 10) {
         deckElement.classList.add('deck-glow');
     } else {
         deckElement.classList.remove('deck-glow');
