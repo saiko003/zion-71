@@ -316,13 +316,17 @@ body {
     transition: transform 0.2s, margin 0.2s;
    }
 
-   .card.dragging {
-    cursor: grabbing;
+.card.dragging {
+    cursor: grabbing !important;
     opacity: 0.9;
     box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-    transform: scale(1.1) rotate(0deg); /* E rritim pak që të duket që u kap */
-    z-index: 1000 !important;
-    margin-left: 0 !important; /* E heqim "lepe-lepe" kur e kemi te gishti */
+    transform: scale(1.1) !important; /* E rritim pak */
+    z-index: 9999 !important;
+    
+    /* KËTO JANË KRITIKE: */
+    margin: 0 !important;        /* Heq -25px që e shtyn anash */
+    transition: none !important;  /* Ndalon vonesën e lëvizjes pas gishtit */
+    pointer-events: none;         /* Lejon detektimin e zonave poshtë letrës */
 }
 
    #discard-pile.over {
