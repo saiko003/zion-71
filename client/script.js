@@ -117,12 +117,13 @@ socket.on('updateGameState', (data) => {
     if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
 
     
-// 6. Update i Letrave (Versioni i përmirësuar)
+// 6. Update i Letrave (Versioni i Sigurt)
 if (data.players) {
     const me = data.players.find(p => p.id === socket.id);
-    if (me && me.cards) {
+    
+    // NDRYSHIMI: Kontrollojmë nëse serveri ka dërguar vërtet lista e letrave
+    if (me && me.cards && Array.isArray(me.cards)) { 
         
-        // 1. Sigurohemi që ID-të janë konsistente
         const serverCardsWithIds = me.cards.map(card => ({
             ...card,
             id: card.id || `${card.v}-${card.s}`
@@ -130,39 +131,31 @@ if (data.players) {
 
         const isDragging = document.querySelector('.card.dragging');
 
-        // 2. Sinkronizimi i mençur
         if (!isDragging) {
-            
-            // RASTI A: Kemi marrë letër të re (Animacioni i tërheqjes)
+            // RASTI A: Letër e re (Animacion)
             if (doraImeData.length > 0 && serverCardsWithIds.length > doraImeData.length) {
                 serverCardsWithIds.forEach(sCard => {
                     const exists = doraImeData.some(myCard => myCard.id === sCard.id);
-                    if (!exists) {
-                        pickCardFromDeck(sCard); 
-                    }
+                    if (!exists) pickCardFromDeck(sCard);
                 });
             } 
-            // RASTI B: Kemi hedhur letër (Serveri konfirmon që kemi 10 letra)
+            // RASTI B: Pas hedhjes (Konfirmim nga serveri)
             else if (serverCardsWithIds.length < doraImeData.length) {
                 doraImeData = doraImeData.filter(myCard => 
                     serverCardsWithIds.some(sCard => sCard.id === myCard.id)
                 );
                 renderHand();
             }
-            // RASTI C: Fillimi i lojës ose reset
-            else if (doraImeData.length === 0) {
-                doraImeData = [...serverCardsWithIds];
-                renderHand();
-            }
-            
-            // --- SIGURESA SHTESË ---
-            // Nëse për ndonjë arsye numri i letrave nuk përputhet (psh. humbje pakete)
-            // bëjmë një sinkronizim të detyruar që loja mos të bllokohet
-            if (doraImeData.length !== serverCardsWithIds.length) {
+            // RASTI C: Sinkronizim i plotë (Vetëm nëse ka mospërputhje totale)
+            else if (doraImeData.length === 0 || JSON.stringify(doraImeData.map(c=>c.id)) !== JSON.stringify(serverCardsWithIds.map(c=>c.id))) {
                 doraImeData = [...serverCardsWithIds];
                 renderHand();
             }
         }
+    } else {
+        // NËSE SERVERI NUK DËRGOI LETRA: 
+        // Mos bëj asgjë, mbaji ato që ke në 'doraImeData'
+        console.log("DEBUG: Serveri nuk dërgoi letra këtë herë, mbajmë dorën aktuale.");
     }
 }
 
