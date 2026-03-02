@@ -29,7 +29,7 @@ let gameStarted = false;
 let isMyTurn = false;
 let doraImeData = [];
 let tookJackpotThisTurn = false;
-
+let placeholder = null;
 socket.on('lobbyMessage', (msg) => {
     const lobbyText = document.getElementById('lobby-text');
     if (lobbyText) lobbyText.innerText = msg;
@@ -382,28 +382,32 @@ function onDragStart(e) {
     const isTouch = e.type === 'touchstart';
     const t = isTouch ? e.touches[0] : e;
     const div = e.currentTarget;
-    
-    // 1. Marrim pozicionin e saktë në ekran para se ta lëvizim
     const rect = div.getBoundingClientRect();
 
-    // 2. Ruajmë distancën mes gishtit dhe cepit të letrës
     div.dataset.offsetX = t.clientX - rect.left;
     div.dataset.offsetY = t.clientY - rect.top;
 
     dragElement = div;
-    div.classList.add('dragging');
 
-    // 3. E zhvendosim te BODY menjëherë
+    // KRIJIMI I PLACEHOLDER-IT
+    placeholder = document.createElement('div');
+    placeholder.className = 'card-placeholder'; // Shto këtë klasë në CSS (bosh/gri)
+    placeholder.style.width = rect.width + 'px';
+    placeholder.style.height = rect.height + 'px';
+    placeholder.style.visibility = 'hidden'; // E padukshme por zë vend
+
+    // E vendosim placeholder-in ekzaktesisht ku ishte letra
+    div.parentNode.insertBefore(placeholder, div);
+
+    // E nxjerrim letrën te BODY
     document.body.appendChild(div);
 
-    // 4. I japim stilet FIXED që të mos varet nga pozicioni i dorës
     Object.assign(div.style, {
         position: 'fixed',
         zIndex: '10000',
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px',
-        // Kjo i thotë: Qëndro ekzaktesisht aty ku ishe (në dorë) por si element i lirë
         left: rect.left + 'px',
         top: rect.top + 'px',
         margin: '0',
@@ -411,25 +415,24 @@ function onDragStart(e) {
         transition: 'none'
     });
 
+    div.classList.add('dragging');
+
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('touchmove', onDragMove, { passive: false });
     document.addEventListener('mouseup', onDragEnd);
     document.addEventListener('touchend', onDragEnd);
 }
 function onDragMove(e) {
-    if (!dragElement) return;
+    if (!dragElement || !placeholder) return;
     if (e.cancelable) e.preventDefault();
 
     const t = e.type.includes('touch') ? e.touches[0] : e;
     
-    // Përdorim clientX/Y që janë koordinatat e pastra të ekranit
-    const x = t.clientX - parseFloat(dragElement.dataset.offsetX);
-    const y = t.clientY - parseFloat(dragElement.dataset.offsetY);
+    // Lëvizja e letrës reale (ndjek gishtin 1:1)
+    dragElement.style.left = (t.clientX - parseFloat(dragElement.dataset.offsetX)) + 'px';
+    dragElement.style.top = (t.clientY - parseFloat(dragElement.dataset.offsetY)) + 'px';
 
-    dragElement.style.left = x + 'px';
-    dragElement.style.top = y + 'px';
-
-    // Logjika e renditjes (renditja në dorë ndërkohë që e lëvizim)
+    // Lëvizja e Placeholder-it brenda dorës
     const handContainer = document.getElementById('player-hand');
     const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
     
@@ -438,8 +441,8 @@ function onDragMove(e) {
         return t.clientX <= r.left + r.width / 2;
     });
 
-    if (nextSibling) handContainer.insertBefore(dragElement, nextSibling);
-    else handContainer.appendChild(dragElement);
+    if (nextSibling) handContainer.insertBefore(placeholder, nextSibling);
+    else handContainer.appendChild(placeholder);
 
     updateZonesFeedback(t.clientX, t.clientY);
 }
@@ -478,7 +481,7 @@ function onDragEnd(e) {
     let isOverPile = false;
     let isOverVictory = false;
 
-    // Detektimi i zonave
+    // 1. Detektimi i zonave (Logjika jote origjinale)
     if (pile && t) {
         const r = pile.getBoundingClientRect();
         isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
@@ -491,34 +494,43 @@ function onDragEnd(e) {
                         t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
-    // Heqja e eventeve menjëherë
+    // Heqja e eventeve
     document.removeEventListener('mousemove', onDragMove);
     document.removeEventListener('touchmove', onDragMove);
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
-    // KUSHTI PËR ZION
+    // 2. KUSHTI PËR ZION
     if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
+            if (placeholder) placeholder.remove();
             socket.emit('declareZion', { 
                 discardedCard: { v: dragElement.dataset.v, s: dragElement.dataset.s },
                 hand: doraImeData.filter(c => c.id !== dragElement.dataset.id)
             });
             finalizeCleanup();
+            dragElement = null;
+            placeholder = null;
             return;
         }
     } 
 
-    // KUSHTI PËR HEDHJE (Discard)
+    // 3. KUSHTI PËR HEDHJE (Discard)
     if (isOverPile && isMyTurn && doraImeData.length === 11) {
+        if (placeholder) placeholder.remove();
         processDiscard(dragElement);
     } else {
-        // KTHIMI DHE RUAJTJA E RENDITJES SË RE
-        if (dragElement.parentNode !== handContainer) {
+        // 4. KTHIMI DHE RUAJTJA (Nëse nuk u hodh)
+        if (placeholder && placeholder.parentNode) {
+            // E vendosim letrën ekzaktesisht te vendi që i ruajti placeholder-i
+            placeholder.parentNode.insertBefore(dragElement, placeholder);
+        } else if (dragElement.parentNode !== handContainer) {
             handContainer.appendChild(dragElement);
         }
 
-        // Pastrojmë stilet inline
+        if (placeholder) placeholder.remove();
+
+        // Pastrojmë stilet
         Object.assign(dragElement.style, {
             position: '', zIndex: '', pointerEvents: '', 
             width: '', height: '', left: '', top: '',
@@ -526,7 +538,7 @@ function onDragEnd(e) {
         });
         dragElement.classList.remove('dragging');
 
-        // RUAJTJA: Kjo zëvendëson saveNewOrder()
+        // RUAJTJA E RENDITJES
         const currentCards = [...handContainer.querySelectorAll('.card')];
         doraImeData = currentCards.map(c => ({
             v: c.dataset.v,
@@ -539,6 +551,7 @@ function onDragEnd(e) {
     }
     
     dragElement = null; 
+    placeholder = null;
     finalizeCleanup();
 }
 function finalizeCleanup() {
