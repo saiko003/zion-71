@@ -898,46 +898,47 @@ function verifyZionRules(cards) {
 /**
  * Gjen një rradhë valide duke llogaritur Asin (1 dhe 14) dhe Xhokerat.
  */
-function findAndRemoveSequence(suitCards, len, availableJokers) {
-    // Rendisim vlerat (Asi trajtohet si 1 fillimisht)
-    let vals = suitCards.map(c => ({ val: getVal(c), card: c }));
-    
-    // Provon dy konfigurime për Asin: si 1 (A-2-3) dhe si 14 (Q-K-A)
-    let configs = [vals.map(v => v.val)];
-    if (vals.some(v => v.val === 1)) {
-        configs.push(vals.map(v => v.val === 1 ? 14 : v.val));
-    }
+function findAndRemoveSequence(suitCards, len, jokers) {
+    // Rendisim letrat sipas cardOrder (e kemi definuar lart)
+    const sorted = [...suitCards].sort((a, b) => cardOrder[a.v] - cardOrder[b.v]);
 
-    for (let config of configs) {
-        config.sort((a, b) => a - b);
-        let uniqueVals = [...new Set(config)];
+    // Provon dy mundësi për A-në: si 1 (A-2-3) dhe si 14 (10-J-Q-K-A)
+    const acePositions = [1, 14]; 
 
-        for (let startVal of uniqueVals) {
-            let usedCardsInSeq = [];
-            let currentJokers = availableJokers;
-            let currentVal = startVal;
-            let count = 0;
+    for (let aceVal of acePositions) {
+        // Krijojmë një listë me vlerat numerike të letrave tona
+        let values = sorted.map(c => (c.v === 'A' ? aceVal : cardOrder[c.v]));
+        values = [...new Set(values)].sort((a, b) => a - b); // Heqim dublikatet (psh dy 7-sha rrush)
 
-            while (count < len) {
-                let foundCard = suitCards.find(c => {
-                    let v = getVal(c);
-                    if (config.includes(14) && v === 1) v = 14;
-                    return v === currentVal;
-                });
+        // Shikojmë nëse mund të ndërtojmë një varg me gjatësinë 'len'
+        for (let i = 0; i < values.length; i++) {
+            let currentSeq = [];
+            let tempJokers = jokers;
+            let targetVal = values[i];
 
-                if (foundCard && !usedCardsInSeq.includes(foundCard)) {
-                    usedCardsInSeq.push(foundCard);
-                } else if (currentJokers > 0) {
-                    currentJokers--;
-                } else {
-                    break; // Nuk mund ta vazhdojmë rradhën
-                }
+            for (let k = 0; k < len; k++) {
+                let valToFind = targetVal + k;
                 
-                currentVal++;
-                count++;
-                if (count === len) {
-                    return { usedCards: usedCardsInSeq, jokersUsed: availableJokers - currentJokers };
+                // RREGULLI: Nëse vargu kalon 14 (A e lartë), nuk lejohet të kthehet te 2
+                if (valToFind > 14) break; 
+
+                let cardFound = sorted.find(c => (c.v === 'A' ? aceVal : cardOrder[c.v]) === valToFind);
+
+                if (cardFound) {
+                    currentSeq.push(cardFound);
+                } else if (tempJokers > 0) {
+                    tempJokers--;
+                    // Këtu imagjinojmë një xhoker, por ti s'ke, kështu që do dalë false
+                } else {
+                    break;
                 }
+            }
+
+            if (currentSeq.length + (jokers - tempJokers) === len) {
+                return {
+                    usedCards: currentSeq,
+                    jokersUsed: jokers - tempJokers
+                };
             }
         }
     }
