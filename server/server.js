@@ -286,7 +286,7 @@ socket.on('startGame', () => {
         console.log(`${player.name} tërhoqi një letër. Tani ka ${player.cards.length} letra.`);
 
         // 3. Njoftojmë lojtarin specifik dhe gjithë grupin
-        // socket.emit('cardDrawn', drawnCard); // Mund ta mbash, por broadcastState mjafton
+         socket.emit('cardDrawn', drawnCard); // Mund ta mbash, por broadcastState mjafton
         broadcastState();
     } else {
         console.log("Deçka është bosh! Nuk ka më letra për të tërhequr.");
