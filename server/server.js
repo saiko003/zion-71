@@ -288,36 +288,38 @@ socket.on('startGame', () => {
 socket.on('drawCard', () => {
     const player = players[activePlayerIndex];
     
-    // 1. Kontrolli i sigurisë
     if (!player) return;
 
-    // Kontrolli i radhës
+    // 1. Kontrolli i radhës
     if (player.id !== socket.id) {
-        console.log(`⚠️ ${player.name} tentoi të tërheqë letër pa pasur radhën.`);
+        console.log(`⚠️ Jo radha e ${player.name}`);
         return; 
     }
 
-    // Kontrolli i numrit të letrave
-    if (player.cards.length !== 10) {
-        console.log(`⚠️ ${player.name} ka ${player.cards.length} letra. Nuk mund të tërheqë tjetër.`);
-        
-        // SHPËTIMI: I dërgojmë lojtarit gjendjen aktuale që t'i zhbllokohet ekrani
+    // 2. KONTROLLI I RI I NUMRIT TË LETRAVE
+    // Dealer-i fillon me 11 (10+1), ai nuk duhet të tërheqë.
+    // Lojtarët e tjerë fillojnë me 10 (9+1), ata DUHET të tërheqin.
+    if (player.cards.length >= 11) {
+        console.log(`⚠️ ${player.name} ka ${player.cards.length} letra. Duhet të hedhësh një, jo të tërheqësh!`);
         broadcastState(); 
         return;
     }
 
-    // 2. Tërheqja e letrës
+    // 3. Tërheqja e letrës
     if (gameDeck && gameDeck.length > 0) {
         const drawnCard = gameDeck.pop();
         player.cards.push(drawnCard);
 
-        console.log(`✅ ${player.name} tërhoqi ${drawnCard.v}${drawnCard.s}. Tani ka ${player.cards.length} letra.`);
+        console.log(`✅ ${player.name} tërhoqi një letër. Total: ${player.cards.length}`);
 
+        // Dërgojmë letrën te lojtari për animacion
         socket.emit('cardDrawn', drawnCard);
+        
+        // Dërgojmë gjendjen e re te të gjithë
         broadcastState();
     } else {
         console.log("❌ Deçka është bosh!");
-        // Opsionale: Rrotullo letrat e hedhura (discardPile) te deku këtu
+        // Këtu mund të shtosh logjikën e rrotullimit të discardPile nëse deku mbaron
     }
 });
 
