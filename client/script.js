@@ -385,9 +385,13 @@ function onDragStart(e) {
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px',
-        // I japim pozicionin fiks aty ku eshte aktualisht letra
         left: rect.left + 'px',
-        top: rect.top + 'px'
+        top: rect.top + 'px',
+        
+        // --- KËTO JANË NDRECHIMET E REJA ---
+        margin: '0',          // Heq marginën -25px që e zhvendos letrën anash
+        transform: 'none',    // Heq translateY(-30px) të hover-it që e çon letrën lart
+        transition: 'none'    // Heq vonesën 0.2s që e bën letrën të "vunojë" pas gishtit
     });
 
     document.addEventListener('mousemove', onDragMove);
