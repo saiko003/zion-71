@@ -120,49 +120,47 @@ socket.on('updateGameState', (data) => {
     if (statusTeksti) statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
     if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
 
-    
-// 6. Update i Letrave (Versioni i Sigurt)
+// 6. Update i Letrave (Versioni i Korrigjuar)
 if (data.players) {
     const me = data.players.find(p => p.id === socket.id);
     
-    // NDRYSHIMI: Kontrollojmë nëse serveri ka dërguar vërtet lista e letrave
-    if (me && me.cards && Array.isArray(me.cards)) { 
+    // NËSE kemi lojtarin dhe ai ka letra...
+    if (me && me.cards && Array.isArray(me.cards) && me.cards.length > 0) { 
         
-        const serverCardsWithIds = me.cards.map(card => ({
+        const serverCardsWithIds = me.cards.map((card, idx) => ({
             ...card,
-            id: card.id || `${card.v}-${card.s}`
+            id: card.id || `${card.v}-${card.s}-${idx}` // Sigurohemi që ka ID
         }));
 
         const isDragging = document.querySelector('.card.dragging');
 
+        // Vetëm nëse nuk jemi duke tërhequr një letër, përditësojmë pamjen
         if (!isDragging) {
-            // RASTI A: Letër e re (Animacion)
-            if (doraImeData.length > 0 && serverCardsWithIds.length > doraImeData.length) {
+            
+            // Kontrolli 1: Nëse dora në ekran është bosh, por serveri ka letra -> VIZATOI
+            if (doraImeData.length === 0 && serverCardsWithIds.length > 0) {
+                console.log("DEBUG: Dora ishte bosh, po mbush me", serverCardsWithIds.length, "letra");
+                doraImeData = [...serverCardsWithIds];
+                renderHand();
+            } 
+            // Kontrolli 2: Nëse ka ndryshuar numri i letrave (kemi marrë letër të re)
+            else if (serverCardsWithIds.length > doraImeData.length) {
                 serverCardsWithIds.forEach(sCard => {
                     const exists = doraImeData.some(myCard => myCard.id === sCard.id);
                     if (!exists) pickCardFromDeck(sCard);
                 });
-            } 
-            // RASTI B: Pas hedhjes (Konfirmim nga serveri)
-            else if (serverCardsWithIds.length < doraImeData.length) {
-                doraImeData = doraImeData.filter(myCard => 
-                    serverCardsWithIds.some(sCard => sCard.id === myCard.id)
-                );
-                renderHand();
             }
-            // RASTI C: Sinkronizim i plotë (Vetëm nëse ka mospërputhje totale)
-            else if (doraImeData.length === 0 || JSON.stringify(doraImeData.map(c=>c.id)) !== JSON.stringify(serverCardsWithIds.map(c=>c.id))) {
+            // Kontrolli 3: Sinkronizim i thjeshtë nëse ID-të nuk përputhen
+            else if (JSON.stringify(doraImeData.map(c=>c.id)) !== JSON.stringify(serverCardsWithIds.map(c=>c.id))) {
                 doraImeData = [...serverCardsWithIds];
                 renderHand();
             }
         }
     } else {
-        // NËSE SERVERI NUK DËRGOI LETRA: 
-        // Mos bëj asgjë, mbaji ato që ke në 'doraImeData'
-        console.log("DEBUG: Serveri nuk dërgoi letra këtë herë, mbajmë dorën aktuale.");
+        // KËTU ËSHTË GABIMI: Nëse 'me.cards' është bosh, nuk duhet të fshijmë 'doraImeData'
+        console.log("DEBUG: Serveri nuk dërgoi lista letërash (ose ishte bosh).");
     }
 }
-
 
     // 2. Përditëso Scoreboard
     console.log("Duke përditësuar tabelën e pikëve...");
@@ -1133,14 +1131,25 @@ socket.on('initGame', () => {
 });
 
 socket.on('yourCards', (cards) => {
-    console.log("Mora letrat e mia:", cards);
-    if (cards && Array.isArray(cards)) {
-        // Vetëm nëse dora është bosh e mbushim, përndryshe updateGameState merret me të
-        if (doraImeData.length === 0) {
-            doraImeData = cards.map((c, i) => ({...c, id: c.id || `${c.v}-${c.s}-${i}`}));
-            renderHand();
+    console.log("DEBUG: Eventi yourCards u thirr. Letrat e marra:", cards);
+    
+    if (cards && Array.isArray(cards) && cards.length > 0) {
+        // FORCIMI: I japim ID çdo letre dhe i vendosim te variabla globale
+        doraImeData = cards.map((c, i) => ({
+            ...c, 
+            id: c.id || `${c.v}-${c.s}-${i}-${Math.random().toString(36).substr(2, 4)}`
+        }));
+        
+        console.log("DEBUG: doraImeData u mbush. Numri i letrave:", doraImeData.length);
+        
+        // E thërrasim renderHand pa kushte për herë të parë
+        renderHand();
+        
+        if (typeof checkZionCondition === "function") {
+            checkZionCondition();
         }
-        checkZionCondition();    
+    } else {
+        console.error("GABIM: Serveri dërgoi 'yourCards' por data ishte e zbrazët!");
     }
 });
 
