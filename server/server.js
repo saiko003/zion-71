@@ -410,7 +410,7 @@ socket.on('drawCard', () => {
 });
     
 socket.on('cardDiscarded', (card) => {
-    // 1. LOG PËR DEBUG (E rëndësishme për të parë terminalin)
+    // 1. LOG PËR DEBUG
     console.log(`--- Tentativë hedhjeje nga ${socket.id} ---`);
     console.log("Të dhënat e letrës që erdhën:", card);
 
@@ -419,27 +419,27 @@ socket.on('cardDiscarded', (card) => {
     // 2. KONTROLLI I RADHËS
     if (!player || player.id !== socket.id) {
         console.log(`⚠️ Tentativë jashtë radhës nga: ${socket.id}`);
-        // Nuk bëjmë broadcastState këtu sepse nuk duam të ndërhyjmë te lojtari që ka radhën
         return;
     }
 
-    // 3. KONTROLLI I SASISË (Duhet të ketë 11 që të hedhë)
-    if (player.cards.length < 11) { 
+    // 3. KONTROLLI I SASISË (Duhet të ketë saktësisht 11 letra për të hedhur)
+    if (player.cards.length !== 11) { 
         console.log(`⚠️ ${player.name} tentoi të hidhte me ${player.cards.length} letra.`);
-        socket.emit('errorMsg', "Duhet të kesh 11 letra për të hedhur (tërhiq një letër).");
-        broadcastState(true); // Refreskojmë dorën e lojtarit
+        socket.emit('errorMsg', "Duhet të kesh 11 letra për të hedhur.");
+        broadcastState(true); 
         return;
     }
 
     // 4. MBROJTJA E XHOKERIT (Ylli nuk lejohet të hidhet)
-    if (card.v === '★' || card.v === 'Jokeri' || card.v === 'joker' || card.v === 'Xhoker') {
+    if (card.v === '★' || card.v === 'Xhoker' || card.v === 'Jokeri') {
         console.log(`🚫 Bllokuar: ${player.name} tentoi të hidhte Xhokerin.`);
-        socket.emit('errorMsg', "Xhokeri (Ylli) nuk mund të hidhet në tokë!");
+        socket.emit('errorMsg', "Xhokeri nuk mund të hidhet në tokë!");
         broadcastState(true); 
         return; 
     }
 
-    // 5. GJETJA E LETRËS (Me ID ose Vlerë/Shenjë)
+    // 5. GJETJA E LETRËS (Prioritet ID-ja për sinkronizim 100%)
+    // Përdorim ID-në që dërgon Front-endi yt (dataset.id)
     const cardIndex = player.cards.findIndex(c => 
         (card.id && c.id === card.id) || (c.v === card.v && c.s === card.s)
     );
@@ -447,30 +447,40 @@ socket.on('cardDiscarded', (card) => {
     if (cardIndex !== -1) {
         // SUKSES: Letra u gjet në server
         const removedCard = player.cards.splice(cardIndex, 1)[0];
+        
+        // Sigurohemi që discardPile ekziston para se të bëjmë push
+        if (!discardPile) discardPile = [];
         discardPile.push(removedCard);
         
         console.log(`✅ ${player.name} hodhi ${removedCard.v}${removedCard.s}. Mbeti me ${player.cards.length} letra.`);
 
         // 6. NDËRRIMI I RADHËS (Stafeta)
         let startingIndex = activePlayerIndex;
-        do {
-            activePlayerIndex = (activePlayerIndex + 1) % players.length;
-        } while (players[activePlayerIndex].isOut && activePlayerIndex !== startingIndex);
+        let foundNextPlayer = false;
+
+        // Kërkojmë lojtarin e radhës që nuk është 'isOut'
+        for (let i = 1; i < players.length; i++) {
+            let nextIdx = (startingIndex + i) % players.length;
+            if (!players[nextIdx].isOut) {
+                activePlayerIndex = nextIdx;
+                foundNextPlayer = true;
+                break;
+            }
+        }
         
+        // Nëse nuk u gjet lojtar tjetër, radha mbetet te i njëjti (rast emergjence)
+        if (!foundNextPlayer) activePlayerIndex = startingIndex;
+
         console.log(`➡️ Radha kaloi te: ${players[activePlayerIndex].name}`);
 
-        // 7. SINKRONIZIMI (Me 'true' për të përditësuar letrat private)
+        // 7. SINKRONIZIMI FINAL
         broadcastState(true);
 
     } else {
-        // GABIM: Letra nuk u gjet (Sinkronizim i dështuar)
-        console.log(`❌ GABIM: Letra ${card.v}${card.s} me ID ${card.id} nuk u gjet te ${player.name}`);
-        
-        socket.emit('errorMsg', "Gabim sinkronizimi! Letra po kthehet në dorë.");
-        
-        // KRITIKE: Ky rresht zhbllokon lojën dhe ia kthen letrën lojtarit
+        // GABIM: Letra nuk u gjet
+        console.log(`❌ GABIM SINKRONIZIMI: Letra ${card.v}${card.s} nuk u gjet te ${player.name}`);
+        socket.emit('errorMsg', "Gabim sinkronizimi! Rifresko faqen nëse problemet vazhdojnë.");
         broadcastState(true);
-        return; 
     }
 });
     // MBYLLJA (ZION!)
