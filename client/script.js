@@ -370,28 +370,29 @@ function onDragStart(e) {
     const t = isTouch ? e.touches[0] : e;
     const div = e.currentTarget;
     
+    // Marrim pozicionin e saktë të letrës në ekran
     const rect = div.getBoundingClientRect();
 
-    // Kjo llogaritje eshte kyc: sa pixel larg skajit te majte/lart te letres eshte gishtit yt?
+    // Llogarisim OFFSET-in (sa larg qendrës së letrës është gishti)
     div.dataset.offsetX = t.clientX - rect.left;
     div.dataset.offsetY = t.clientY - rect.top;
 
     dragElement = div;
     div.classList.add('dragging');
 
+    // Kjo pjesë ndalon "kërcimin" që pamë në video
     Object.assign(div.style, {
         position: 'fixed',
         zIndex: '1000',
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px',
+        // I japim koordinatat e saktë që ka në atë moment
         left: rect.left + 'px',
         top: rect.top + 'px',
-        
-        // --- KËTO JANË NDRECHIMET E REJA ---
-        margin: '0',          // Heq marginën -25px që e zhvendos letrën anash
-        transform: 'none',    // Heq translateY(-30px) të hover-it që e çon letrën lart
-        transition: 'none'    // Heq vonesën 0.2s që e bën letrën të "vunojë" pas gishtit
+        margin: '0',
+        transform: 'none',
+        transition: 'none' 
     });
 
     document.addEventListener('mousemove', onDragMove);
