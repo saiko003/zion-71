@@ -336,19 +336,17 @@ function renderHand() {
     const handContainer = document.getElementById('player-hand');
     if (!handContainer) return;
     
-    // Pastrojmë dorën që të mos dublohen letrat
     handContainer.innerHTML = '';
 
     doraImeData.forEach((card, index) => {
         const div = document.createElement('div');
         div.className = 'card';
-        // Ruajmë të dhënat në dataset
+        // Datasetet kryesore për ID-në dhe vlerat
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
         div.dataset.id = card.id; 
 
-        // Vizatimi i letrës
         if (card.v === '★') {
             div.classList.add('joker');
             div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
@@ -357,42 +355,37 @@ function renderHand() {
             if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
         }
         
-        // Eventet e fillimit (Start) - I referohen funksioneve jashtë
+        // Lidhja me funksionet e jashtme
         div.addEventListener('mousedown', onDragStart);
         div.addEventListener('touchstart', onDragStart, { passive: false });
 
         handContainer.appendChild(div);
     });
 
-    if (typeof checkZionCondition === "function") {
-        checkZionCondition();
-    }
+    if (typeof checkZionCondition === "function") checkZionCondition();
 }
-
-// --- LOGJIKA UNIVERSALE E LËVIZJES (E jashtme për performancë) ---
 
 function onDragStart(e) {
     const div = e.currentTarget;
-    const point = e.type.includes('touch') ? e.touches[0] : e;
+    const t = e.type.includes('touch') ? e.touches[0] : e;
     const rect = div.getBoundingClientRect();
 
     dragElement = div;
-    div.dataset.offsetX = point.clientX - rect.left;
-    div.dataset.offsetY = point.clientY - rect.top;
+    div.dataset.offsetX = t.clientX - rect.left;
+    div.dataset.offsetY = t.clientY - rect.top;
     div.classList.add('dragging');
 
-    // Stilet fiks gjatë lëvizjes
     Object.assign(div.style, {
         position: 'fixed',
         zIndex: '1000',
-        pointerEvents: 'none', // Lejon detektimin e elementeve poshtë letrës
+        pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px',
         left: rect.left + 'px',
         top: rect.top + 'px'
     });
 
-    // Shto dëgjuesit globalë vetëm kur fillon dragging
+    // Eventet globale
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('touchmove', onDragMove, { passive: false });
     document.addEventListener('mouseup', onDragEnd);
@@ -403,27 +396,24 @@ function onDragMove(e) {
     if (!dragElement) return;
     if (e.cancelable) e.preventDefault();
 
-    const point = e.type.includes('touch') ? e.touches[0] : e;
-    const clientX = point.clientX;
-    const clientY = point.clientY;
+    const t = e.type.includes('touch') ? e.touches[0] : e;
+    
+    dragElement.style.left = (t.clientX - parseFloat(dragElement.dataset.offsetX)) + 'px';
+    dragElement.style.top = (t.clientY - parseFloat(dragElement.dataset.offsetY)) + 'px';
 
-    // 1. Lëvizja e letrës nën gisht/maus
-    dragElement.style.left = (clientX - parseFloat(dragElement.dataset.offsetX)) + 'px';
-    dragElement.style.top = (clientY - parseFloat(dragElement.dataset.offsetY)) + 'px';
-
-    // 2. Renditja dinamike në dorë
+    // Renditja dinamike në dorë
     const handContainer = document.getElementById('player-hand');
     const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
     const nextSibling = siblings.find(sibling => {
         const r = sibling.getBoundingClientRect();
-        return clientX <= r.left + r.width / 2;
+        return t.clientX <= r.left + r.width / 2;
     });
 
     if (nextSibling) handContainer.insertBefore(dragElement, nextSibling);
     else handContainer.appendChild(dragElement);
 
-    // 3. Feedback vizual për zonat (Discard & Victory)
-    updateZonesFeedback(clientX, clientY);
+    // Feedback vizual për Piles
+    updateZonesFeedback(t.clientX, t.clientY);
 }
 
 function updateZonesFeedback(x, y) {
@@ -440,8 +430,8 @@ function updateZonesFeedback(x, y) {
         if (typeof isMyTurn !== 'undefined' && isMyTurn && doraImeData.length === 11) {
             victoryZone.style.display = 'flex';
             const r = victoryZone.getBoundingClientRect();
-            const over = x > r.left && x < r.right && y > r.top && y < r.bottom;
-            victoryZone.classList.toggle('over', over);
+            const overV = x > r.left && x < r.right && y > r.top && y < r.bottom;
+            victoryZone.classList.toggle('over', overV);
         } else {
             victoryZone.style.display = 'none';
         }
@@ -451,40 +441,32 @@ function updateZonesFeedback(x, y) {
 function onDragEnd(e) {
     if (!dragElement) return;
 
-    // Koordinatat e fundit (changedTouches për Mobile)
-    const point = e.type.includes('touch') ? (e.changedTouches[0] || e.touches[0]) : e;
-    const clientX = point.clientX;
-    const clientY = point.clientY;
-
+    const t = e.type.includes('touch') ? (e.changedTouches[0] || e.touches[0]) : e;
     const pile = document.getElementById('discard-pile');
     const victoryZone = document.getElementById('victory-drop-zone');
-    const tolerance = 20; // Toleranca që kërkove
+    const tolerance = 20;
 
     let isOverPile = false;
     let isOverVictory = false;
 
-    // Kontrolli me tolerancë për Discard Pile
     if (pile) {
         const r = pile.getBoundingClientRect();
-        isOverPile = clientX > r.left - tolerance && clientX < r.right + tolerance && 
-                     clientY > r.top - tolerance && clientY < r.bottom + tolerance;
+        isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
+                     t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
-    // Kontrolli me tolerancë për Victory Zone
     if (victoryZone && victoryZone.style.display !== 'none') {
         const r = victoryZone.getBoundingClientRect();
-        isOverVictory = clientX > r.left - tolerance && clientX < r.right + tolerance && 
-                        clientY > r.top - tolerance && clientY < r.bottom + tolerance;
+        isOverVictory = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
+                        t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
-    // Hiq dëgjuesit globalë
     document.removeEventListener('mousemove', onDragMove);
     document.removeEventListener('touchmove', onDragMove);
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
-    // --- LOGJIKA E VENDIMIT ---
-
+    // VENDIMI
     if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
             socket.emit('declareZion', { 
@@ -499,24 +481,18 @@ function onDragEnd(e) {
     if (isOverPile && isMyTurn && doraImeData.length === 11) {
         processDiscard(dragElement);
     } else {
-        // Nëse thjesht e ka lëvizur në dorë, përditësojmë renditjen
+        // Renditja e re
         const handContainer = document.getElementById('player-hand');
         const cardsInDOM = [...handContainer.querySelectorAll('.card')];
-        
         doraImeData = cardsInDOM.map(cardEl => ({
-            v: cardEl.dataset.v, 
-            s: cardEl.dataset.s, 
-            id: cardEl.dataset.id 
+            v: cardEl.dataset.v, s: cardEl.dataset.s, id: cardEl.dataset.id 
         }));
         
-        // Kthejmë stilet në gjendje normale
         Object.assign(dragElement.style, {
             position: '', zIndex: '', pointerEvents: '', width: '', height: '', left: '', top: ''
         });
-        
         renderHand(); 
     }
-
     finalizeCleanup();
 }
 
@@ -725,28 +701,22 @@ function animateCardDraw() {
 // ==========================================
 
 function processDiscard(cardElement) {
-    // 0. Bllokojmë menjëherë radhën
     isMyTurn = false; 
 
-    // MARRIM ID-në (Kjo është kryesorja për renditjen)
     const cardId = cardElement.dataset.id; 
     const v = cardElement.dataset.v;
     const s = cardElement.dataset.s;
 
-    // 1. Rregulli i Xhokerit
-    if (v === '★' || v === 'Jokeri' || v === 'joker' || v === 'Xhoker') {
+    if (['★', 'Jokeri', 'joker', 'Xhoker'].includes(v)) {
         alert("Xhokeri nuk hidhet në tokë!");
         isMyTurn = true; 
-        if (typeof resetCardStyles === "function") resetCardStyles(cardElement);
         renderHand();
         return;
     }
 
-    // 2. Gjejmë indeksin saktësisht përmes ID-së
     const cardIndex = doraImeData.findIndex(c => c.id === cardId);
     
     if (cardIndex !== -1) {
-        // --- MBURRJA E ANIMACIONIT (Struktura jote e paprekur) ---
         const discardZone = document.getElementById('discard-pile');
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
@@ -760,6 +730,7 @@ function processDiscard(cardElement) {
             transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
         });
 
+        // Animacioni
         requestAnimationFrame(() => {
             cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
             cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
@@ -768,25 +739,14 @@ function processDiscard(cardElement) {
         });
         
         setTimeout(() => {
-            cardElement.style.transition = "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)";
-            cardElement.style.left = targetRect.left + 'px';
-            cardElement.style.top = targetRect.top + 'px';
-            cardElement.style.transform = "scale(0.5) rotate(15deg)";
-            cardElement.style.opacity = "0.2";
-        }, 10);
-
-        // 4. Njoftojmë serverin dhe pastrojmë listën
-        setTimeout(() => {
-            // Hiqet vetëm letra që u zgjodh me ID (ruhet renditja e të tjerave)
             doraImeData.splice(cardIndex, 1); 
-
             socket.emit('cardDiscarded', { v, s, id: cardId });
             renderHand(); 
-            
             if (typeof checkZionCondition === "function") checkZionCondition();
         }, 400);
     } else {
         isMyTurn = true;
+        renderHand();
     }
 }
 // ==========================================
