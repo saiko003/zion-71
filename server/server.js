@@ -639,7 +639,7 @@ function broadcastState(shouldSendCards = false) {
     // 3. Dërgimi i eventeve të përgjithshme
     io.emit('lobbyMessage', lobbyMsg);
 
-    io.emit('updateGameState', {
+io.emit('updateGameState', {
         gameStarted: gameStarted,
         players: players.map(p => ({
             id: p.id,
@@ -647,13 +647,22 @@ function broadcastState(shouldSendCards = false) {
             score: p.score,
             history: p.history,
             cardCount: p.cards.length,
-            isOut: p.isOut
+            isOut: p.isOut,
+            // SHTO KËTË RRESHT: I dërgon letrat vetëm nëse duhet sinkronizim i plotë
+            cards: shouldSendCards ? p.cards : null 
         })),
         activePlayerId: activePlayerId,
         discardPile: discardPile, 
         discardPileTop: discardPile[discardPile.length - 1] || null,
         jackpotCard: jackpotCard
     });
+
+    // Pjesa tjetër (yourCards) mund të mbetet siç është për siguri ekstra
+    if (shouldSendCards) {
+        players.forEach(player => {
+            io.to(player.id).emit('yourCards', player.cards);
+        });
+    }
 
     // 4. Letrat individuale (Dërgohen VETËM nëse shouldSendCards është true)
     if (shouldSendCards) {
