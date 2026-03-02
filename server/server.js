@@ -423,15 +423,15 @@ socket.on('cardDiscarded', (card) => {
         return;
     }
 
-    // 2. KONTROLLI I SASISË (Logjika: 11 letra për të hedhur)
-    // Dealer-i fillon me 11 dhe hedh. 
-    // Lojtarët tjerë tërheqin (shkojnë në 11) dhe pastaj hedhin.
-    if (player.cards.length !== 11) {
-        console.log(`⚠️ ${player.name} nuk mund të hedhë. Ka ${player.cards.length} letra, por duhen 11.`);
-        // I dërgojmë gjendjen aktuale që t'i zhbllokohet ekrani (render)
-        broadcastState();
-        return;
-    }
+    // 2. KONTROLLI I SASISË (Modifikuar për siguri)
+if (player.cards.length < 11) { 
+    console.log(`⚠️ ${player.name} ka vetëm ${player.cards.length} letra. Duhet të tërheqësh një letër para se të hedhësh!`);
+    
+    // I dërgojmë një sinjal specifik që t'i kthehet letra në dorë vizualisht
+    socket.emit('errorMsg', "Duhet të kesh 11 letra për të hedhur (tërhiq një letër).");
+    broadcastState(); 
+    return;
+}
 
     // 3. MBROJTJA E XHOKERIT (Ylli nuk lejohet të hidhet)
     if (card.v === '★' || card.v === 'Jokeri' || card.v === 'joker' || card.v === 'Xhoker') {
