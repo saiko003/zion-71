@@ -24,7 +24,6 @@ const statusDrita = document.getElementById('status-drita');
 const statusTeksti = document.getElementById('status-teksti');
 const lobbyControls = document.getElementById('lobby-controls');
 const gameTable = document.getElementById('game-table');
-const deckElement = document.getElementById('deck'); 
 let gameStarted = false;
 let isMyTurn = false;
 let doraImeData = [];
@@ -116,17 +115,6 @@ socket.on('updateGameState', (data) => {
     if (statusTeksti) statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
     if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
 
-    // --- SHTO KËTË PJESË KËTU ---
-    const deckElement = document.getElementById('deck-zion') || document.getElementById('deck-pile');
-    if (deckElement) {
-        // Logjika: Ndihet vetëm nëse është radha ime DHE kam 10 letra
-        // (Që do të thotë sapo kam hedhur njërën dhe serveri pret të tërheq)
-        if (isMyTurn && doraImeData.length === 10) {
-            deckElement.classList.add('deck-glow');
-        } else {
-            deckElement.classList.remove('deck-glow');
-        }
-    }
     
 // 6. Update i Letrave (Versioni i përmirësuar)
 if (data.players) {
@@ -177,22 +165,6 @@ if (data.players) {
     }
 }
 
-// 7. Kontrolli i dritës së Dekut (E SHTUAR)
-    
-const deckElement = document.getElementById('deck-zion');
-
-if (deckElement) {
-    // Kontrollojmë nëse variablat janë të definuara që të mos kemi "ReferenceError"
-    const myTurn = typeof isMyTurn !== 'undefined' ? isMyTurn : false;
-    const myCards = typeof doraImeData !== 'undefined' ? doraImeData : [];
-
-    // Logjika: Nëse është radha ime dhe kam 10 letra (duhet të tërheq të 11-tën)
-    if (myTurn && myCards.length === 10) {
-        deckElement.classList.add('deck-glow');
-    } else {
-        deckElement.classList.remove('deck-glow');
-    }
-}
 
     // 2. Përditëso Scoreboard
     console.log("Duke përditësuar tabelën e pikëve...");
@@ -715,11 +687,22 @@ function isDoraValid(cards) {
     return false;
 }
 function pickCardFromDeck(newCardData) {
-    // 1. Referencat e elementeve
-    const deckElement = document.getElementById('deck-pile') || document.getElementById('deck-zion'); 
+    // 1. Referencat e elementeve (I deklarojmë vetëm NJË HERË këtu)
+    const deckElement = document.getElementById('deck-zion') || document.getElementById('deck-pile') || document.getElementById('deck'); 
     const handContainer = document.getElementById('player-hand');
     
-    // Siguria: Nëse diçka mungon, shtoje letrën pa animacion që mos të bllokohet loja
+    // --- KËTU SHTOJMË LOGJIKËN E GLOW (Pa konstante të reja) ---
+    if (deckElement) {
+        const myTurn = typeof isMyTurn !== 'undefined' ? isMyTurn : false;
+        // Kontrollojmë gjendjen: nëse kam 10 letra, bëj glow që lojtari të dijë të tërheqë
+        if (myTurn && doraImeData.length === 10) {
+            deckElement.classList.add('deck-glow');
+        } else {
+            deckElement.classList.remove('deck-glow');
+        }
+    }
+
+    // Siguria: Nëse diçka mungon, shtoje letrën pa animacion
     if (!deckElement || !handContainer) {
         const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
         if (!alreadyExists) {
@@ -731,29 +714,30 @@ function pickCardFromDeck(newCardData) {
 
     // 2. Krijo "fantazmën" e letrës për animacion
     const tempCard = document.createElement('div');
-    tempCard.className = 'temp-animating'; // Sigurohu që e ke këtë në CSS
+    tempCard.className = 'temp-animating'; 
     
     const deckRect = deckElement.getBoundingClientRect();
     
-    // Pozicioni fillestar (mbi dekun)
     Object.assign(tempCard.style, {
         position: 'fixed',
         left: deckRect.left + 'px',
         top: deckRect.top + 'px',
-        width: '60px',  // Përshtate me madhësinë e letrave tua
+        width: '60px',
         height: '90px',
         zIndex: '5000',
+        backgroundColor: 'white', // Ose imazhi i prapmë i letrës
+        borderRadius: '5px',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
         transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
     });
 
     document.body.appendChild(tempCard);
 
-    // 3. Cakto pikën e mbërritjes (në fund të dorës sate)
+    // 3. Cakto pikën e mbërritjes
     const handRect = handContainer.getBoundingClientRect();
     const targetLeft = handRect.right - 40; 
     const targetTop = handRect.top;
 
-    // Nis fluturimin
     requestAnimationFrame(() => {
         tempCard.style.left = targetLeft + 'px';
         tempCard.style.top = targetTop + 'px';
@@ -761,21 +745,18 @@ function pickCardFromDeck(newCardData) {
         tempCard.style.opacity = '0.5';
     });
 
-    // 4. Pasi mbaron fluturimi (600ms)
+    // 4. Pas animacionit
     setTimeout(() => {
         if (tempCard.parentNode) tempCard.remove();
         
-        // Kontrollojmë nëse letra është shtuar tashmë (mbrojtje nga dublikimi)
         const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
         
         if (!alreadyExists) {
-            // SHTIMI KRITIK: E shtojmë letrën me ID-në origjinale të serverit
             doraImeData.push(newCardData);
-            
-            // Rifreskojmë pamjen e dorës
             renderHand();
             
-            console.log("Letra e re u shtua në fund të renditjes ekzistuese.");
+            // MBAS TËRHEQJES: Heqim Glow sepse tani lojtari ka 11 letra
+            deckElement.classList.remove('deck-glow');
         }
     }, 600);
 }
