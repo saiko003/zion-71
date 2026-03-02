@@ -356,15 +356,15 @@ function renderHand() {
     div.classList.add('dragging');
     
     Object.assign(div.style, {
-        position: 'fixed',
-        zIndex: '1000',
-        pointerEvents: 'none',
-        width: rect.width + 'px',
-        height: rect.height + 'px',
-        // KËTO DY RRESHTA E MBAJNË LETRËN TE MAUSI:
-        left: rect.left + 'px',
-        top: rect.top + 'px'
-    });
+    position: 'fixed',
+    zIndex: '1000',
+    pointerEvents: 'none',
+    width: rect.width + 'px',
+    height: rect.height + 'px',
+    // Përdorim direkt koordinatat e gishtit në momentin e prekjes
+    left: (t.clientX - (t.clientX - rect.left)) + 'px',
+    top: (t.clientY - (t.clientY - rect.top)) + 'px'
+});
            
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
