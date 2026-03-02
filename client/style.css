@@ -410,7 +410,19 @@ body:has(.dragging) {
 }
  #player-hand {
     display: flex;
+    justify-content: center;
+    align-items: flex-end;
     transition: all 0.2s ease; /* Kjo i bën letrat të rrëshqasin butë */
+    z-index: 1001 !important;
+    
+    /* SHTO KËTO QË TË JETË I DUKSHËM POSHTË */
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    min-height: 120px;
+    pointer-events: auto; /* Sigurohu që mund t'i prekësh letrat */
 }
    
 .card:first-child { margin-left: 0; }
