@@ -314,22 +314,24 @@ function renderHand() {
     console.log("--- DEBUG: renderHand nisi ---");
     const handContainer = document.getElementById('player-hand');
     
-    // 1. KONTROLLI I PARË: A ekziston elementi?
+    // 1. KONTROLLI I SIGURISË: Nëse jemi duke lëvizur një letër, NDALO!
+    // Kjo parandalon ngrirjen e letrës në mes të ekranit.
+    if (document.querySelector('.card.dragging') || document.body.classList.contains('sorting')) {
+        console.warn("Vizatimi u anulua: Lojtari po lëviz një letër.");
+        return;
+    }
+
     if (!handContainer) {
-        console.error("GABIM: Nuk u gjet elementi me ID 'player-hand' në HTML!");
+        console.error("GABIM: Nuk u gjet #player-hand!");
         return;
     }
 
-    // 2. KONTROLLI I DYTË: A ka letra?
     if (!doraImeData || doraImeData.length === 0) {
-        console.warn("KUJDES: doraImeData është bosh. Nuk kam çfarë të vizatoj.");
-        handContainer.innerHTML = ""; // Sigurohemi që është pastër
+        handContainer.innerHTML = "";
         return;
     }
 
-    console.log("Duke vizatuar", doraImeData.length, "letra...");
-
-    // Pastrojmë mbetjet vizuale te body
+    // Pastrojmë mbetjet vizuale
     const ghostCards = document.querySelectorAll('body > .card.dragging');
     ghostCards.forEach(card => card.remove());
 
@@ -339,26 +341,23 @@ function renderHand() {
         const div = document.createElement('div');
         div.className = 'card';
         
-        // Datasetet
+        // Datasetet për identifikim
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
         div.dataset.id = card.id || `card-${card.v}-${card.s}-${index}`;
 
-        // Pamja e letrës
-        if (card.v === '★' || card.v === 'Xhoker') {
+        // Pamja e letrës (ZION/Xhoker apo Letër normale)
+        if (card.v === '★' || card.v === 'Xhoker' || card.v === 'J') { 
+            // Kontrollo nëse vërtet është Xhoker sipas logjikës tënde
             div.classList.add('joker');
             div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
         } else {
-            div.innerHTML = `${card.v}<br>${card.s}`;
+            div.innerHTML = `<span>${card.v}</span><br><span>${card.s}</span>`;
             if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
         }
         
-        // Resetimi i stileve inline
-        Object.assign(div.style, {
-            position: '', left: '', top: '', zIndex: ''
-        });
-         
+        // Eventet për Drag & Drop
         div.onmousedown = onDragStart;
         div.ontouchstart = (e) => onDragStart(e);
 
