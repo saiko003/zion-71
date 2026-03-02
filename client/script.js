@@ -350,47 +350,44 @@ function renderHand() {
     
         
 div.addEventListener('mousedown', (e) => {
-    const rect = div.getBoundingClientRect();
-    
-    // Ruajmë offset-in (distanca nga mausi te cepi i letrës)
-    div.dataset.offsetX = e.clientX - rect.left;
-    div.dataset.offsetY = e.clientY - rect.top;
-    
-    div.classList.add('dragging');
-    
-    Object.assign(div.style, {
-        position: 'fixed',
-        zIndex: '1000',
-        pointerEvents: 'none',
-        width: rect.width + 'px',
-        height: rect.height + 'px',
-        // Kjo e mban letrën saktësisht aty ku është mausi
-        left: (e.clientX - (e.clientX - rect.left)) + 'px',
-        top: (e.clientY - (e.clientY - rect.top)) + 'px'
-    });
+const rect = div.getBoundingClientRect();
+
+// Kjo llogarit distancën e saktë nga pika ku e preke letrën deri te cepi i saj
+// window.scrollX/Y siguron që nëse faqja ka lëvizur, koordinatat mbeten saktë
+div.dataset.offsetX = (e.type.includes('touch') ? e.touches[0].clientX : e.clientX) - rect.left;
+div.dataset.offsetY = (e.type.includes('touch') ? e.touches[0].clientY : e.clientY) - rect.top;
+
+div.classList.add('dragging');
+
+Object.assign(div.style, {
+    position: 'fixed',
+    zIndex: '1000',
+    pointerEvents: 'none',
+    width: rect.width + 'px',
+    height: rect.height + 'px',
+    // I japim koordinatat FIKS aty ku është në ekran në atë sekondë
+    left: rect.left + 'px',
+    top: rect.top + 'px'
+});
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
 });
         
         
-    // Krijojmë lëvizjen dhe lëshimin specifike për mausin
 const onMouseMove = (e) => {
-    // 1. Ndalojmë scroll-in në telefon
     if (e.type === 'touchmove') e.preventDefault();
-    
     if (!div.classList.contains('dragging')) return;
 
-    // 2. GJEJMË KOORDINATAT (Zgjidhja e problemit "prej poshtit")
-    // Nëse është touch, marrim gishtin e parë, përndryshe marrim mausin
+    // Koordinatat inteligjente (Mouse ose Touch)
     const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
-    // 3. Përdorim clientX dhe clientY (jo e.clientX)
+    // Lëvizja e letrës
     div.style.left = (clientX - parseFloat(div.dataset.offsetX)) + 'px';
     div.style.top = (clientY - parseFloat(div.dataset.offsetY)) + 'px';
 
-    // Logjika e renditjes (Përdorim clientX)
+    // Renditja në dorë
     const handContainer = document.getElementById('player-hand');
     const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
     const nextSibling = siblings.find(sibling => {
@@ -401,16 +398,19 @@ const onMouseMove = (e) => {
     if (nextSibling) handContainer.insertBefore(div, nextSibling);
     else handContainer.appendChild(div);
 
-    // 1. Feedback për discard-pile (Përdorim clientX/Y)
+    // --- LOGJIKA E FEEDBACK-UT (Ngjyrat kur kalon sipër) ---
+
+    // 1. Për Discard Pile (Hedhja normale)
     const pile = document.getElementById('discard-pile');
     const pRect = pile.getBoundingClientRect();
-    const over = clientX > pRect.left && clientX < pRect.right &&
-                 clientY > pRect.top && clientY < pRect.bottom;
-    pile.classList.toggle('over', over);
+    const overPile = clientX > pRect.left && clientX < pRect.right &&
+                     clientY > pRect.top && clientY < pRect.bottom;
+    pile.classList.toggle('over', overPile);
 
-    // 2. Feedback për victory-drop-zone
+    // 2. Për Victory Zone (Mbyllja ZION)
     const victoryZone = document.getElementById('victory-drop-zone');
     if (victoryZone) {
+        // Shfaqet vetëm kur ke 11 letra dhe është radha jote
         if (isMyTurn && doraImeData.length === 11) {
             victoryZone.style.display = 'flex';
             const vRect = victoryZone.getBoundingClientRect();
@@ -425,51 +425,43 @@ const onMouseMove = (e) => {
 
 
 
-   const onMouseUp = (e) => {
-    // 1. Hiq dëgjuesit (siç e kemi folur)
+const onMouseUp = (e) => {
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
     document.removeEventListener('touchmove', onMouseMove);
     document.removeEventListener('touchend', onMouseUp);
 
-    // 2. Gjej koordinatat
     const clientX = e.type.includes('touch') ? (e.changedTouches[0]?.clientX || 0) : e.clientX;
     const clientY = e.type.includes('touch') ? (e.changedTouches[0]?.clientY || 0) : e.clientY;
 
-    div.classList.remove('dragging');
-
-    // 3. Kontrollojmë zonat duke përdorur elementFromPoint (Më e sakta për telefon)
-    // Kjo shikon çfarë ka poshtë gishtit/mausit në atë moment
-    const elementBelow = document.elementFromPoint(clientX, clientY);
-    const isOverPile = elementBelow?.closest('#discard-pile');
-    const isOverVictoryZone = elementBelow?.closest('#victory-drop-zone');
-
     const victoryZone = document.getElementById('victory-drop-zone');
+    const isOverVictory = victoryZone && victoryZone.classList.contains('over');
+
+    const pile = document.getElementById('discard-pile');
+    const pRect = pile.getBoundingClientRect();
+    const isOverPile = clientX > pRect.left && clientX < pRect.right &&
+                       clientY > pRect.top && clientY < pRect.bottom;
 
     // RASTI 1: MBYLLJA ZION
-    if (isOverVictoryZone && isMyTurn && doraImeData.length === 11) {
+    if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
             socket.emit('declareZion', { 
                 discardedCard: { v: div.dataset.v, s: div.dataset.s },
                 hand: doraImeData.filter((_, i) => i !== parseInt(div.dataset.index))
             });
-            return; // Ndalo këtu nëse mbyllet loja
+            return;
         }
     } 
     
     // RASTI 2: HEDHJA NORMALE
-    // Përdorim isOverPile ose llogaritjen tënde me pRect
-    const pile = document.getElementById('discard-pile');
-    const pRect = pile.getBoundingClientRect();
-    const isOver = clientX > pRect.left - 20 && clientX < pRect.right + 20 &&
-                   clientY > pRect.top - 20 && clientY < pRect.bottom + 20;
-
-    if ((isOver || isOverPile) && isMyTurn && doraImeData.length === 11) {
+    if (isOverPile && isMyTurn && doraImeData.length === 11) {
         processDiscard(div);
-    } else {
-        // RASTI 3: RENDITJA (Kthimi në dorë)
+    } 
+    // RASTI 3: RENDITJA / KTHIMI NË DORË
+    else {
         resetCardStyles(div);
         
+        // Përditësojmë listën globale nga renditja e re në ekran
         const handContainer = document.getElementById('player-hand');
         const cardsInDOM = [...handContainer.querySelectorAll('.card')];
         doraImeData = cardsInDOM.map(cardEl => ({
@@ -477,13 +469,14 @@ const onMouseMove = (e) => {
             s: cardEl.dataset.s, 
             id: cardEl.dataset.id 
         }));   
-        renderHand();
+        
+        renderHand(); // Kjo do t'i pastrojë edhe dublikatat (nëse ke innerHTML = '')
     }
 
     if (victoryZone) {
         victoryZone.classList.remove('over');
         victoryZone.style.display = 'none';
-    }        
+    }
 };
         // TOUCH START
         div.addEventListener('touchstart', (e) => {
