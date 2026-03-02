@@ -375,46 +375,53 @@ div.addEventListener('mousedown', (e) => {
         
         
     // Krijojmë lëvizjen dhe lëshimin specifike për mausin
-   const onMouseMove = (e) => {
-       if (e.type === 'touchmove') e.preventDefault();
-        if (!div.classList.contains('dragging')) return;
-       
-        div.style.left = (e.clientX - parseFloat(div.dataset.offsetX)) + 'px';
-        div.style.top = (e.clientY - parseFloat(div.dataset.offsetY)) + 'px';
+const onMouseMove = (e) => {
+    // 1. Ndalojmë scroll-in në telefon
+    if (e.type === 'touchmove') e.preventDefault();
+    
+    if (!div.classList.contains('dragging')) return;
 
-        // Logjika e renditjes (e njëjtë si te touchmove)
-        const handContainer = document.getElementById('player-hand');
-        const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
-        const nextSibling = siblings.find(sibling => {
-            const r = sibling.getBoundingClientRect();
-            return e.clientX <= r.left + r.width / 2;
-        });
+    // 2. GJEJMË KOORDINATAT (Zgjidhja e problemit "prej poshtit")
+    // Nëse është touch, marrim gishtin e parë, përndryshe marrim mausin
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
-        if (nextSibling) handContainer.insertBefore(div, nextSibling);
-        else handContainer.appendChild(div);
+    // 3. Përdorim clientX dhe clientY (jo e.clientX)
+    div.style.left = (clientX - parseFloat(div.dataset.offsetX)) + 'px';
+    div.style.top = (clientY - parseFloat(div.dataset.offsetY)) + 'px';
 
-        // 1. Feedback për discard-pile (Stiva normale)
-        const pile = document.getElementById('discard-pile');
-        const pRect = pile.getBoundingClientRect();
-        const over = e.clientX > pRect.left && e.clientX < pRect.right &&
-                     e.clientY > pRect.top && e.clientY < pRect.bottom;
-        pile.classList.toggle('over', over);
+    // Logjika e renditjes (Përdorim clientX)
+    const handContainer = document.getElementById('player-hand');
+    const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+    const nextSibling = siblings.find(sibling => {
+        const r = sibling.getBoundingClientRect();
+        return clientX <= r.left + r.width / 2;
+    });
 
-        // 2. Feedback për victory-drop-zone (Mbyllja ZION mbi dekun)
-        const victoryZone = document.getElementById('victory-drop-zone');
-        if (victoryZone) {
-            // E shfaqim vetëm nëse lojtari ka 11 letra dhe është radha e tij
-            if (isMyTurn && doraImeData.length === 11) {
-                victoryZone.style.display = 'flex';
-                const vRect = victoryZone.getBoundingClientRect();
-                const overVictory = e.clientX > vRect.left && e.clientX < vRect.right &&
-                                    e.clientY > vRect.top && e.clientY < vRect.bottom;
-                victoryZone.classList.toggle('over', overVictory);
-            } else {
-                victoryZone.style.display = 'none';
-            }
+    if (nextSibling) handContainer.insertBefore(div, nextSibling);
+    else handContainer.appendChild(div);
+
+    // 1. Feedback për discard-pile (Përdorim clientX/Y)
+    const pile = document.getElementById('discard-pile');
+    const pRect = pile.getBoundingClientRect();
+    const over = clientX > pRect.left && clientX < pRect.right &&
+                 clientY > pRect.top && clientY < pRect.bottom;
+    pile.classList.toggle('over', over);
+
+    // 2. Feedback për victory-drop-zone
+    const victoryZone = document.getElementById('victory-drop-zone');
+    if (victoryZone) {
+        if (isMyTurn && doraImeData.length === 11) {
+            victoryZone.style.display = 'flex';
+            const vRect = victoryZone.getBoundingClientRect();
+            const overVictory = clientX > vRect.left && clientX < vRect.right &&
+                                clientY > vRect.top && clientY < vRect.bottom;
+            victoryZone.classList.toggle('over', overVictory);
+        } else {
+            victoryZone.style.display = 'none';
         }
-    };
+    }
+};
 
 
 
