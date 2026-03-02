@@ -619,14 +619,11 @@ function calculateScore(cards) {
     });
     return score;
 }
-function broadcastState() {
+function broadcastState(shouldSendCards = false) {
     if (players.length === 0) return;
 
-    // 1. SINKRONIZIMI I ID-së (E rëndësishme që drita e radhës të ndizet saktë)
+    // 1. SINKRONIZIMI I ID-së
     activePlayerId = players[activePlayerIndex]?.id || null;
-
-    console.log("Statusi i lojës që po dërgohet:", gameStarted);
-    console.log("DEBUG: activePlayerIndex =", activePlayerIndex, "Players length =", players.length);
 
     // 2. Përgatitja e mesazhit të Lobby
     const activePlayersCount = players.filter(p => !p.isOut).length;
@@ -639,7 +636,7 @@ function broadcastState() {
         }
     }
 
-    // 3. Dërgimi i eventeve
+    // 3. Dërgimi i eventeve të përgjithshme
     io.emit('lobbyMessage', lobbyMsg);
 
     io.emit('updateGameState', {
@@ -652,21 +649,19 @@ function broadcastState() {
             cardCount: p.cards.length,
             isOut: p.isOut
         })),
-        activePlayerId: activePlayerId, // Përdorim variablin e sinkronizuar sipër
-        
-        // Dërgojmë të gjithë listën e letrave në tokë që të shihet historia
+        activePlayerId: activePlayerId,
         discardPile: discardPile, 
-        
-        // Letra e fundit për qasje të shpejtë
         discardPileTop: discardPile[discardPile.length - 1] || null,
-        
         jackpotCard: jackpotCard
     });
 
-    // 4. Letrat individuale për secilin lojtar
-    players.forEach(player => {
-        io.to(player.id).emit('yourCards', player.cards);
-    });
+    // 4. Letrat individuale (Dërgohen VETËM nëse shouldSendCards është true)
+    if (shouldSendCards) {
+        players.forEach(player => {
+            io.to(player.id).emit('yourCards', player.cards);
+        });
+        console.log("✅ Letrat u dërguan te të gjithë lojtarët.");
+    }
 }
 
 function shuffle(array) {
