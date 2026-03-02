@@ -360,8 +360,12 @@ function renderHand() {
         zIndex: '1000',
         pointerEvents: 'none',
         width: rect.width + 'px',
-        height: rect.height + 'px'
+        height: rect.height + 'px',
+        // KËTO DY RRESHTA E MBAJNË LETRËN TE MAUSI:
+        left: rect.left + 'px',
+        top: rect.top + 'px'
     });
+           
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
        
@@ -420,10 +424,6 @@ function renderHand() {
         document.removeEventListener('touchend', onTouchEnd);
         div.classList.remove('dragging');
     
-        const pile = document.getElementById('discard-pile');
-        const pRect = pile.getBoundingClientRect();
-        
-    div.classList.remove('dragging');
 
     // MARRIM KOORDINATAT E SAKTA (Mouse ose Touch)
     const clientX = e.type.includes('touch') ? (e.changedTouches[0]?.clientX || 0) : e.clientX;
@@ -487,7 +487,10 @@ function renderHand() {
         zIndex: '1000',
         pointerEvents: 'none',
         width: rect.width + 'px',
-        height: rect.height + 'px'
+        height: rect.height + 'px',
+        // KËTO DY RRESHTA E MBAJNË LETRËN TE GISHTI:
+        left: rect.left + 'px',
+        top: rect.top + 'px'
     });
 
     // 2. SHTO KËTO: Duhet t'i tregosh telefonit çfarë të bëjë kur gishti lëviz ose hiqet
