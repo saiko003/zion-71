@@ -790,27 +790,29 @@ if (deckElement) {
 // ==========================================
 
 function processDiscard(cardElement) {
-    if (!isMyTurn) return;
-    isMyTurn = false; 
+    if (!isMyTurn) return; // Mbrojtje e parë
+    isMyTurn = false; // Bllokoje menjëherë radhën vizualisht
 
     const cardId = cardElement.dataset.id; 
     
-    // Gjejmë objektin e PLOTË të letrës në memorje
+    // Gjejmë objektin e PLOTË të letrës në memorje (doraImeData)
     const cardIndex = doraImeData.findIndex(c => c.id === cardId);
     
     if (cardIndex !== -1) {
-        const letraObjekt = doraImeData[cardIndex]; // Marrim objektin origjinal
+        const letraObjekt = doraImeData[cardIndex]; // Marrim objektin origjinal me v, s dhe id
 
         console.log("Duke dërguar letrën në server:", letraObjekt);
 
-        // 1. DËRGIMI - Dërgojmë objektin e plotë, jo vetëm dataset-in
+        // 1. DËRGIMI I MENJËHERSHËM TE SERVERI
+        // Përdorim objektin e plotë që serveri ta gjejë me .findIndex() pa gabime
         socket.emit('cardDiscarded', letraObjekt);
 
-        // --- PJESA E ANIMACIONIT (lihet siç është) ---
+        // --- PJESA E ANIMACIONIT ---
         const discardZone = document.getElementById('discard-pile');
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
 
+        // Vendosim stilet fillestare për animacionin (fixed që të lëvizë lirisht në ekran)
         Object.assign(cardElement.style, {
             position: 'fixed',
             left: rect.left + 'px',
@@ -820,6 +822,7 @@ function processDiscard(cardElement) {
             transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
         });
 
+        // Nisim lëvizjen drejt stivës
         requestAnimationFrame(() => {
             cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
             cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
@@ -827,16 +830,28 @@ function processDiscard(cardElement) {
             cardElement.style.opacity = "0";
         });
         
+        // 2. PASTRIMI PAS ANIMACIONIT
         setTimeout(() => {
+            // Heqim letrën nga array lokal (doraImeData)
             doraImeData.splice(cardIndex, 1); 
+            
+            // Heqim elementin fizik nga DOM
             if (cardElement.parentNode) cardElement.remove();
+            
+            // Rivizatojmë dorën e mbetur (tani me 10 letra)
             renderHand(); 
+            
+            // Kontrollojmë nëse lojtari ka fituar apo ka ndonjë kusht tjetër (Zion)
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
         }, 400);
 
     } else {
-        console.error("GABIM: Letra nuk u gjet lokalisht!");
-        isMyTurn = true;
-        renderHand();
+        // RASTI I GABIMIT: Nëse letra nuk gjendet në memorjen lokale
+        console.error("GABIM: Letra nuk u gjet lokalisht! ID:", cardId);
+        isMyTurn = true; // Ktheja radhën lojtarit pasi nuk u realizua hedhja
+        renderHand(); // Rifresko pamjen për siguri
     }
 }
 // ==========================================
