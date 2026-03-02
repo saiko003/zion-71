@@ -369,20 +369,17 @@ function onDragStart(e) {
     const isTouch = e.type === 'touchstart';
     const t = isTouch ? e.touches[0] : e;
     const div = e.currentTarget;
+    
+    // 1. Marrim pozicionin sa është ende në dorë
     const rect = div.getBoundingClientRect();
 
-    // Ruajmë ku e kemi kapur saktë letrën
+    // 2. Llogarisim offset-in saktë
     div.dataset.offsetX = t.clientX - rect.left;
     div.dataset.offsetY = t.clientY - rect.top;
 
     dragElement = div;
     
-    // SHTO KËTË: E nxjerrim letrën nga dora dhe e kalojmë te body
-    // Kjo parandalon konfliktet me transform: translateX(-50%) të dorës
-    document.body.appendChild(div);
-
-    div.classList.add('dragging');
-
+    // 3. I japim stilet para se ta lëvizim te body
     Object.assign(div.style, {
         position: 'fixed',
         zIndex: '10000',
@@ -395,6 +392,9 @@ function onDragStart(e) {
         transform: 'none',
         transition: 'none'
     });
+
+    div.classList.add('dragging');
+    document.body.appendChild(div); // E nxjerrim te body
 
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('touchmove', onDragMove, { passive: false });
