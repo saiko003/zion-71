@@ -354,40 +354,54 @@ socket.on('drawCard', () => {
 socket.on('cardDiscarded', (card) => {
     const player = players[activePlayerIndex];
 
-    // 1. KONTROLLI I RADHËS DHE SASISË (Kritike!)
-    // Lojtari mund të hedhë letër VETËM nëse është radha e tij dhe ka 11 letra.
-    if (!player || player.id !== socket.id || player.cards.length !== 11) {
-        console.log(`Tentativë e pavlefshme nga ${player?.name}. Letra në dorë: ${player?.cards.length}`);
+    // 1. KONTROLLI I SIGURISË DHE RADHËS
+    if (!player || player.id !== socket.id) {
+        console.log(`⚠️ Tentativë jashtë radhës nga: ${socket.id}`);
         return;
     }
 
-    // 2. MBROJTJA E XHOKERIT (★)
-    // Sigurohemi që nuk po hedh yllin që i dhamë në fillim.
+    // 2. KONTROLLI I SASISË (Duhet të ketë 11 letra për të hedhur)
+    if (player.cards.length < 11) {
+        console.log(`⚠️ ${player.name} tentoi të hedhë pa tërhequr (Ka vetëm ${player.cards.length} letra)`);
+        // I dërgojmë gjendjen aktuale që t'i zhbllokohet ekrani
+        broadcastState();
+        return;
+    }
+
+    // 3. MBROJTJA E XHOKERIT (Ylli nuk hidhet)
     const v = card.v;
     if (v === '★' || v === 'Jokeri' || v === 'joker' || v === 'Xhoker') {
-        console.log(`Tentativë e bllokuar: ${player.name} deshi të hidhte Xhokerin!`);
-        socket.emit('errorMsg', "Xhokeri (Ylli) nuk mund të hidhet në tokë!");
+        console.log(`🚫 Bllokuar: ${player.name} tentoi të hidhte Xhokerin.`);
+        socket.emit('errorMsg', "Xhokeri (Ylli) nuk mund të hidhet!");
+        broadcastState(); // Rifreskim për siguri
         return; 
     }
 
-    // 3. GJETJA DHE HEQJA E LETRËS
-    const cardIndex = player.cards.findIndex(c => c.v === card.v && c.s === card.s);
+    // 4. GJETJA E LETRËS (Me ID unike ose Vlerë/Simbol)
+    // Duke qenë se kemi 104 letra, ID-ja është mënyra më e sigurt
+    const cardIndex = player.cards.findIndex(c => 
+        (card.id && c.id === card.id) || (c.v === card.v && c.s === card.s)
+    );
     
     if (cardIndex !== -1) {
-        // Heqim letrën nga dora e lojtarit
+        // Heqim letrën e saktë nga dora
         const removedCard = player.cards.splice(cardIndex, 1)[0];
         
-        // E vendosim në majë të stivës në tokë
+        // E vendosim në tokë (discardPile)
         discardPile.push(removedCard);
         
+        console.log(`✅ ${player.name} hodhi ${removedCard.v}${removedCard.s}.`);
+
+        // 5. NDËRRIMI I RADHËS TE LOJTARI TJETËR AKTIV
         do {
             activePlayerIndex = (activePlayerIndex + 1) % players.length;
-        } while (players[activePlayerIndex].isOut);
+        } while (players[activePlayerIndex].isOut && players.filter(p => !p.isOut).length > 1);
         
-        console.log(`${player.name} hodhi ${card.v}${card.s}. Radhën e ka lojtari tjetër.`);
-
-        // 5. NJOFTIMI I TË GJITHËVE
+        // 6. NJOFTIMI I TË GJITHËVE
         broadcastState();
+    } else {
+        console.log(`❌ Letra ${card.v}${card.s} nuk u gjet në dorën e ${player.name}`);
+        broadcastState(); // Zhbllokon lojtarin nëse ka ndodhur ndonjë gabim sinkronizimi
     }
 });
     // MBYLLJA (ZION!)
