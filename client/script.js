@@ -369,18 +369,19 @@ function onDragStart(e) {
     const isTouch = e.type === 'touchstart';
     const t = isTouch ? e.touches[0] : e;
     const div = e.currentTarget;
-    
-    // Marrim pozicionin e saktë të letrës në ekran
     const rect = div.getBoundingClientRect();
 
-    // Llogarisim OFFSET-in (sa larg qendrës së letrës është gishti)
+    // Ruajmë ku e kemi kapur saktë letrën
     div.dataset.offsetX = t.clientX - rect.left;
     div.dataset.offsetY = t.clientY - rect.top;
 
     dragElement = div;
-    div.classList.add('dragging');
+    
+    // SHTO KËTË: E nxjerrim letrën nga dora dhe e kalojmë te body
+    // Kjo parandalon konfliktet me transform: translateX(-50%) të dorës
+    document.body.appendChild(div);
 
-    document.body.appendChild(div); 
+    div.classList.add('dragging');
 
     Object.assign(div.style, {
         position: 'fixed',
@@ -388,7 +389,6 @@ function onDragStart(e) {
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px',
-        // Vendose letrën ekzaktë aty ku ishte para se ta lëviznim prindin
         left: rect.left + 'px',
         top: rect.top + 'px',
         margin: '0',
@@ -401,47 +401,30 @@ function onDragStart(e) {
     document.addEventListener('mouseup', onDragEnd);
     document.addEventListener('touchend', onDragEnd);
 }
-
 function onDragMove(e) {
     if (!dragElement) return;
     if (e.cancelable) e.preventDefault();
 
     const t = e.type.includes('touch') ? e.touches[0] : e;
     
-    // 1. Lëvizja e letrës (Rri gjithmonë në koordinata ekrani)
-    const x = t.clientX - parseFloat(dragElement.dataset.offsetX);
-    const y = t.clientY - parseFloat(dragElement.dataset.offsetY);
+    // Lëvizja e lirë në ekran
+    dragElement.style.left = (t.clientX - parseFloat(dragElement.dataset.offsetX)) + 'px';
+    dragElement.style.top = (t.clientY - parseFloat(dragElement.dataset.offsetY)) + 'px';
 
-    dragElement.style.left = x + 'px';
-    dragElement.style.top = y + 'px';
-
-    // 2. Renditja dinamike (Logjika e re)
+    // Renditja vizuale (Gjejmë vendin në dorë pa e futur letrën akoma aty)
     const handContainer = document.getElementById('player-hand');
-    
-    // Marrim të gjitha letrat që nuk po i lëvizim
     const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
     
-    // Gjejmë ku duhet të hyjë letra jonë
     const nextSibling = siblings.find(sibling => {
         const r = sibling.getBoundingClientRect();
         return t.clientX <= r.left + r.width / 2;
     });
 
-    // Në vend që ta lëvizim letrën dragElement brenda dorës tani, 
-    // ne vetëm krijojmë hapësirën. 
-    // POR: Që të punojë renditja jote, na duhet një element aty.
-    
-    if (nextSibling) {
-        if (dragElement.parentNode !== handContainer || dragElement.nextSibling !== nextSibling) {
-             handContainer.insertBefore(dragElement, nextSibling);
-        }
-    } else {
-        if (dragElement.parentNode !== handContainer || dragElement.nextSibling !== null) {
-             handContainer.appendChild(dragElement);
-        }
-    }
+    // Kjo krijon një "vrimë" vizuale në dorë që lojtari ta shohë ku po e vë letrën
+    // (Për momentin thjesht lëvizim renditjen në DOM)
+    if (nextSibling) handContainer.insertBefore(dragElement, nextSibling);
+    else handContainer.appendChild(dragElement);
 
-    // 3. Feedback për zonat e hedhjes
     updateZonesFeedback(t.clientX, t.clientY);
 }
 
@@ -473,11 +456,13 @@ function onDragEnd(e) {
     const t = e.type.includes('touch') ? (e.changedTouches[0] || e.touches[0]) : e;
     const pile = document.getElementById('discard-pile');
     const victoryZone = document.getElementById('victory-drop-zone');
+    const handContainer = document.getElementById('player-hand'); // Na duhet referenca këtu
     const tolerance = 20;
 
     let isOverPile = false;
     let isOverVictory = false;
 
+    // Detektimi i zonave
     if (pile) {
         const r = pile.getBoundingClientRect();
         isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
@@ -490,12 +475,13 @@ function onDragEnd(e) {
                         t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
+    // Heqja e eventeve
     document.removeEventListener('mousemove', onDragMove);
     document.removeEventListener('touchmove', onDragMove);
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
-    // 1. SHTO KËTË: Hiq klasën dragging menjëherë që të ri-aktivizohen stilet e dorës
+    // 1. Hiq klasën dragging që letra të jetë gati për stilin normal
     dragElement.classList.remove('dragging');
 
     // VENDIMI
@@ -513,27 +499,43 @@ function onDragEnd(e) {
     if (isOverPile && isMyTurn && doraImeData.length === 11) {
         processDiscard(dragElement);
     } else {
-        // Renditja e re
-        const handContainer = document.getElementById('player-hand');
+        // --- LOGJIKA E RIKTHIMIT NË DORË ---
+        
+        // SHTO KËTË: Nëse letra u nxorr te 'body', e kthejmë te 'handContainer'
+        // para se të llogarisim renditjen e re.
+        if (dragElement.parentNode !== handContainer) {
+            handContainer.appendChild(dragElement);
+        }
+
+        // Renditja e re bazuar në renditjen vizuale që ka DOM-i
         const cardsInDOM = [...handContainer.querySelectorAll('.card')];
         doraImeData = cardsInDOM.map(cardEl => ({
-            v: cardEl.dataset.v, s: cardEl.dataset.s, id: cardEl.dataset.id 
+            v: cardEl.dataset.v, 
+            s: cardEl.dataset.s, 
+            id: cardEl.dataset.id 
         }));
         
-        // 2. SHTO KËTË: Pastrim i plotë i stileve inline që letra të kthehet te CSS-ja bazë
+        // Pastrim i plotë i stileve inline (Të gjitha që shtohen te onDragStart)
         Object.assign(dragElement.style, {
-            position: '', zIndex: '', pointerEvents: '', 
-            width: '', height: '', left: '', top: '',
-            margin: '', transform: '', transition: '' // SHTO KËTO TË TRIJA
+            position: '', 
+            zIndex: '', 
+            pointerEvents: '', 
+            width: '', 
+            height: '', 
+            left: '', 
+            top: '',
+            margin: '', 
+            transform: '', 
+            transition: ''
         });
         
+        // Ribëjmë vizatimin e dorës që të sinkronizohet me array-n doraImeData
         renderHand(); 
     }
     
-    // 3. SHTO KËTË: Sigurohu që dragElement bëhet null në fund
+    // Pastrim i variablave globale (dragElement = null)
     finalizeCleanup();
 }
-
 function finalizeCleanup() {
     if (dragElement) dragElement.classList.remove('dragging');
     dragElement = null;
