@@ -438,38 +438,39 @@ socket.on('cardDiscarded', (card) => {
         return; 
     }
 
-    // 5. GJETJA E LETRËS (Prioritet ID-ja për sinkronizim 100%)
-    // Përdorim ID-në që dërgon Front-endi yt (dataset.id)
-    const cardIndex = player.cards.findIndex(c => 
-        (card.id && c.id === card.id) || (c.v === card.v && c.s === card.s)
-    );
+    // 5. GJETJA E LETRËS (Prioritet absolut ID-ja për sinkronizim 100%)
+    const cardIndex = player.cards.findIndex(c => {
+        if (card.id && c.id) return c.id === card.id;
+        return c.v === card.v && c.s === card.s;
+    });
     
     if (cardIndex !== -1) {
         // SUKSES: Letra u gjet në server
         const removedCard = player.cards.splice(cardIndex, 1)[0];
         
-        // Sigurohemi që discardPile ekziston para se të bëjmë push
-        if (!discardPile) discardPile = [];
+        // Sigurohemi që discardPile ekziston
+        if (typeof discardPile === 'undefined') discardPile = [];
         discardPile.push(removedCard);
         
         console.log(`✅ ${player.name} hodhi ${removedCard.v}${removedCard.s}. Mbeti me ${player.cards.length} letra.`);
 
         // 6. NDËRRIMI I RADHËS (Stafeta)
-        let startingIndex = activePlayerIndex;
-        let foundNextPlayer = false;
+        let foundNext = false;
+        let nextIdx = activePlayerIndex;
 
-        // Kërkojmë lojtarin e radhës që nuk është 'isOut'
         for (let i = 1; i < players.length; i++) {
-            let nextIdx = (startingIndex + i) % players.length;
-            if (!players[nextIdx].isOut) {
-                activePlayerIndex = nextIdx;
-                foundNextPlayer = true;
+            let checkIdx = (activePlayerIndex + i) % players.length;
+            if (!players[checkIdx].isOut) {
+                activePlayerIndex = checkIdx;
+                foundNext = true;
                 break;
             }
         }
         
-        // Nëse nuk u gjet lojtar tjetër, radha mbetet te i njëjti (rast emergjence)
-        if (!foundNextPlayer) activePlayerIndex = startingIndex;
+        // Nëse nuk u gjet lojtar tjetër aktiv, radha mbetet te ky lojtar
+        if (!foundNext) {
+            console.log("⚠️ Nuk u gjet lojtar tjetër aktiv.");
+        }
 
         console.log(`➡️ Radha kaloi te: ${players[activePlayerIndex].name}`);
 
@@ -479,7 +480,7 @@ socket.on('cardDiscarded', (card) => {
     } else {
         // GABIM: Letra nuk u gjet
         console.log(`❌ GABIM SINKRONIZIMI: Letra ${card.v}${card.s} nuk u gjet te ${player.name}`);
-        socket.emit('errorMsg', "Gabim sinkronizimi! Rifresko faqen nëse problemet vazhdojnë.");
+        socket.emit('errorMsg', "Gabim sinkronizimi! Letra po kthehet në dorë.");
         broadcastState(true);
     }
 });
@@ -488,55 +489,72 @@ socket.on('cardDiscarded', (card) => {
 socket.on('playerClosed', (data) => {
     const winner = players.find(p => p.id === socket.id);
     
-    // 1. KONTROLLI I SIGURISË DHE VERIFIKIMI I LETRAVE
-    // Duhet të jetë radha e tij dhe duhet të ketë 11 letra
+    // 1. KONTROLLI I SIGURISË
     if (!winner || winner.id !== players[activePlayerIndex].id || winner.cards.length !== 11) {
         console.log(`⚠️ Tentativë mbylljeje e pavlefshme nga ${winner?.name}`);
-        socket.emit('errorMsg', "Nuk mund të mbyllësh lojën! Kontrollo letrat ose radhën.");
+        socket.emit('errorMsg', "Nuk mund të mbyllësh lojën! Nuk është radha jote ose s'ke 11 letra.");
         return;
     }
 
-    // --- KONTROLLI I ZIONIT (Bllokon Q-K-A-2 dhe kombinimet e gabuara) ---
-    // Ky funksion kontrollon nëse të 11 letrat formojnë grupe/vargje valide
-    const isHandValid = checkRecursive(winner.cards, 0); 
+    // --- KONTROLLI I ZIONIT (KORRIGJIM) ---
+    // Ne duhet të provojmë të heqim NJË letër (letrën mbyllëse) 
+    // dhe të shohim nëse 10 të tjerat formojnë Zion valid.
+    
+    let isHandValid = false;
+    let closingCard = null;
+
+    // Provojmë secilën letër si letër mbyllëse (përveç Xhokerit)
+    for (let i = 0; i < winner.cards.length; i++) {
+        const testHand = [...winner.cards];
+        const removed = testHand.splice(i, 1)[0];
+
+        // Rregull: Xhokeri nuk lejohet si letër mbyllëse
+        if (removed.v === '★' || removed.v === 'Xhoker' || removed.v === 'Jokeri') continue;
+
+        // Kontrollojmë nëse 10 letrat e mbetura janë valide
+        if (checkRecursive(testHand, 0)) {
+            isHandValid = true;
+            closingCard = removed; // Kjo është letra që do shkojë te discardPile
+            winner.cards.splice(i, 1); // E heqim përfundimisht nga dora e fituesit
+            break;
+        }
+    }
 
     if (!isHandValid) {
         console.log(`❌ ${winner.name} tentoi të mbyllet me letra të parregullta!`);
-        socket.emit('errorMsg', "Kombinim i pavlefshëm! Vargu Q-K-A-2 nuk lejohet.");
-        return; // Ndalon procesin e mbylljes nëse letrat nuk janë në rregull
+        socket.emit('errorMsg', "Kombinim i pavlefshëm! Sigurohu që ke 10 letra në rregull dhe 1 për ta hedhur.");
+        return;
     }
+
+    // Shtojmë letrën mbyllëse te stiva
+    if (closingCard) discardPile.push(closingCard);
+
     // --------------------------------------------------------------------
 
-    // Përcaktojmë nëse u mbyll me letrën e fundit të dekut (Jackpot) 
     const isJackpotWin = data.isJackpotClosing || false;
-    console.log(`🏆 RAUNDI U MBYLL RREGULLISHT: ${winner.name} fiton! (Jackpot: ${isJackpotWin})`);
+    console.log(`🏆 ZION! ${winner.name} fiton! (Jackpot: ${isJackpotWin})`);
 
-    // 2. LLOGARITJA E PIKËVE PËR TË GJITHË
+    // 2. LLOGARITJA E PIKËVE
     players.forEach(p => {
-        if (p.isOut) return; // Lojtarët e djegur nuk preken
+        if (p.isOut) return;
 
         if (p.id !== winner.id) {
-            // Llogarisim pikët e letrare që i kanë mbetur në dorë
             let roundPoints = calculateScore(p.cards); 
             
-            // Nëse fituesi u mbyll me Jackpot, pikët ndëshkuese dyfishohen
             if (isJackpotWin) {
-                roundPoints *= 2;
+                roundPoints *= 2; // Rregulli i Jackpot x2
             }
 
-            // Shtohen pikët në totalin kumulativ
             p.score += roundPoints;
             
-            // Regjistrojmë historikun
+            // Regjistrojmë historikun me simbolin "!" për Jackpot
             p.history.push(isJackpotWin ? `${roundPoints}!` : roundPoints);
             
-            // Kontrolli i djegies (71 ose më shumë)
             if (p.score >= 71) {
                 p.isOut = true;
-                console.log(`💀 Lojtari ${p.name} u dogj (Score: ${p.score})`);
+                console.log(`💀 Lojtari ${p.name} u eliminua!`);
             }
         } else {
-            // Për fituesin shënojmë "X"
             p.history.push("X");
         }
     });
@@ -554,16 +572,13 @@ socket.on('playerClosed', (data) => {
         }))
     });
 
-    // 4. NDRYSHIMI I DEALER-IT PËR RAUNDIN TJETËR
+    // 4. RESETIMI I RADHËS DHE TAVOLINËS
     dealerIndex = (dealerIndex + 1) % players.length;
-    
-    let safetyCounter = 0;
-    while(players[dealerIndex].isOut && safetyCounter < players.length) {
+    while(players[dealerIndex].isOut) {
         dealerIndex = (dealerIndex + 1) % players.length;
-        safetyCounter++;
     }
+    activePlayerIndex = (dealerIndex + 1) % players.length; // Lojtari pas dealer-it nis raundin e ri
 
-    // Pastrojmë tavolinën
     discardPile = [];   
     jackpotCard = null; 
 
@@ -573,15 +588,12 @@ socket.on('playerClosed', (data) => {
     if (activePlayers.length <= 1) {
         const finalWinner = activePlayers.length === 1 ? activePlayers[0].name : "Askush";
         io.emit('gameOver', { winner: finalWinner });
-        console.log(`🏁 LOJA PËRFUNDOI! Fituesi final: ${finalWinner}`);
     } else {
         setTimeout(() => {
-            console.log("♻️ Duke nisur raundin e ri...");
             startNewRound(); 
-        }, 4000); 
+        }, 5000); // 5 sekonda vonesë që lojtarët të shohin tabelën
     }
 });
-
    socket.on('disconnect', () => {
     console.log("❌ Lojtari u shkëput:", socket.id);
     
