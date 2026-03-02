@@ -202,28 +202,36 @@ function updateScoreboard(players, activeId) {
     headerHTML += `<th>Total</th>`;
     scoreHeader.innerHTML = headerHTML;
 
-    // 3. Mbushim rreshtat (Logjika jote e paprekur)
-    scoreBody.innerHTML = '';
-    players.forEach(player => {
-        const row = document.createElement('tr');
-        
-        // Klasat për stilim
-        if (player.id === activeId) row.classList.add('active-row');
-        if (player.score >= 71) row.classList.add('eliminated'); 
+// 3. Mbushim rreshtat (Versioni i përmirësuar vizualisht)
+scoreBody.innerHTML = '';
+players.forEach(player => {
+    const row = document.createElement('tr');
+    
+    // Klasat për stilim
+    if (player.id === activeId) row.classList.add('active-row');
+    if (player.isOut || player.score >= 71) row.classList.add('eliminated'); 
 
-        let nameCell = `<td>${player.name} ${player.id === socket.id ? '<small>(Ti)</small>' : ''}</td>`;
+    let nameCell = `<td>${player.name} ${player.id === socket.id ? '<small>(Ti)</small>' : ''}</td>`;
+    
+    let historyCells = '';
+    for (let i = 0; i < maxRounds; i++) {
+        let pikaRaundi = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
         
-        let historyCells = '';
-        for (let i = 0; i < maxRounds; i++) {
-            let pikaRaundi = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
-            historyCells += `<td>${pikaRaundi}</td>`;
+        // Stilim special për "X" (fitoren) dhe "!" (Jackpot)
+        let cellStyle = "";
+        if (pikaRaundi === "X") cellStyle = 'style="color: #2ecc71; font-weight: bold;"';
+        if (typeof pikaRaundi === "string" && pikaRaundi.includes("!")) {
+            cellStyle = 'style="color: #e74c3c; font-weight: bold;"';
         }
 
-        let totalCell = `<td><strong>${player.score}</strong></td>`;
-        
-        row.innerHTML = nameCell + historyCells + totalCell;
-        scoreBody.appendChild(row);
-    });
+        historyCells += `<td ${cellStyle}>${pikaRaundi}</td>`;
+    }
+
+    let totalCell = `<td><strong>${player.score}</strong></td>`;
+    
+    row.innerHTML = nameCell + historyCells + totalCell;
+    scoreBody.appendChild(row);
+});
 }
 function updateGameFlow(data) {
     isMyTurn = (data.activePlayerId === socket.id);
