@@ -35,6 +35,42 @@ let gameStarted = false;
 let gameDeck = [];
 let players = [];
 let dealerIndex = 0;
+const cardOrder = {
+    'A': [1, 14], 
+    '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+    'J': 11, 'Q': 12, 'K': 13
+};
+
+// 2. SHTO KËTU: Funksioni që kontrollon vargjet (Policia e lojës)
+function isSequence(cards) {
+    if (cards.length < 3) return false;
+
+    // Kontrollojmë nëse janë të gjitha të njëjtës shenjë (psh. ♥)
+    const suit = cards[0].s;
+    if (!cards.every(c => c.s === suit)) return false;
+
+    // Prova 1: A-ja si 1 (A-2-3)
+    const valuesLow = cards.map(c => (c.v === 'A' ? 1 : cardOrder[c.v])).sort((a, b) => a - b);
+    const isLow = valuesLow.every((v, i) => i === 0 || v === valuesLow[i - 1] + 1);
+
+    // Prova 2: A-ja si 14 (10-J-Q-K-A)
+    const valuesHigh = cards.map(c => (c.v === 'A' ? 14 : cardOrder[c.v])).sort((a, b) => a - b);
+    const isHigh = valuesHigh.every((v, i) => i === 0 || v === valuesHigh[i - 1] + 1);
+
+    // Kthehet True vetëm nëse është njëra nga këto dyja
+    // Nëse vargu është Q-K-A-2, të dyja do dalin false (RREGULLI YT)
+    return isLow || isHigh;
+}
+function isSet(cards) {
+    if (cards.length < 3) return false;
+    const firstValue = cards[0].v;
+    // Të gjitha duhet të kenë vlerën e njëjtë (psh. '7')
+    if (!cards.every(c => c.v === firstValue)) return false;
+    
+    // Duhet të kenë shenja të ndryshme (nuk lejohen dy 7-sha rrush në një grup)
+    const suits = cards.map(c => c.s);
+    return new Set(suits).size === cards.length;
+}
 function endRound(winnerId) {
     console.log("==== Përfundimi i Raundit ====");
 
@@ -90,33 +126,35 @@ function createDeck() {
     const suits = ['♠', '♣', '♥', '♦'];
     const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     let newDeck = [];
-    let idCounter = 1; // Numërues për ID unike
-    
-    // Krijojmë 2 pako letra (104 letra gjithsej)
+    let idCounter = 1; 
+
+    // 1. Krijojmë 104 letrat (2 pako x 52)
     for (let p = 0; p < 2; p++) {
         for (let s of suits) {
             for (let v of values) {
                 newDeck.push({ 
                     v: v, 
                     s: s, 
-                    // ID unike e pastër: psh "c-1", "c-2"... deri në "c-104"
-                    id: `c-${idCounter++}` 
+                    id: `c-${idCounter++}` // Krijon ID unike nga c-1 deri c-104
                 });
             }
         }
     }
 
-    // Shto 2 Xhokerë (nëse i përdorni në Zion 71)
-    // newDeck.push({ v: '★', s: 'Joker', id: `j-105` });
-    // newDeck.push({ v: '★', s: 'Joker', id: `j-106` });
-    
-    // Përzierja (Fisher-Yates Shuffle) - E ke bërë shumë mirë!
+    // 2. XHOKERËT (Nëse i do, thjesht hiqni // më poshtë)
+    // Duke i lënë këtu jashtë ciklit, shtohen vetëm 2 ID-të e radhës (c-105, c-106)
+    /*
+    newDeck.push({ v: '★', s: 'Joker', id: `c-${idCounter++}` });
+    newDeck.push({ v: '★', s: 'Joker', id: `c-${idCounter++}` });
+    */
+
+    // 3. Përzierja (Fisher-Yates Shuffle)
     for (let i = newDeck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
     }
 
-    console.log("Deku u krijua me", newDeck.length, "letra.");
+    console.log(`✅ Deku u krijua me ${newDeck.length} letra.`);
     return newDeck;
 }
 function startNewRound() {
