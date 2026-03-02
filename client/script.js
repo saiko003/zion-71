@@ -349,26 +349,25 @@ function renderHand() {
         handContainer.appendChild(div);
     
         
-       div.addEventListener('mousedown', (e) => {
+    div.addEventListener('mousedown', (e) => {
     const rect = div.getBoundingClientRect();
     div.dataset.offsetX = e.clientX - rect.left;
     div.dataset.offsetY = e.clientY - rect.top;
     div.classList.add('dragging');
     
     Object.assign(div.style, {
-    position: 'fixed',
-    zIndex: '1000',
-    pointerEvents: 'none',
-    width: rect.width + 'px',
-    height: rect.height + 'px',
-    // Përdorim direkt koordinatat e gishtit në momentin e prekjes
-    left: (t.clientX - (t.clientX - rect.left)) + 'px',
-    top: (t.clientY - (t.clientY - rect.top)) + 'px'
-});
-           
+        position: 'fixed',
+        zIndex: '1000',
+        pointerEvents: 'none',
+        width: rect.width + 'px',
+        height: rect.height + 'px',
+        // Për mausin përdorim "e", jo "t"
+        left: rect.left + 'px',
+        top: rect.top + 'px'
+    });
+            
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
-       
 });
         
         
