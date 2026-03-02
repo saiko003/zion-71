@@ -996,49 +996,36 @@ jackpotElement.addEventListener('click', () => {
 });
 
 
-function canSolve(hand) {
-    const jokers = hand.filter(c => c.v === '★' || c.v === 'Xhoker').length;
-    const normalCards = hand.filter(c => c.v !== '★' && c.v !== 'Xhoker');
-
-    // I rendisim që t'i gjejmë rradhët më lehtë
-    normalCards.sort((a, b) => getVal(a) - getVal(b));
-
-    return checkRecursive(normalCards, jokers);
-}
-
 function checkRecursive(cards, jokers) {
-    // Nëse nuk ka më letra normale, kemi fituar (xhokerat e mbetur janë "wild")
     if (cards.length === 0) return true;
+
+    // Rendisim letrat që të gjejmë rradhët më lehtë
+    cards.sort((a, b) => getValForSequence(a) - getValForSequence(b));
 
     const first = cards[0];
 
-    // --- 1. PROVO GRUPIN (Vlera e njëjtë, simbole të çfarëdoshme) ---
-    // Një grup mund të ketë 3 ose 4 letra
+    // --- 1. PROVO GRUPIN (Vlera e njëjtë) ---
     const sameValue = cards.filter(c => c.v === first.v);
-    
     for (let size = 3; size <= 4; size++) {
         for (let jUsed = 0; jUsed <= jokers; jUsed++) {
             let normalNeeded = size - jUsed;
             if (normalNeeded > 0 && normalNeeded <= sameValue.length) {
-                // Heqim letrat që përdorëm për këtë grup
                 const used = sameValue.slice(0, normalNeeded);
                 const remaining = cards.filter(c => !used.includes(c));
-                
-                // Kontrollojmë recursiv letrat që mbetën
                 if (checkRecursive(remaining, jokers - jUsed)) return true;
             }
         }
     }
 
-    // --- 2. PROVO RRADHËN (Vlera pasuese, duhet simbol i njëjtë) ---
+    // --- 2. PROVO RRADHËN (Simbol i njëjtë) ---
     const sameSuit = cards.filter(c => c.s === first.s);
     if (sameSuit.length + jokers >= 3) {
-        // Provojmë vargje me gjatësi të ndryshme (3 deri 10)
+        // Provojmë gjatësi vargu nga 3 deri në 10
         for (let len = 3; len <= 10; len++) {
-            const sequenceResult = findAndRemoveSequence(sameSuit, len, jokers);
-            if (sequenceResult) {
-                const remaining = cards.filter(c => !sequenceResult.usedCards.includes(c));
-                if (checkRecursive(remaining, jokers - sequenceResult.jokersUsed)) return true;
+            const res = findAndRemoveSequence(sameSuit, len, jokers);
+            if (res) {
+                const remaining = cards.filter(c => !res.usedCards.includes(c));
+                if (checkRecursive(remaining, jokers - res.jokersUsed)) return true;
             }
         }
     }
