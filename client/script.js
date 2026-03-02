@@ -336,12 +336,18 @@ function renderHand() {
     const handContainer = document.getElementById('player-hand');
     if (!handContainer) return;
     
+    // 1. ZGJIDHJA PËR LETRËN E DYTË:
+    // Pastrojmë çdo letër dragging që mund të ketë mbetur te body gabimisht
+    const ghostCards = document.querySelectorAll('body > .card.dragging');
+    ghostCards.forEach(card => card.remove());
+
     handContainer.innerHTML = '';
 
     doraImeData.forEach((card, index) => {
         const div = document.createElement('div');
         div.className = 'card';
-        // Datasetet kryesore për ID-në dhe vlerat
+        
+        // Datasetet
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
@@ -355,7 +361,12 @@ function renderHand() {
             if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
         }
         
-        // Lidhja me funksionet e jashtme
+        // 2. SIGURIA: Resetojmë çdo stil që mund të ketë mbetur nga dragging
+        div.style.position = '';
+        div.style.left = '';
+        div.style.top = '';
+        div.style.zIndex = '';
+        
         div.addEventListener('mousedown', onDragStart);
         div.addEventListener('touchstart', onDragStart, { passive: false });
 
