@@ -416,61 +416,65 @@ function renderHand() {
 
 
 
-    const onMouseUp = (e) => {
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-       
-        document.removeEventListener('touchmove', onTouchMove);
-        document.removeEventListener('touchend', onTouchEnd);
-        div.classList.remove('dragging');
-    
+   const onMouseUp = (e) => {
+    // 1. Hiq dëgjuesit (siç e kemi folur)
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+    document.removeEventListener('touchmove', onMouseMove);
+    document.removeEventListener('touchend', onMouseUp);
 
-    // MARRIM KOORDINATAT E SAKTA (Mouse ose Touch)
+    // 2. Gjej koordinatat
     const clientX = e.type.includes('touch') ? (e.changedTouches[0]?.clientX || 0) : e.clientX;
     const clientY = e.type.includes('touch') ? (e.changedTouches[0]?.clientY || 0) : e.clientY;
 
+    div.classList.remove('dragging');
+
+    // 3. Kontrollojmë zonat duke përdorur elementFromPoint (Më e sakta për telefon)
+    // Kjo shikon çfarë ka poshtë gishtit/mausit në atë moment
+    const elementBelow = document.elementFromPoint(clientX, clientY);
+    const isOverPile = elementBelow?.closest('#discard-pile');
+    const isOverVictoryZone = elementBelow?.closest('#victory-drop-zone');
+
+    const victoryZone = document.getElementById('victory-drop-zone');
+
+    // RASTI 1: MBYLLJA ZION
+    if (isOverVictoryZone && isMyTurn && doraImeData.length === 11) {
+        if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
+            socket.emit('declareZion', { 
+                discardedCard: { v: div.dataset.v, s: div.dataset.s },
+                hand: doraImeData.filter((_, i) => i !== parseInt(div.dataset.index))
+            });
+            return; // Ndalo këtu nëse mbyllet loja
+        }
+    } 
+    
+    // RASTI 2: HEDHJA NORMALE
+    // Përdorim isOverPile ose llogaritjen tënde me pRect
     const pile = document.getElementById('discard-pile');
     const pRect = pile.getBoundingClientRect();
     const isOver = clientX > pRect.left - 20 && clientX < pRect.right + 20 &&
-                   clientY > pRect.top - 20 && clientY < pRect.bottom + 20;;
+                   clientY > pRect.top - 20 && clientY < pRect.bottom + 20;
 
-        // Kontrollojmë edhe Victory Zone
-        const victoryZone = document.getElementById('victory-drop-zone');
-        const isOverVictory = victoryZone && victoryZone.classList.contains('over');
+    if ((isOver || isOverPile) && isMyTurn && doraImeData.length === 11) {
+        processDiscard(div);
+    } else {
+        // RASTI 3: RENDITJA (Kthimi në dorë)
+        resetCardStyles(div);
+        
+        const handContainer = document.getElementById('player-hand');
+        const cardsInDOM = [...handContainer.querySelectorAll('.card')];
+        doraImeData = cardsInDOM.map(cardEl => ({
+            v: cardEl.dataset.v, 
+            s: cardEl.dataset.s, 
+            id: cardEl.dataset.id 
+        }));   
+        renderHand();
+    }
 
-        if (isOverVictory && isMyTurn && doraImeData.length === 11) {
-            // RASTI 1: MBYLLJA ZION
-            if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
-                socket.emit('declareZion', { 
-                    discardedCard: { v: div.dataset.v, s: div.dataset.s },
-                    hand: doraImeData.filter((_, i) => i !== parseInt(div.dataset.index))
-                });
-            } else {
-                resetCardStyles(div);
-                renderHand();
-            }
-        } else if (isOver && isMyTurn && doraImeData.length === 11) {
-            // RASTI 2: HEDHJA NORMALE
-            processDiscard(div);
-        } else {
-            // RASTI 3: RENDITJA E RE NË DORË
-            const handContainer = document.getElementById('player-hand');
-            const cardsInDOM = [...handContainer.querySelectorAll('.card')];
-            doraImeData = cardsInDOM.map(cardEl => {
-                return { 
-                    v: cardEl.dataset.v, 
-                    s: cardEl.dataset.s, 
-                    id: cardEl.dataset.id  // MOS E HARRON KËTË!
-                };
-             });   
-            resetCardStyles(div);
-            renderHand();
-        }
-        // Fshehim Rubikun pasi lëshojmë letrën
-        if (victoryZone) {
-            victoryZone.classList.remove('over');
-            victoryZone.style.display = 'none';
-        }       
+    if (victoryZone) {
+        victoryZone.classList.remove('over');
+        victoryZone.style.display = 'none';
+    }        
 };
         // TOUCH START
         div.addEventListener('touchstart', (e) => {
