@@ -329,23 +329,26 @@ function checkZionCondition() {
 // ==========================================
 // 3. RENDER HAND (Pika 18 - Renditja Interaktive)
 // ==========================================
+// 1. Variablat globale për të menaxhuar dragging-un
+let dragElement = null;
+
 function renderHand() {
     const handContainer = document.getElementById('player-hand');
     if (!handContainer) return;
     
-    // 1. Pastrojmë dorën që të mos dublohen letrat
+    // Pastrojmë dorën që të mos dublohen letrat
     handContainer.innerHTML = '';
 
     doraImeData.forEach((card, index) => {
         const div = document.createElement('div');
         div.className = 'card';
-        // Ruajmë të dhënat origjinale në dataset
+        // Ruajmë të dhënat në dataset
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
         div.dataset.id = card.id; 
 
-        // Vizatimi i letrës (Joker ose Letër normale)
+        // Vizatimi i letrës
         if (card.v === '★') {
             div.classList.add('joker');
             div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
@@ -354,155 +357,182 @@ function renderHand() {
             if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
         }
         
+        // Eventet e fillimit (Start) - I referohen funksioneve jashtë
+        div.addEventListener('mousedown', onDragStart);
+        div.addEventListener('touchstart', onDragStart, { passive: false });
+
         handContainer.appendChild(div);
-
-        // --- LOGJIKA E LËVIZJES (Të gjitha funksionet tuaja janë këtu) ---
-
-        const onMove = (e) => {
-            if (!div.classList.contains('dragging')) return;
-            if (e.cancelable) e.preventDefault();
-
-            const t = e.type.includes('touch') ? e.touches[0] : e;
-            
-            // Rregullimi i pozicionit që të mos ikë letra prej gishtit
-            div.style.left = (t.clientX - parseFloat(div.dataset.offsetX)) + 'px';
-            div.style.top = (t.clientY - parseFloat(div.dataset.offsetY)) + 'px';
-
-            // 1. Logjika e renditjes në dorë (Shtohet/Lëvizet div-i)
-            const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
-            const nextSibling = siblings.find(sibling => {
-                const r = sibling.getBoundingClientRect();
-                return t.clientX <= r.left + r.width / 2;
-            });
-            if (nextSibling) handContainer.insertBefore(div, nextSibling);
-            else handContainer.appendChild(div);
-
-            // 2. Feedback vizual për Piles (Discard dhe Victory)
-            const pile = document.getElementById('discard-pile');
-            const victoryZone = document.getElementById('victory-drop-zone');
-            
-            if (pile) {
-                const pRect = pile.getBoundingClientRect();
-                const over = t.clientX > pRect.left && t.clientX < pRect.right && 
-                             t.clientY > pRect.top && t.clientY < pRect.bottom;
-                pile.classList.toggle('over', over);
-            }
-
-            if (victoryZone && isMyTurn && doraImeData.length === 11) {
-                victoryZone.style.display = 'flex';
-                const vRect = victoryZone.getBoundingClientRect();
-                const overV = t.clientX > vRect.left && t.clientX < vRect.right && 
-                              t.clientY > vRect.top && t.clientY < vRect.bottom;
-                victoryZone.classList.toggle('over', overV);
-            }
-        };
-
-        const onEnd = (e) => {
-            if (!div.classList.contains('dragging')) return;
-            
-            const t = e.type.includes('touch') ? e.changedTouches[0] : e;
-            div.classList.remove('dragging');
-
-            // Hiqim dëgjuesit e eventeve
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onEnd);
-            document.removeEventListener('touchmove', onMove);
-            document.removeEventListener('touchend', onEnd);
-
-            // --- VENDIMMARRJA E FUNDIT (ZION / DISCARD / RENDITJE) ---
-            const pile = document.getElementById('discard-pile');
-            const victoryZone = document.getElementById('victory-drop-zone');
-            const tolerance = 20;
-
-            let isOverPile = false;
-            let isOverVictory = false;
-
-            if (pile) {
-                const r = pile.getBoundingClientRect();
-                isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
-                             t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
-                pile.classList.remove('over');
-            }
-
-            if (victoryZone && victoryZone.style.display !== 'none') {
-                const r = victoryZone.getBoundingClientRect();
-                isOverVictory = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
-                                t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
-            }
-
-            // RASTI 1: MBYLLJA ZION (Funksioni yt origjinal)
-            if (isOverVictory && isMyTurn && doraImeData.length === 11) {
-                if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
-                    socket.emit('declareZion', { 
-                        discardedCard: { v: div.dataset.v, s: div.dataset.s },
-                        hand: doraImeData.filter((_, i) => i !== parseInt(div.dataset.index))
-                    });
-                    if (victoryZone) victoryZone.style.display = 'none';
-                    return; 
-                }
-            } 
-            
-            // RASTI 2: HEDHJA NORMALE (Funksioni yt processDiscard)
-            if (isOverPile && isMyTurn && doraImeData.length === 11) {
-                processDiscard(div);
-            } 
-            // RASTI 3: RENDITJA E RE / KTHIMI NË DORË
-            else {
-                // Pastrojmë stilet e lëvizjes fiks
-                Object.assign(div.style, {
-                    position: '', zIndex: '', pointerEvents: '', width: '', height: '', left: '', top: ''
-                });
-
-                // Përditësojmë listën globale nga renditja e re në ekran
-                const cardsInDOM = [...handContainer.querySelectorAll('.card')];
-                doraImeData = cardsInDOM.map(cardEl => ({
-                    v: cardEl.dataset.v, 
-                    s: cardEl.dataset.s, 
-                    id: cardEl.dataset.id 
-                })); 
-                
-                renderHand(); // Rinvizatim për të pastruar çdo mbetje
-            }
-
-            if (victoryZone) victoryZone.style.display = 'none';
-        };
-
-        const onStart = (e) => {
-            if (e.type === 'touchstart') e.stopImmediatePropagation();
-            
-            const t = e.type.includes('touch') ? e.touches[0] : e;
-            const rect = div.getBoundingClientRect();
-            
-            // Llogaritja e saktë e pikës së kapjes brenda div-it
-            div.dataset.offsetX = t.clientX - rect.left;
-            div.dataset.offsetY = t.clientY - rect.top;
-            
-            div.classList.add('dragging');
-
-            Object.assign(div.style, {
-                position: 'fixed',
-                zIndex: '1000',
-                pointerEvents: 'none', // Shumë e rëndësishme për të detektuar pile-n poshtë letrës
-                width: rect.width + 'px',
-                height: rect.height + 'px',
-                left: rect.left + 'px',
-                top: rect.top + 'px'
-            });
-
-            document.addEventListener(e.type.includes('touch') ? 'touchmove' : 'mousemove', onMove, { passive: false });
-            document.addEventListener(e.type.includes('touch') ? 'touchend' : 'mouseup', onEnd);
-        };
-
-        div.addEventListener('mousedown', onStart);
-        div.addEventListener('touchstart', onStart, { passive: false });
     });
 
-    // Thirrja e kontrollit Zion në fund të renderimit
     if (typeof checkZionCondition === "function") {
         checkZionCondition();
     }
 }
 
+// --- LOGJIKA UNIVERSALE E LËVIZJES (E jashtme për performancë) ---
+
+function onDragStart(e) {
+    const div = e.currentTarget;
+    const point = e.type.includes('touch') ? e.touches[0] : e;
+    const rect = div.getBoundingClientRect();
+
+    dragElement = div;
+    div.dataset.offsetX = point.clientX - rect.left;
+    div.dataset.offsetY = point.clientY - rect.top;
+    div.classList.add('dragging');
+
+    // Stilet fiks gjatë lëvizjes
+    Object.assign(div.style, {
+        position: 'fixed',
+        zIndex: '1000',
+        pointerEvents: 'none', // Lejon detektimin e elementeve poshtë letrës
+        width: rect.width + 'px',
+        height: rect.height + 'px',
+        left: rect.left + 'px',
+        top: rect.top + 'px'
+    });
+
+    // Shto dëgjuesit globalë vetëm kur fillon dragging
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('touchmove', onDragMove, { passive: false });
+    document.addEventListener('mouseup', onDragEnd);
+    document.addEventListener('touchend', onDragEnd);
+}
+
+function onDragMove(e) {
+    if (!dragElement) return;
+    if (e.cancelable) e.preventDefault();
+
+    const point = e.type.includes('touch') ? e.touches[0] : e;
+    const clientX = point.clientX;
+    const clientY = point.clientY;
+
+    // 1. Lëvizja e letrës nën gisht/maus
+    dragElement.style.left = (clientX - parseFloat(dragElement.dataset.offsetX)) + 'px';
+    dragElement.style.top = (clientY - parseFloat(dragElement.dataset.offsetY)) + 'px';
+
+    // 2. Renditja dinamike në dorë
+    const handContainer = document.getElementById('player-hand');
+    const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+    const nextSibling = siblings.find(sibling => {
+        const r = sibling.getBoundingClientRect();
+        return clientX <= r.left + r.width / 2;
+    });
+
+    if (nextSibling) handContainer.insertBefore(dragElement, nextSibling);
+    else handContainer.appendChild(dragElement);
+
+    // 3. Feedback vizual për zonat (Discard & Victory)
+    updateZonesFeedback(clientX, clientY);
+}
+
+function updateZonesFeedback(x, y) {
+    const pile = document.getElementById('discard-pile');
+    const victoryZone = document.getElementById('victory-drop-zone');
+
+    if (pile) {
+        const r = pile.getBoundingClientRect();
+        const over = x > r.left && x < r.right && y > r.top && y < r.bottom;
+        pile.classList.toggle('over', over);
+    }
+
+    if (victoryZone) {
+        if (typeof isMyTurn !== 'undefined' && isMyTurn && doraImeData.length === 11) {
+            victoryZone.style.display = 'flex';
+            const r = victoryZone.getBoundingClientRect();
+            const over = x > r.left && x < r.right && y > r.top && y < r.bottom;
+            victoryZone.classList.toggle('over', over);
+        } else {
+            victoryZone.style.display = 'none';
+        }
+    }
+}
+
+function onDragEnd(e) {
+    if (!dragElement) return;
+
+    // Koordinatat e fundit (changedTouches për Mobile)
+    const point = e.type.includes('touch') ? (e.changedTouches[0] || e.touches[0]) : e;
+    const clientX = point.clientX;
+    const clientY = point.clientY;
+
+    const pile = document.getElementById('discard-pile');
+    const victoryZone = document.getElementById('victory-drop-zone');
+    const tolerance = 20; // Toleranca që kërkove
+
+    let isOverPile = false;
+    let isOverVictory = false;
+
+    // Kontrolli me tolerancë për Discard Pile
+    if (pile) {
+        const r = pile.getBoundingClientRect();
+        isOverPile = clientX > r.left - tolerance && clientX < r.right + tolerance && 
+                     clientY > r.top - tolerance && clientY < r.bottom + tolerance;
+    }
+
+    // Kontrolli me tolerancë për Victory Zone
+    if (victoryZone && victoryZone.style.display !== 'none') {
+        const r = victoryZone.getBoundingClientRect();
+        isOverVictory = clientX > r.left - tolerance && clientX < r.right + tolerance && 
+                        clientY > r.top - tolerance && clientY < r.bottom + tolerance;
+    }
+
+    // Hiq dëgjuesit globalë
+    document.removeEventListener('mousemove', onDragMove);
+    document.removeEventListener('touchmove', onDragMove);
+    document.removeEventListener('mouseup', onDragEnd);
+    document.removeEventListener('touchend', onDragEnd);
+
+    // --- LOGJIKA E VENDIMIT ---
+
+    if (isOverVictory && isMyTurn && doraImeData.length === 11) {
+        if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
+            socket.emit('declareZion', { 
+                discardedCard: { v: dragElement.dataset.v, s: dragElement.dataset.s },
+                hand: doraImeData.filter((_, i) => i !== parseInt(dragElement.dataset.index))
+            });
+            finalizeCleanup();
+            return;
+        }
+    } 
+
+    if (isOverPile && isMyTurn && doraImeData.length === 11) {
+        processDiscard(dragElement);
+    } else {
+        // Nëse thjesht e ka lëvizur në dorë, përditësojmë renditjen
+        const handContainer = document.getElementById('player-hand');
+        const cardsInDOM = [...handContainer.querySelectorAll('.card')];
+        
+        doraImeData = cardsInDOM.map(cardEl => ({
+            v: cardEl.dataset.v, 
+            s: cardEl.dataset.s, 
+            id: cardEl.dataset.id 
+        }));
+        
+        // Kthejmë stilet në gjendje normale
+        Object.assign(dragElement.style, {
+            position: '', zIndex: '', pointerEvents: '', width: '', height: '', left: '', top: ''
+        });
+        
+        renderHand(); 
+    }
+
+    finalizeCleanup();
+}
+
+function finalizeCleanup() {
+    if (dragElement) dragElement.classList.remove('dragging');
+    dragElement = null;
+    
+    const pile = document.getElementById('discard-pile');
+    const victoryZone = document.getElementById('victory-drop-zone');
+    
+    if (pile) pile.classList.remove('over');
+    if (victoryZone) {
+        victoryZone.classList.remove('over');
+        victoryZone.style.display = 'none';
+    }
+}
 function isDoraValid(cards) {
     // 0. Nëse nuk ka letra, ose ka vetëm 1, është automatikisht valid për mbyllje
     if (cards.length <= 1) return true;
