@@ -24,6 +24,7 @@ const statusDrita = document.getElementById('status-drita');
 const statusTeksti = document.getElementById('status-teksti');
 const lobbyControls = document.getElementById('lobby-controls');
 const gameTable = document.getElementById('game-table');
+const deckElement = document.getElementById('deck-zion') || document.getElementById('deck');
 let gameStarted = false;
 let isMyTurn = false;
 let doraImeData = [];
