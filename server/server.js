@@ -410,50 +410,47 @@ socket.on('drawCard', () => {
 });
     
 socket.on('cardDiscarded', (card) => {
+    // 1. SHTOJE KËTU: Shih nëse po vijnë të dhënat saktë nga Front-end
+    console.log("--- DEBUG: Serveri mori kërkesën për hedhje ---");
+    console.log("Letra që erdhi:", card);
+
     const player = players[activePlayerIndex];
 
-    // 1. KONTROLLI I SIGURISË DHE RADHËS
     // Sigurohemi që lojtari ekziston dhe është radha e tij
     if (!player || player.id !== socket.id) {
         console.log(`⚠️ Tentativë jashtë radhës nga: ${socket.id}`);
         return;
     }
 
-    // 2. KONTROLLI I SASISË (Modifikuar për siguri)
-if (player.cards.length < 11) { 
-    console.log(`⚠️ ${player.name} ka vetëm ${player.cards.length} letra. Duhet të tërheqësh një letër para se të hedhësh!`);
-    
-    // I dërgojmë një sinjal specifik që t'i kthehet letra në dorë vizualisht
-    socket.emit('errorMsg', "Duhet të kesh 11 letra për të hedhur (tërhiq një letër).");
-    broadcastState(true);
-    return;
-}
+    // Kontrolli i sasisë
+    if (player.cards.length < 11) { 
+        console.log(`⚠️ ${player.name} ka vetëm ${player.cards.length} letra.`);
+        socket.emit('errorMsg', "Duhet të kesh 11 letra për të hedhur.");
+        broadcastState(true);
+        return;
+    }
 
-    // 3. MBROJTJA E XHOKERIT (Ylli nuk lejohet të hidhet)
-    if (card.v === '★' || card.v === 'Jokeri' || card.v === 'joker' || card.v === 'Xhoker') {
+    // Mbrojtja e Xhokerit
+    if (card.v === '★' || card.v === 'Jokeri' || card.v === 'Xhoker') {
         console.log(`🚫 Bllokuar: ${player.name} tentoi të hidhte Xhokerin.`);
-        socket.emit('errorMsg', "Xhokeri (Ylli) nuk mund të hidhet në tokë!");
-        broadcastState(); 
+        socket.emit('errorMsg', "Xhokeri nuk mund të hidhet në tokë!");
+        broadcastState(true); 
         return; 
     }
 
-    // 4. GJETJA DHE HEQJA E LETRËS
-    // Përdorim ID-në nëse ekziston, përndryshe vlerën dhe simbolin
+    // Gjetja e letrës
     const cardIndex = player.cards.findIndex(c => 
         (card.id && c.id === card.id) || (c.v === card.v && c.s === card.s)
     );
     
     if (cardIndex !== -1) {
-        // Heqim letrën e saktë nga dora e lojtarit
+        // RASTI SUKSES: Letra u gjet
         const removedCard = player.cards.splice(cardIndex, 1)[0];
-        
-        // E shtojmë te stiva e letrave të hedhura (në tokë)
         discardPile.push(removedCard);
         
-        console.log(`✅ ${player.name} hodhi ${removedCard.v}${removedCard.s}. Mbeti me ${player.cards.length} letra.`);
+        console.log(`✅ ${player.name} hodhi ${removedCard.v}${removedCard.s}.`);
 
-        // 5. NDËRRIMI I RADHËS (Stafeta)
-        // Pasi lojtari ka hedhur letrën dhe ka mbetur me 10, radha i kalon tjetrit
+        // Ndërrimi i radhës
         let startingIndex = activePlayerIndex;
         do {
             activePlayerIndex = (activePlayerIndex + 1) % players.length;
@@ -461,12 +458,20 @@ if (player.cards.length < 11) {
         
         console.log(`➡️ Radha kaloi te: ${players[activePlayerIndex].name}`);
 
-        // 6. SINIKRONIZIMI I TË GJITHË LOJTARËVE
-        broadcastState();
+        // SHTOJE KËTU: Dërgojmë 'true' që të përditësohen letrat në dorë (nga 11 në 10)
+        broadcastState(true); 
+
     } else {
-        console.log(`❌ Letra ${card.v}${card.s} nuk u gjet në dorën e ${player.name}`);
-        // Rifreskojmë gjendjen për të kthyer letrën vizualisht te lojtari
-        broadcastState();
+        // 2. SHTOJE KËTU: Çfarë ndodh nëse letra nuk gjendet?
+        console.log(`❌ GABIM: Letra ${card.v}${card.s} nuk u gjet në dorën e ${player.name}`);
+        
+        // I dërgojmë një gabim lojtarit
+        socket.emit('errorMsg', "Gabim: Letra nuk u gjet në server. Provoni të rifreskoni.");
+        
+        // KRITIKE: Thërrasim broadcastState(true) dhe shtojmë RETURN
+        // Kjo ia rikthen letrën lojtarit në dorë që mos t'i zhduket pa u hedhur në stivë
+        broadcastState(true);
+        return; 
     }
 });
     // MBYLLJA (ZION!)
