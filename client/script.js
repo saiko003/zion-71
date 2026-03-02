@@ -86,41 +86,48 @@ socket.on('updateGameState', (data) => {
         if (gameTable) gameTable.style.display = 'none';
     }
 
-    // 6. Update i Letrave (I rregulluar që të jetë më i shpejtë)
-// 6. Update i Letrave (I rregulluar)
-    if (data.players) {
-        const me = data.players.find(p => p.id === socket.id);
-        if (me && me.cards) {
-            
-            const serverCardsWithIds = me.cards.map((card, index) => ({
-                ...card,
-                id: card.id || `${card.v}-${card.s}-${index}` 
-            }));
+ // 6. Update i Letrave (I rregulluar me mbrojtje nga Dragging)
+if (data.players) {
+    const me = data.players.find(p => p.id === socket.id);
+    if (me && me.cards) {
+        
+        // Kriojmë ID-të për letrat e serverit
+        const serverCardsWithIds = me.cards.map((card, index) => ({
+            ...card,
+            id: card.id || `${card.v}-${card.s}-${index}` 
+        }));
 
-            // KORRIGJIMI KËTU:
-            // Nëse dora ime është bosh, ose ka ndryshuar numri i letrave
-            if (!doraImeData || doraImeData.length === 0 || doraImeData.length !== serverCardsWithIds.length) {
-                
-                // Nëse është fillimi i lojës ose reset, merri të gjitha
-                if (doraImeData.length === 0) {
-                    doraImeData = [...serverCardsWithIds];
-                } 
+        // MBROJTJA: Nëse jam duke lëvizur një letër, mos e përditëso dorën nga serveri
+        // sepse renditja lokale është ajo që ka rëndësi në atë moment.
+        const isDraggingAnyCard = document.querySelector('.card.dragging');
+
+        if (!isDraggingAnyCard) {
+            // Kontrollojmë nëse ka ndryshim real (në numër ose në përmbajtje)
+            const countChanged = !doraImeData || doraImeData.length !== serverCardsWithIds.length;
+            
+            if (countChanged || doraImeData.length === 0) {
                 // Nëse po marrim letër të re (nga 10 në 11)
-                else if (serverCardsWithIds.length > doraImeData.length) {
+                if (doraImeData && serverCardsWithIds.length > doraImeData.length) {
                     const newCard = serverCardsWithIds.find(sc => !doraImeData.some(my => my.id === sc.id));
-                    if (newCard) doraImeData.push(newCard);
-                    else doraImeData = [...serverCardsWithIds];
+                    if (newCard) {
+                        doraImeData.push(newCard);
+                    } else {
+                        doraImeData = [...serverCardsWithIds];
+                    }
                 } 
-                // Nëse po gjuajmë letër
+                // Nëse po gjuajmë letër ose reset i plotë
                 else {
-                    doraImeData = doraImeData.filter(my => serverCardsWithIds.some(sc => sc.id === my.id));
+                    doraImeData = [...serverCardsWithIds];
                 }
 
-                console.log("Duke vizatuar dorën me", doraImeData.length, "letra");
+                console.log("Serveri përditësoi dorën:", doraImeData.length);
                 renderHand();
             }
+        } else {
+            console.log("Update i dorës u injorua sepse jeni duke lëvizur një letër.");
         }
     }
+}
 
     // 2. Përditëso Scoreboard
     console.log("Duke përditësuar tabelën e pikëve...");
@@ -347,20 +354,19 @@ function renderHand() {
         
         handContainer.appendChild(div);
 
-        // --- FUNKSIONET E LËVIZJES (Të unifikuara) ---
+        // Variabël për të parandaluar ekzekutimin e dyfishtë në telefon
+        let isProcessing = false;
 
         const onMove = (e) => {
             if (!div.classList.contains('dragging')) return;
             if (e.type === 'touchmove') e.preventDefault();
 
-            // Koordinatat (Zgjidhja për "prej poshtit")
             const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
             const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
             div.style.left = (clientX - parseFloat(div.dataset.offsetX)) + 'px';
             div.style.top = (clientY - parseFloat(div.dataset.offsetY)) + 'px';
 
-            // Logjika e renditjes
             const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
             const nextSibling = siblings.find(sibling => {
                 const r = sibling.getBoundingClientRect();
@@ -369,7 +375,6 @@ function renderHand() {
             if (nextSibling) handContainer.insertBefore(div, nextSibling);
             else handContainer.appendChild(div);
 
-            // Feedback vizual (Glow)
             const pile = document.getElementById('discard-pile');
             const victoryZone = document.getElementById('victory-drop-zone');
             
@@ -387,17 +392,21 @@ function renderHand() {
         };
 
         const onEnd = (e) => {
+            // Nëse procesi ka filluar, mos e lejo të përsëritet (Zgjidhja për telefon)
+            if (isProcessing) return;
+            isProcessing = true;
+
             div.classList.remove('dragging');
+            
+            // Koordinatat korrekte për telefon
             const clientX = e.type.includes('touch') ? (e.changedTouches[0].clientX) : e.clientX;
             const clientY = e.type.includes('touch') ? (e.changedTouches[0].clientY) : e.clientY;
 
-            // Hiqim dëgjuesit
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onEnd);
             document.removeEventListener('touchmove', onMove);
             document.removeEventListener('touchend', onEnd);
 
-            // --- VENDIMMARRJA (ZION / DISCARD / SORT) ---
             const pile = document.getElementById('discard-pile');
             const victoryZone = document.getElementById('victory-drop-zone');
             const tolerance = 20;
@@ -429,7 +438,6 @@ function renderHand() {
             if (isOverPile && isMyTurn && doraImeData.length === 11) {
                 processDiscard(div);
             } else {
-                // RIKRIJIMI I RENDITJES (Rasti C)
                 const currentCards = [...handContainer.querySelectorAll('.card')];
                 doraImeData = currentCards.map(c => ({ 
                     v: c.dataset.v, 
@@ -444,6 +452,13 @@ function renderHand() {
         };
 
         const onStart = (e) => {
+            // Ndalojmë shkaktimin e dyfishtë (Touch + Mouse)
+            if (e.type === 'touchstart') {
+                // e.preventDefault(); // E heqim komentin nese ka prap probleme
+            }
+            e.stopImmediatePropagation();
+            isProcessing = false; // Resetojmë gjendjen në fillim
+
             const t = e.type.includes('touch') ? e.touches[0] : e;
             const rect = div.getBoundingClientRect();
             
