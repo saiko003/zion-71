@@ -618,10 +618,10 @@ function calculateScore(cards) {
 function broadcastState(shouldSendCards = false) {
     if (players.length === 0) return;
 
-    // 1. SINKRONIZIMI I ID-së
+    // 1. SINKRONIZIMI I ID-së SË LOJTARIT AKTUAL
     activePlayerId = players[activePlayerIndex]?.id || null;
 
-    // 2. Përgatitja e mesazhit të Lobby
+    // 2. PËRGATITJA E MESAZHIT TË LOBBY
     const activePlayersCount = players.filter(p => !p.isOut).length;
     let lobbyMsg = "ZION 71\nNIS LOJËN (START)\n";
     if (!gameStarted) {
@@ -632,20 +632,17 @@ function broadcastState(shouldSendCards = false) {
         }
     }
 
-    // 3. Dërgimi i eventeve të përgjithshme
+    // 3. DËRGIMI I EVENTEVE TË PËRGJITHSHME (Publike për të gjithë)
     io.emit('lobbyMessage', lobbyMsg);
 
-io.emit('updateGameState', {
+    io.emit('updateGameState', {
         gameStarted: gameStarted,
         players: players.map(p => ({
             id: p.id,
             name: p.name,
             score: p.score,
-            history: p.history,
-            cardCount: p.cards.length,
-            isOut: p.isOut,
-            // SHTO KËTË RRESHT: I dërgon letrat vetëm nëse duhet sinkronizim i plotë
-            cards: shouldSendCards ? p.cards : null 
+            cardCount: p.cards.length, // Siguria: dërgojmë vetëm numrin, jo vlerat
+            isOut: p.isOut
         })),
         activePlayerId: activePlayerId,
         discardPile: discardPile, 
@@ -653,19 +650,16 @@ io.emit('updateGameState', {
         jackpotCard: jackpotCard
     });
 
-    // Pjesa tjetër (yourCards) mund të mbetet siç është për siguri ekstra
+    // 4. DËRGIMI I LETRAVE PRIVATE (Vetëm nëse duhet)
+    // Këtu e kemi bërë që letrat të dërgohen vetëm kur shouldSendCards është true
+    // për të shmangur trafikun e tepërt kur ndryshon vetëm radha.
     if (shouldSendCards) {
-        players.forEach(player => {
-            io.to(player.id).emit('yourCards', player.cards);
+        players.forEach(p => {
+            if (p.id) {
+                io.to(p.id).emit('yourCards', p.cards);
+            }
         });
-    }
-
-    // 4. Letrat individuale (Dërgohen VETËM nëse shouldSendCards është true)
-    if (shouldSendCards) {
-        players.forEach(player => {
-            io.to(player.id).emit('yourCards', player.cards);
-        });
-        console.log("✅ Letrat u dërguan te të gjithë lojtarët.");
+        console.log("✅ Letrat private u sinkronizuan me sukses.");
     }
 }
 
