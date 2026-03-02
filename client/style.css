@@ -511,3 +511,12 @@ body.game-active #lobby-controls {
 .hidden {
     display: none !important;
 }
+
+.card-placeholder {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    margin: 0 5px;
+    vertical-align: top;
+}
