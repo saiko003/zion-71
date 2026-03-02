@@ -314,50 +314,59 @@ function renderHand() {
     console.log("--- DEBUG: renderHand nisi ---");
     const handContainer = document.getElementById('player-hand');
     
-    // 1. KONTROLLI I SIGURISË: Nëse jemi duke lëvizur një letër, NDALO!
-    // Kjo parandalon ngrirjen e letrës në mes të ekranit.
-    if (document.querySelector('.card.dragging') || document.body.classList.contains('sorting')) {
-        console.warn("Vizatimi u anulua: Lojtari po lëviz një letër.");
-        return;
-    }
-
+    // 1. KONTROLLI I PARË: A ekziston elementi?
     if (!handContainer) {
-        console.error("GABIM: Nuk u gjet #player-hand!");
+        console.error("GABIM: Nuk u gjet elementi me ID 'player-hand' në HTML!");
         return;
     }
 
+    // 2. KONTROLLI I DYTË: A ka letra?
     if (!doraImeData || doraImeData.length === 0) {
-        handContainer.innerHTML = "";
+        console.warn("KUJDES: doraImeData është bosh. Nuk kam çfarë të vizatoj.");
+        handContainer.innerHTML = ""; // Sigurohemi që është pastër
         return;
     }
 
-    // Pastrojmë mbetjet vizuale
+    console.log("Duke vizatuar", doraImeData.length, "letra...");
+
+    // Pastrojmë mbetjet vizuale te body (letrat që mbeten pezull gjatë drag-and-drop)
     const ghostCards = document.querySelectorAll('body > .card.dragging');
     ghostCards.forEach(card => card.remove());
 
+    // Pastrojmë kontejnerin para rindërtimit
     handContainer.innerHTML = '';
 
     doraImeData.forEach((card, index) => {
         const div = document.createElement('div');
         div.className = 'card';
         
-        // Datasetet për identifikim
+        // Datasetet për identifikim dhe logjikë
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
         div.dataset.id = card.id || `card-${card.v}-${card.s}-${index}`;
 
-        // Pamja e letrës (ZION/Xhoker apo Letër normale)
-        if (card.v === '★' || card.v === 'Xhoker' || card.v === 'J') { 
-            // Kontrollo nëse vërtet është Xhoker sipas logjikës tënde
+        // Pamja e letrës (Xhoker/Zion apo Letër normale)
+        if (card.v === '★' || card.v === 'Xhoker') {
             div.classList.add('joker');
             div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
         } else {
-            div.innerHTML = `<span>${card.v}</span><br><span>${card.s}</span>`;
-            if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
+            div.innerHTML = `${card.v}<br>${card.s}`;
+            // Ngjyrosja e letrave të kuqe (Zemër dhe Kokëshqollë)
+            if (['♥', '♦'].includes(card.s)) {
+                div.style.color = 'red';
+            }
         }
         
-        // Eventet për Drag & Drop
+        // Resetimi i stileve inline për t'u siguruar që letrat rreshtohen saktë në kontejner
+        Object.assign(div.style, {
+            position: '', 
+            left: '', 
+            top: '', 
+            zIndex: ''
+        });
+         
+        // Lidhja e eventeve për lëvizjen e letrave
         div.onmousedown = onDragStart;
         div.ontouchstart = (e) => onDragStart(e);
 
@@ -365,7 +374,11 @@ function renderHand() {
     });
 
     console.log("--- DEBUG: renderHand përfundoi ---");
-    if (typeof checkZionCondition === "function") checkZionCondition();
+    
+    // Kontrolli i kushtit Zion pas çdo vizatimi
+    if (typeof checkZionCondition === "function") {
+        checkZionCondition();
+    }
 }
 
 function onDragStart(e) {
