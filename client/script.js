@@ -453,87 +453,71 @@ function updateZonesFeedback(x, y) {
 function onDragEnd(e) {
     if (!dragElement) return;
 
+    // Kjo kap koordinatat e fundit ekzakte ku u lëshua gishti
     const t = e.type.includes('touch') ? (e.changedTouches[0] || e.touches[0]) : e;
+    
     const pile = document.getElementById('discard-pile');
     const victoryZone = document.getElementById('victory-drop-zone');
-    const handContainer = document.getElementById('player-hand'); // Na duhet referenca këtu
-    const tolerance = 20;
+    const handContainer = document.getElementById('player-hand');
+    
+    // Rritim tolerancën në 40 për celular që të jetë më e lehtë hedhja
+    const tolerance = 40; 
 
     let isOverPile = false;
     let isOverVictory = false;
 
-    // Detektimi i zonave
+    // Kontrolli për Stivën
     if (pile) {
         const r = pile.getBoundingClientRect();
         isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
                      t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
+    // Kontrolli për Zion
     if (victoryZone && victoryZone.style.display !== 'none') {
         const r = victoryZone.getBoundingClientRect();
         isOverVictory = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
                         t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
-    // Heqja e eventeve
+    // Heqim eventet
     document.removeEventListener('mousemove', onDragMove);
     document.removeEventListener('touchmove', onDragMove);
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
-    // 1. Hiq klasën dragging që letra të jetë gati për stilin normal
-    dragElement.classList.remove('dragging');
-
-    // VENDIMI
     if (isOverVictory && isMyTurn && doraImeData.length === 11) {
-        if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
-            socket.emit('declareZion', { 
-                discardedCard: { v: dragElement.dataset.v, s: dragElement.dataset.s },
-                hand: doraImeData.filter((_, i) => i !== parseInt(dragElement.dataset.index))
-            });
-            finalizeCleanup();
-            return;
-        }
+        // ... kodi yt i Zion ...
+        processZion(dragElement); 
+        return;
     } 
 
     if (isOverPile && isMyTurn && doraImeData.length === 11) {
         processDiscard(dragElement);
     } else {
-        // --- LOGJIKA E RIKTHIMIT NË DORË ---
-        
-        // SHTO KËTË: Nëse letra u nxorr te 'body', e kthejmë te 'handContainer'
-        // para se të llogarisim renditjen e re.
+        // KTHEJE NË DORË
         if (dragElement.parentNode !== handContainer) {
             handContainer.appendChild(dragElement);
         }
 
-        // Renditja e re bazuar në renditjen vizuale që ka DOM-i
-        const cardsInDOM = [...handContainer.querySelectorAll('.card')];
-        doraImeData = cardsInDOM.map(cardEl => ({
-            v: cardEl.dataset.v, 
-            s: cardEl.dataset.s, 
-            id: cardEl.dataset.id 
-        }));
-        
-        // Pastrim i plotë i stileve inline (Të gjitha që shtohen te onDragStart)
         Object.assign(dragElement.style, {
-            position: '', 
-            zIndex: '', 
-            pointerEvents: '', 
-            width: '', 
-            height: '', 
-            left: '', 
-            top: '',
-            margin: '', 
-            transform: '', 
-            transition: ''
+            position: '', zIndex: '', pointerEvents: '', 
+            width: '', height: '', left: '', top: '',
+            margin: '', transform: '', transition: ''
         });
         
-        // Ribëjmë vizatimin e dorës që të sinkronizohet me array-n doraImeData
+        dragElement.classList.remove('dragging');
+        
+        // Ri-renditja e të dhënave
+        const cardsInDOM = [...handContainer.querySelectorAll('.card')];
+        doraImeData = cardsInDOM.map(cardEl => ({
+            v: cardEl.dataset.v, s: cardEl.dataset.s, id: cardEl.dataset.id 
+        }));
+
         renderHand(); 
     }
     
-    // Pastrim i variablave globale (dragElement = null)
+    dragElement = null; // Sigurohemi që fshihet referenca
     finalizeCleanup();
 }
 function finalizeCleanup() {
