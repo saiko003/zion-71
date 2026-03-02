@@ -366,18 +366,21 @@ function renderHand() {
 }
 
 function onDragStart(e) {
-    // Kjo parandalon që telefoni ta llogarisë prekjen si Mouse Click dhe Touch në të njëjtën kohë
-    if (e.type === 'touchstart') {
-        // e.preventDefault(); // Mund ta aktivizosh nëse browseri nuk ankohet për passive
-        e.stopPropagation(); 
+    // 1. Përcaktojmë nëse është Touch apo Mouse
+    const isTouch = e.type === 'touchstart';
+    
+    // 2. Parandalojmë konfliktet në Mobile (Ghost Clicks)
+    if (isTouch) {
+        // e.preventDefault(); // Hiqe komentin nëse nuk të bllokon scroll-in
+        e.stopPropagation();
     }
 
     const div = e.currentTarget;
     
-    // Sigurohemi që nuk po zvarritim një letër që është tashmë duke u lëvizur
+    // Siguri që nuk po kapim dy letra njëherësh
     if (div.classList.contains('dragging')) return;
 
-    const t = e.type.includes('touch') ? e.touches[0] : e;
+    const t = isTouch ? e.touches[0] : e;
     const rect = div.getBoundingClientRect();
 
     dragElement = div;
@@ -385,6 +388,7 @@ function onDragStart(e) {
     div.dataset.offsetY = t.clientY - rect.top;
     div.classList.add('dragging');
 
+    // Stilet vizuale
     Object.assign(div.style, {
         position: 'fixed',
         zIndex: '1000',
@@ -395,14 +399,13 @@ function onDragStart(e) {
         top: rect.top + 'px'
     });
 
-    // Shto dëgjuesit globalë bazuar në llojin e pajisjes
-    if (e.type === 'touchstart') {
-        document.addEventListener('touchmove', onDragMove, { passive: false });
-        document.addEventListener('touchend', onDragEnd);
-    } else {
-        document.addEventListener('mousemove', onDragMove);
-        document.addEventListener('mouseup', onDragEnd);
-    }
+    // 3. SHTOJMË TË DYJA LLOJET E EVENTEVE (Zgjidhja e problemit të mausit)
+    // Kjo siguron që kodi dëgjon si mausin ashtu edhe gishtin
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('touchmove', onDragMove, { passive: false });
+    
+    document.addEventListener('mouseup', onDragEnd);
+    document.addEventListener('touchend', onDragEnd);
 }
 
 function onDragMove(e) {
