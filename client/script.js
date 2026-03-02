@@ -357,11 +357,25 @@ function checkZionCondition() {
 let dragElement = null;
 
 function renderHand() {
+    console.log("--- DEBUG: renderHand nisi ---");
     const handContainer = document.getElementById('player-hand');
-    if (!handContainer) return;
     
-    // 1. ZGJIDHJA PËR LETRËN E DYTË:
-    // Pastrojmë çdo letër dragging që mund të ketë mbetur te body gabimisht
+    // 1. KONTROLLI I PARË: A ekziston elementi?
+    if (!handContainer) {
+        console.error("GABIM: Nuk u gjet elementi me ID 'player-hand' në HTML!");
+        return;
+    }
+
+    // 2. KONTROLLI I DYTË: A ka letra?
+    if (!doraImeData || doraImeData.length === 0) {
+        console.warn("KUJDES: doraImeData është bosh. Nuk kam çfarë të vizatoj.");
+        handContainer.innerHTML = ""; // Sigurohemi që është pastër
+        return;
+    }
+
+    console.log("Duke vizatuar", doraImeData.length, "letra...");
+
+    // Pastrojmë mbetjet vizuale te body
     const ghostCards = document.querySelectorAll('body > .card.dragging');
     ghostCards.forEach(card => card.remove());
 
@@ -375,9 +389,10 @@ function renderHand() {
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
-        div.dataset.id = card.id || div.dataset.id || `card-${card.v}-${card.s}-${Math.random().toString(36).substr(2, 5)}`;
+        div.dataset.id = card.id || `card-${card.v}-${card.s}-${index}`;
 
-        if (card.v === '★') {
+        // Pamja e letrës
+        if (card.v === '★' || card.v === 'Xhoker') {
             div.classList.add('joker');
             div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
         } else {
@@ -385,11 +400,10 @@ function renderHand() {
             if (['♥', '♦'].includes(card.s)) div.style.color = 'red';
         }
         
-        // 2. SIGURIA: Resetojmë çdo stil që mund të ketë mbetur nga dragging
-        div.style.position = '';
-        div.style.left = '';
-        div.style.top = '';
-        div.style.zIndex = '';
+        // Resetimi i stileve inline
+        Object.assign(div.style, {
+            position: '', left: '', top: '', zIndex: ''
+        });
          
         div.onmousedown = onDragStart;
         div.ontouchstart = (e) => onDragStart(e);
@@ -397,6 +411,7 @@ function renderHand() {
         handContainer.appendChild(div);
     });
 
+    console.log("--- DEBUG: renderHand përfundoi ---");
     if (typeof checkZionCondition === "function") checkZionCondition();
 }
 
