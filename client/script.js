@@ -351,7 +351,7 @@ function renderHand() {
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
-        div.dataset.id = card.id; 
+        div.dataset.id = card.id || `${card.v}-${card.s}-${index}`; 
 
         if (card.v === '★') {
             div.classList.add('joker');
@@ -678,26 +678,25 @@ function animateCardDraw() {
 // ==========================================
 
 function processDiscard(cardElement) {
-    isMyTurn = false; 
-
+    // 1. Marrim të dhënat nga DOM
     const cardId = cardElement.dataset.id; 
     const v = cardElement.dataset.v;
     const s = cardElement.dataset.s;
 
-    if (['★', 'Jokeri', 'joker', 'Xhoker'].includes(v)) {
-        alert("Xhokeri nuk hidhet në tokë!");
-        isMyTurn = true; 
-        renderHand();
-        return;
-    }
+    // DEBUG: Shiko në konsolë (F12) nëse ID vjen e saktë
+    console.log("Duke provuar hedhjen:", {v, s, cardId});
 
+    // 2. Gjejmë indeksin në array-n e të dhënave
     const cardIndex = doraImeData.findIndex(c => c.id === cardId);
     
     if (cardIndex !== -1) {
+        isMyTurn = false; // Vetëm tani e bllokojmë radhën
+
         const discardZone = document.getElementById('discard-pile');
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
 
+        // Stilizimi për animacion (letrën e kemi te body)
         Object.assign(cardElement.style, {
             position: 'fixed',
             left: rect.left + 'px',
@@ -707,7 +706,6 @@ function processDiscard(cardElement) {
             transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
         });
 
-        // Animacioni
         requestAnimationFrame(() => {
             cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
             cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
@@ -718,12 +716,17 @@ function processDiscard(cardElement) {
         setTimeout(() => {
             doraImeData.splice(cardIndex, 1); 
             socket.emit('cardDiscarded', { v, s, id: cardId });
+            
+            // SHUMË E RËNDËSISHME: Hiqe elementin nga body pasi mbaron animacioni
+            if (cardElement.parentNode) cardElement.remove();
+            
             renderHand(); 
             if (typeof checkZionCondition === "function") checkZionCondition();
         }, 400);
     } else {
+        console.error("GABIM: Letra nuk u gjet në listë! ID:", cardId);
         isMyTurn = true;
-        renderHand();
+        renderHand(); // Rindërto dorën që të mos mbetet letra te body
     }
 }
 // ==========================================
