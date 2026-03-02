@@ -128,23 +128,23 @@ socket.on('updateGameState', (data) => {
         }
     }
     
-// 6. Update i Letrave (Versioni që ruan renditjen dhe bën
+// 6. Update i Letrave (Versioni i përmirësuar)
 if (data.players) {
     const me = data.players.find(p => p.id === socket.id);
     if (me && me.cards) {
         
         // 1. Sigurohemi që ID-të janë konsistente
-        const serverCardsWithIds = me.cards.map((card, index) => ({
+        const serverCardsWithIds = me.cards.map(card => ({
             ...card,
-            id: card.id || `${card.v}-${card.s}` // Përdorim vetëm vlerën dhe simbolin si ID bazë
+            id: card.id || `${card.v}-${card.s}`
         }));
 
         const isDragging = document.querySelector('.card.dragging');
 
-        // 2. Sinkronizimi i mençur (VETËM nëse nuk jemi duke tërhequr një letër)
+        // 2. Sinkronizimi i mençur
         if (!isDragging) {
             
-            // RASTI A: Kemi marrë letër të re (Animacioni)
+            // RASTI A: Kemi marrë letër të re (Animacioni i tërheqjes)
             if (doraImeData.length > 0 && serverCardsWithIds.length > doraImeData.length) {
                 serverCardsWithIds.forEach(sCard => {
                     const exists = doraImeData.some(myCard => myCard.id === sCard.id);
@@ -153,22 +153,38 @@ if (data.players) {
                     }
                 });
             } 
-            // RASTI B: Kemi hedhur letër ose serveri thotë që kemi më pak letra
+            // RASTI B: Kemi hedhur letër (Serveri konfirmon që kemi 10 letra)
             else if (serverCardsWithIds.length < doraImeData.length) {
                 doraImeData = doraImeData.filter(myCard => 
                     serverCardsWithIds.some(sCard => sCard.id === myCard.id)
                 );
                 renderHand();
             }
-            // RASTI C: Fillimi i lojës OSE sinkronizim i detyruar (nëse ID-të nuk përputhen fare)
+            // RASTI C: Fillimi i lojës ose reset
             else if (doraImeData.length === 0) {
                 doraImeData = [...serverCardsWithIds];
                 renderHand();
             }
             
-            // SHËNIM: Nëse numri i letrave është i njëjtë (psh 10 me 10), 
-            // ne NUK bëjmë renderHand(). Kjo mbron 3 K-shat e tu që të mos lëvizin.
+            // --- SIGURESA SHTESË ---
+            // Nëse për ndonjë arsye numri i letrave nuk përputhet (psh. humbje pakete)
+            // bëjmë një sinkronizim të detyruar që loja mos të bllokohet
+            if (doraImeData.length !== serverCardsWithIds.length) {
+                doraImeData = [...serverCardsWithIds];
+                renderHand();
+            }
         }
+    }
+}
+
+// 7. Kontrolli i dritës së Dekut (E SHTUAR)
+const deckElement = document.getElementById('deck-zion') || document.getElementById('deck-pile');
+if (deckElement) {
+    // Nëse është radha ime dhe kam 10 letra, deku duhet të ndriçojë (Glow)
+    if (isMyTurn && doraImeData.length === 10) {
+        deckElement.classList.add('deck-glow');
+    } else {
+        deckElement.classList.remove('deck-glow');
     }
 }
 
