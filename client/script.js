@@ -103,100 +103,44 @@ if (deckZion) {
 }
 
 socket.on('updateGameState', (data) => {
-    console.log("DEBUG: gameStarted është:", data.gameStarted);
+    console.log("DEBUG: Përditësim i ri nga serveri.");
 
-    // 1. Kontrolli i Lobby-t
-    if (data.gameStarted === true) {
+    // 1. Kontrolli i Pamjes (Lobby vs Table)
+    if (data.gameStarted) {
         if (lobbyControls) lobbyControls.style.display = 'none';
         if (gameTable) gameTable.style.display = 'block';
     } else {
         if (lobbyControls) lobbyControls.style.display = 'flex';
         if (gameTable) gameTable.style.display = 'none';
+        return; // Ndalo këtu nëse loja s'ka nisur
     }
-    // 5. Kontrolli i Radhës (Glow & Status)
-    isMyTurn = (data.activePlayerId === socket.id);
-    document.body.classList.toggle('my-turn-glow', isMyTurn);
-    
-    if (statusTeksti) statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
-    if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
 
-// 6. Update i Letrave (Versioni i Korrigjuar)
-if (data.players) {
-    const me = data.players.find(p => p.id === socket.id);
-    
-    // NËSE kemi lojtarin dhe ai ka letra...
-    if (me && me.cards && Array.isArray(me.cards) && me.cards.length > 0) { 
-        
-        const serverCardsWithIds = me.cards.map((card, idx) => ({
-            ...card,
-            id: card.id || `${card.v}-${card.s}-${idx}` // Sigurohemi që ka ID
-        }));
-
-        const isDragging = document.querySelector('.card.dragging');
-
-        // Vetëm nëse nuk jemi duke tërhequr një letër, përditësojmë pamjen
-        if (!isDragging) {
-            
-            // Kontrolli 1: Nëse dora në ekran është bosh, por serveri ka letra -> VIZATOI
-            if (doraImeData.length === 0 && serverCardsWithIds.length > 0) {
-                console.log("DEBUG: Dora ishte bosh, po mbush me", serverCardsWithIds.length, "letra");
-                doraImeData = [...serverCardsWithIds];
-                renderHand();
-            } 
-            // Kontrolli 2: Nëse ka ndryshuar numri i letrave (kemi marrë letër të re)
-            else if (serverCardsWithIds.length > doraImeData.length) {
-                serverCardsWithIds.forEach(sCard => {
-                    const exists = doraImeData.some(myCard => myCard.id === sCard.id);
-                    if (!exists) pickCardFromDeck(sCard);
-                });
-            }
-            // Kontrolli 3: Sinkronizim i thjeshtë nëse ID-të nuk përputhen
-            else if (JSON.stringify(doraImeData.map(c=>c.id)) !== JSON.stringify(serverCardsWithIds.map(c=>c.id))) {
-                doraImeData = [...serverCardsWithIds];
-                renderHand();
-            }
-        }
-    } else {
-        // KËTU ËSHTË GABIMI: Nëse 'me.cards' është bosh, nuk duhet të fshijmë 'doraImeData'
-        console.log("DEBUG: Serveri nuk dërgoi lista letërash (ose ishte bosh).");
-    }
-}
-
-    // 2. Përditëso Scoreboard
-    console.log("Duke përditësuar tabelën e pikëve...");
+    // 2. Përditëso Tabelën e Pikëve
     if (typeof updateScoreboard === "function") {
         updateScoreboard(data.players, data.activePlayerId);
     }
 
-    // 3. Përditëso Letrën në Tokë (Discard Pile / Historia)
+    // 3. Përditëso Letrat në Tokë (Discard Pile)
     const discardPileElement = document.getElementById('discard-pile');
-    if (discardPileElement) {
-        // Kontrollojmë nëse kemi listën e plotë të letrave (discardPile)
-        if (data.discardPile && data.discardPile.length > 0) {
-            discardPileElement.innerHTML = ''; // Pastrojmë për të vizatuar historinë e re
-            
+    if (discardPileElement && data.discardPile) {
+        discardPileElement.innerHTML = ''; 
+        
+        if (data.discardPile.length === 0) {
+            discardPileElement.innerHTML = '<span class="label">HEDH KËTU</span>';
+        } else {
             data.discardPile.forEach((card, index) => {
-                const isRed = ['♥', '♦'].includes(card.s);
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'card-on-table';
+                const isRed = ['♥', '♦'].includes(card.s);
                 cardDiv.style.color = isRed ? 'red' : 'black';
                 
-                // I rendisim pak mbi njëra-tjetrën (psh 15px diferencë)
+                // Efekti "lepe-lepe" (shkallë-shkallë)
                 cardDiv.style.position = 'absolute';
-                cardDiv.style.left = (Math.min(index, 10) * 15) + 'px'; // Max 10 letra duken, të tjerat palosen nën to
+                cardDiv.style.left = (index * 12) + 'px'; 
                 
                 cardDiv.innerHTML = `${card.v}<br>${card.s}`;
                 discardPileElement.appendChild(cardDiv);
             });
-        } else if (data.discardPileTop) {
-            // Backup nëse vjen vetëm letra e fundit
-            const isRed = ['♥', '♦'].includes(data.discardPileTop.s);
-            discardPileElement.innerHTML = `
-                <div class="card-on-table" style="color: ${isRed ? 'red' : 'black'}">
-                    ${data.discardPileTop.v}<br>${data.discardPileTop.s}
-                </div>`;
-        } else {
-            discardPileElement.innerHTML = '<span class="label">HEDH KËTU</span>';
         }
     }
 
@@ -205,22 +149,32 @@ if (data.players) {
         if (data.jackpotCard) {
             const isRedJackpot = ['♥', '♦'].includes(data.jackpotCard.s);
             jackpotElement.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
-            jackpotElement.style.color = isRedJackpot ? 'red' : 'white';
+            jackpotElement.style.color = isRedJackpot ? 'red' : 'black';
             jackpotElement.style.display = 'block';
         } else {
             jackpotElement.style.display = 'none';
         }
     }
 
-    // 5. Kontrolli i Radhës (Glow & Status)
+    // 5. Kontrolli i Radhës (Glow & Status) - VETËM NJË HERË
     isMyTurn = (data.activePlayerId === socket.id);
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
     if (statusTeksti) statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
     if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
 
-    // 7. Thirr funksionet ndihmëse
-    if (typeof updateGameFlow === "function") updateGameFlow(data);
+    // 6. Shkëlqimi i Dekut (Nëse duhet të tërheqësh letër)
+    const deckZion = document.getElementById('deck-zion');
+    if (deckZion) {
+        // Shkëlqen vetëm nëse është radha jote dhe ke më pak se 11 letra
+        if (isMyTurn && doraImeData.length < 11) {
+            deckZion.classList.add('active-deck');
+        } else {
+            deckZion.classList.remove('active-deck');
+        }
+    }
+
+    // 7. Kontrollo kushtet e fitores (Zion)
     if (typeof checkZionCondition === "function") checkZionCondition();
 });
 
@@ -1179,35 +1133,65 @@ socket.on('initGame', () => {
     }
 });
 
+/* ==========================================
+   EVENTI: MARRJA E LETRAVE (yourCards)
+   Ky event thirret kur serveri të ndan letrat
+   ========================================== */
 socket.on('yourCards', (cards) => {
     console.log("DEBUG: Eventi yourCards u thirr. Letrat e marra:", cards);
     
+    // Kontrollojmë nëse të dhënat janë të vlefshme
     if (cards && Array.isArray(cards) && cards.length > 0) {
-        // 1. Shfaqim tabelën e lojës dhe fshehim lobby-n (KRITIKE)
+        
+        // 1. NDRYSHIMI I PAMJES (Nga Lobby te Tavolina)
         const gameTable = document.getElementById('game-table');
         const lobby = document.getElementById('lobby-controls');
         
-        if (gameTable) gameTable.style.display = 'block'; // Ose 'flex' varet nga CSS
-        if (lobby) lobby.style.display = 'none';
+        // Sigurohemi që tabela është e dukshme para se të vizatojmë
+        if (gameTable) {
+            gameTable.style.display = 'block';
+            // Shtojmë një klasë në body nëse duam stile specifike për lojën aktive
+            document.body.classList.add('game-active');
+        }
         
-        // 2. Ruajmë të dhënat
+        if (lobby) {
+            lobby.style.display = 'none';
+        }
+        
+        // 2. RUAJTJA DHE FORMATIMI I LETRAVE
+        // Pastrojmë array-n e vjetër dhe mbushim me të dhënat e reja
         doraImeData = cards.map((c, i) => ({
             ...c, 
+            // Gjenerojmë një ID unike nëse serveri nuk e ka dërguar një të tillë
+            // Kjo i duhet SortableJS dhe funksionit të lëvizjes (drag)
             id: c.id || `${c.v}-${c.s}-${i}-${Math.random().toString(36).substring(2, 6)}`
         }));
         
-        console.log("DEBUG: doraImeData u mbush. Numri:", doraImeData.length);
+        console.log("DEBUG: doraImeData u mbush me sukses. Numri i letrave:", doraImeData.length);
         
-        // 3. Vizatojmë letrat me një vonesë të vogël (vonesa ndihmon që DOM-i të jetë gati)
+        // 3. VIZATIMI I DORËS
+        // Përdorim setTimeout për t'i dhënë kohë browser-it të bëjë "render" tabelën
         setTimeout(() => {
-            renderHand();
+            // Vizatojmë letrat në HTML
+            if (typeof renderHand === "function") {
+                renderHand();
+            } else {
+                console.error("GABIM: Funksioni renderHand() nuk u gjet!");
+            }
+            
+            // Kontrollojmë nëse lojtari ka bërë Zion (71 pikë) automatikisht
             if (typeof checkZionCondition === "function") {
                 checkZionCondition();
             }
-        }, 50);
+        }, 100); // 100ms është vonesa ideale për stabilitet
 
     } else {
-        console.error("GABIM: Serveri dërgoi 'yourCards' por data ishte e zbrazët!");
+        // Nëse serveri dërgon listë bosh (p.sh. pas një gabimi)
+        console.error("GABIM KRITIK: Serveri dërgoi 'yourCards' por data ishte e zbrazët ose korruptuar!");
+        
+        // Opsionale: mund të rifreskojmë pamjen që të mos mbeten letra fantazmë
+        doraImeData = [];
+        if (typeof renderHand === "function") renderHand();
     }
 });
 
