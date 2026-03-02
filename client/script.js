@@ -408,25 +408,40 @@ function onDragMove(e) {
 
     const t = e.type.includes('touch') ? e.touches[0] : e;
     
-    // Llogaritja e pozicionit te ri
+    // 1. Lëvizja e letrës (Rri gjithmonë në koordinata ekrani)
     const x = t.clientX - parseFloat(dragElement.dataset.offsetX);
     const y = t.clientY - parseFloat(dragElement.dataset.offsetY);
 
     dragElement.style.left = x + 'px';
     dragElement.style.top = y + 'px';
 
-    // Renditja dinamike (pjesa jote qe punon mire)
+    // 2. Renditja dinamike (Logjika e re)
     const handContainer = document.getElementById('player-hand');
+    
+    // Marrim të gjitha letrat që nuk po i lëvizim
     const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+    
+    // Gjejmë ku duhet të hyjë letra jonë
     const nextSibling = siblings.find(sibling => {
         const r = sibling.getBoundingClientRect();
-        // Kontrollojme nese jemi ne gjysmen e letres tjeter per ta lene vendin
         return t.clientX <= r.left + r.width / 2;
     });
 
-    if (nextSibling) handContainer.insertBefore(dragElement, nextSibling);
-    else handContainer.appendChild(dragElement);
+    // Në vend që ta lëvizim letrën dragElement brenda dorës tani, 
+    // ne vetëm krijojmë hapësirën. 
+    // POR: Që të punojë renditja jote, na duhet një element aty.
+    
+    if (nextSibling) {
+        if (dragElement.parentNode !== handContainer || dragElement.nextSibling !== nextSibling) {
+             handContainer.insertBefore(dragElement, nextSibling);
+        }
+    } else {
+        if (dragElement.parentNode !== handContainer || dragElement.nextSibling !== null) {
+             handContainer.appendChild(dragElement);
+        }
+    }
 
+    // 3. Feedback për zonat e hedhjes
     updateZonesFeedback(t.clientX, t.clientY);
 }
 
