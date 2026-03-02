@@ -790,32 +790,27 @@ if (deckElement) {
 // ==========================================
 
 function processDiscard(cardElement) {
-    if (!isMyTurn) return; // Mbrojtje e parë
-    isMyTurn = false; // Bllokoje menjëherë radhën
+    if (!isMyTurn) return;
+    isMyTurn = false; 
 
     const cardId = cardElement.dataset.id; 
-    const v = cardElement.dataset.v;
-    const s = cardElement.dataset.s;
-
-    if (!cardId) {
-        console.error("GABIM: Letra nuk ka ID!");
-        isMyTurn = true; // Ktheja radhën pasi dështoi
-        renderHand();
-        return;
-    }
-
+    
+    // Gjejmë objektin e PLOTË të letrës në memorje
     const cardIndex = doraImeData.findIndex(c => c.id === cardId);
     
     if (cardIndex !== -1) {
-        // 1. Dërgojmë menjëherë sinjalin te serveri
-        // Mos prit 400ms për socket-in, dërgoje tani!
-        socket.emit('cardDiscarded', { v, s, id: cardId });
+        const letraObjekt = doraImeData[cardIndex]; // Marrim objektin origjinal
 
+        console.log("Duke dërguar letrën në server:", letraObjekt);
+
+        // 1. DËRGIMI - Dërgojmë objektin e plotë, jo vetëm dataset-in
+        socket.emit('cardDiscarded', letraObjekt);
+
+        // --- PJESA E ANIMACIONIT (lihet siç është) ---
         const discardZone = document.getElementById('discard-pile');
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
 
-        // Stilizimi për animacion
         Object.assign(cardElement.style, {
             position: 'fixed',
             left: rect.left + 'px',
@@ -832,19 +827,15 @@ function processDiscard(cardElement) {
             cardElement.style.opacity = "0";
         });
         
-        // 2. Pas animacionit vetëm fshijmë elementin vizual
         setTimeout(() => {
             doraImeData.splice(cardIndex, 1); 
-            
             if (cardElement.parentNode) cardElement.remove();
-            
             renderHand(); 
-            if (typeof checkZionCondition === "function") checkZionCondition();
         }, 400);
 
     } else {
-        console.error("GABIM: Letra nuk u gjet! ID:", cardId);
-        isMyTurn = true; // Ktheja radhën pasi nuk u gjet letra
+        console.error("GABIM: Letra nuk u gjet lokalisht!");
+        isMyTurn = true;
         renderHand();
     }
 }
