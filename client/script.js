@@ -34,7 +34,11 @@ socket.on('lobbyMessage', (msg) => {
     const lobbyText = document.getElementById('lobby-text');
     if (lobbyText) lobbyText.innerText = msg;
 });
-
+const cardOrder = {
+    'A': 14, // E lartë për vargun 12-13-14 (Q-K-A)
+    '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+    'J': 11, 'Q': 12, 'K': 13
+};
 // 1. LIDHJA E BUTONIT START
 const btnstart = document.getElementById('btn-start');
 
@@ -1143,25 +1147,25 @@ socket.on('yourCards', (cards) => {
 // --- FUNDI I SCRIPT.JS ---
 
 // Sigurohemi që DOM është gati para se të aktivizojmë Sortable
-document.addEventListener('DOMContentLoaded', () => {
-    const handContainer = document.getElementById('player-hand');
+//document.addEventListener('DOMContentLoaded', () => {
+ //   const handContainer = document.getElementById('player-hand');
 
-    if (handContainer && typeof Sortable !== 'undefined') {
-        new Sortable(handContainer, {
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            onEnd: function (evt) {
+ //   if (handContainer && typeof Sortable !== 'undefined') {
+   //     new Sortable(handContainer, {
+ //           animation: 150,
+     //       ghostClass: 'sortable-ghost',
+   //         onEnd: function (evt) {
                 // 1. Ndryshojmë renditjen në array (shumë e rëndësishme!)
-                const movedCard = doraImeData.splice(evt.oldIndex, 1)[0];
-                doraImeData.splice(evt.newIndex, 0, movedCard);
+    //            const movedCard = doraImeData.splice(evt.oldIndex, 1)[0];
+    //            doraImeData.splice(evt.newIndex, 0, movedCard);
                 
-                // 2. Rifreskojmë vizatimin dhe kontrollojmë Zion-in
-                renderHand();
+    //            // 2. Rifreskojmë vizatimin dhe kontrollojmë Zion-in
+      //          renderHand();
                 
-                console.log("Renditja u përditësua në memorie!");
-            }
-        });
-    }
-});
+   //             console.log("Renditja u përditësua në memorie!");
+    //        }
+   //     });
+//    }
+// });
 
 console.log("Lidhja HTML -> Script: OK ✅");
