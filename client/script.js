@@ -87,44 +87,45 @@ socket.on('updateGameState', (data) => {
     }
 
  // 6. Update i Letrave (I rregulluar me mbrojtje nga Dragging)
+// 6. Update i Letrave (I përmirësuar për të ruajtur renditjen lokale)
 if (data.players) {
     const me = data.players.find(p => p.id === socket.id);
     if (me && me.cards) {
         
-        // Kriojmë ID-të për letrat e serverit
         const serverCardsWithIds = me.cards.map((card, index) => ({
             ...card,
             id: card.id || `${card.v}-${card.s}-${index}` 
         }));
 
-        // MBROJTJA: Nëse jam duke lëvizur një letër, mos e përditëso dorën nga serveri
-        // sepse renditja lokale është ajo që ka rëndësi në atë moment.
         const isDraggingAnyCard = document.querySelector('.card.dragging');
 
         if (!isDraggingAnyCard) {
-            // Kontrollojmë nëse ka ndryshim real (në numër ose në përmbajtje)
-            const countChanged = !doraImeData || doraImeData.length !== serverCardsWithIds.length;
-            
-            if (countChanged || doraImeData.length === 0) {
-                // Nëse po marrim letër të re (nga 10 në 11)
-                if (doraImeData && serverCardsWithIds.length > doraImeData.length) {
-                    const newCard = serverCardsWithIds.find(sc => !doraImeData.some(my => my.id === sc.id));
-                    if (newCard) {
-                        doraImeData.push(newCard);
-                    } else {
-                        doraImeData = [...serverCardsWithIds];
-                    }
-                } 
-                // Nëse po gjuajmë letër ose reset i plotë
-                else {
-                    doraImeData = [...serverCardsWithIds];
+            // RREGULLI I RI: Nëse kemi letër të re, shtoje në fund pa prishur renditjen tonë
+            if (doraImeData.length > 0 && serverCardsWithIds.length !== doraImeData.length) {
+                
+                if (serverCardsWithIds.length > doraImeData.length) {
+                    // Kemi marrë letër të re
+                    serverCardsWithIds.forEach(sCard => {
+                        const exists = doraImeData.some(myCard => myCard.id === sCard.id);
+                        if (!exists) {
+                            doraImeData.push(sCard); // E shton vetëm letrën e re në fund
+                        }
+                    });
+                } else {
+                    // Kemi hedhur letër - mbajmë vetëm ato që serveri thotë se i kemi akoma
+                    doraImeData = doraImeData.filter(myCard => 
+                        serverCardsWithIds.some(sCard => sCard.id === myCard.id)
+                    );
                 }
-
-                console.log("Serveri përditësoi dorën:", doraImeData.length);
+                
+                console.log("Dora u përditësua duke ruajtur renditjen.");
+                renderHand();
+            } 
+            // Nëse dora është bosh (fillimi i lojës), merre siç vjen
+            else if (doraImeData.length === 0) {
+                doraImeData = [...serverCardsWithIds];
                 renderHand();
             }
-        } else {
-            console.log("Update i dorës u injorua sepse jeni duke lëvizur një letër.");
         }
     }
 }
@@ -1046,10 +1047,13 @@ socket.on('initGame', () => {
 });
 
 socket.on('yourCards', (cards) => {
-    console.log("Mora letrat e mia nga serveri:", cards);
+    console.log("Mora letrat e mia:", cards);
     if (cards && Array.isArray(cards)) {
-        doraImeData = cards; 
-        renderHand();        
+        // Vetëm nëse dora është bosh e mbushim, përndryshe updateGameState merret me të
+        if (doraImeData.length === 0) {
+            doraImeData = cards.map((c, i) => ({...c, id: c.id || `${c.v}-${c.s}-${i}`}));
+            renderHand();
+        }
         checkZionCondition();    
     }
 });
