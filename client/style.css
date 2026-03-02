@@ -320,13 +320,13 @@ body {
     cursor: grabbing !important;
     opacity: 0.9;
     box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-    transform: scale(1.1) !important; /* E rritim pak */
+    transform: scale(1.1) !important;
     z-index: 9999 !important;
     
-    /* KËTO JANË KRITIKE: */
-    margin: 0 !important;        /* Heq -25px që e shtyn anash */
-    transition: none !important;  /* Ndalon vonesën e lëvizjes pas gishtit */
-    pointer-events: none;         /* Lejon detektimin e zonave poshtë letrës */
+    /* KËTO JANË ATO QË E NDALIN KËRCIMIN */
+    margin: 0 !important; 
+    transition: none !important; 
+    pointer-events: none; /* Shumë e rëndësishme për të detektuar stivën poshtë letrës */
 }
 
    #discard-pile.over {
