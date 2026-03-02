@@ -242,7 +242,7 @@ function startNewRound() {
     console.log("Lojtari aktiv (Dealer):", players[activePlayerIndex]?.name);
 
     // 6️⃣ Broadcast gjendja
-    broadcastState();
+    broadcastState(true);
 
     console.log("Raundi i ri është gati, gjendja u dërgua.");
 }
@@ -320,7 +320,7 @@ socket.on('startGame', () => {
         console.log("📢 Duke dërguar initGame te të gjithë...");
         io.emit('initGame');
         
-        broadcastState();
+        broadcastState(true);
         console.log("✅ Çdo gjë përfundoi me sukses!");
 
     } catch (error) {
@@ -425,7 +425,7 @@ if (player.cards.length < 11) {
     
     // I dërgojmë një sinjal specifik që t'i kthehet letra në dorë vizualisht
     socket.emit('errorMsg', "Duhet të kesh 11 letra për të hedhur (tërhiq një letër).");
-    broadcastState(); 
+    broadcastState(true);
     return;
 }
 
