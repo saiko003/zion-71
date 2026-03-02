@@ -645,7 +645,7 @@ function isDoraValid(cards) {
 
     return false;
 }
-unction pickCardFromDeck(newCardData) {
+function pickCardFromDeck(newCardData) {
     const deckElement = document.getElementById('deck-pile'); 
     const handContainer = document.getElementById('player-hand');
     
