@@ -380,19 +380,20 @@ function onDragStart(e) {
     dragElement = div;
     div.classList.add('dragging');
 
-    // Kjo pjesë ndalon "kërcimin" që pamë në video
+    document.body.appendChild(div); 
+
     Object.assign(div.style, {
         position: 'fixed',
-        zIndex: '1000',
+        zIndex: '10000',
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px',
-        // I japim koordinatat e saktë që ka në atë moment
+        // Vendose letrën ekzaktë aty ku ishte para se ta lëviznim prindin
         left: rect.left + 'px',
         top: rect.top + 'px',
         margin: '0',
         transform: 'none',
-        transition: 'none' 
+        transition: 'none'
     });
 
     document.addEventListener('mousemove', onDragMove);
