@@ -272,25 +272,39 @@ socket.on('startGame', () => {
    
     
     // TËRHEQJA E LETRËS (Pika 12)
-    socket.on('drawCard', () => {
+socket.on('drawCard', () => {
     const player = players[activePlayerIndex];
     
-    // 1. Kontrolli i radhës dhe i numrit të letrave (duhet të ketë saktësisht 10 për të tërhequr)
-    if (!player || player.id !== socket.id || player.cards.length !== 10) return;
+    // 1. Kontrolli i sigurisë
+    if (!player) return;
 
-    // 2. Sigurohemi që deçka (deck) nuk është bosh
-    if (gameDeck && gameDeck.length > 0){
-        const drawnCard = gameDeck.pop(); // Marrim letrën e fundit
+    // Kontrolli i radhës
+    if (player.id !== socket.id) {
+        console.log(`⚠️ ${player.name} tentoi të tërheqë letër pa pasur radhën.`);
+        return; 
+    }
+
+    // Kontrolli i numrit të letrave
+    if (player.cards.length !== 10) {
+        console.log(`⚠️ ${player.name} ka ${player.cards.length} letra. Nuk mund të tërheqë tjetër.`);
+        
+        // SHPËTIMI: I dërgojmë lojtarit gjendjen aktuale që t'i zhbllokohet ekrani
+        broadcastState(); 
+        return;
+    }
+
+    // 2. Tërheqja e letrës
+    if (gameDeck && gameDeck.length > 0) {
+        const drawnCard = gameDeck.pop();
         player.cards.push(drawnCard);
 
-        console.log(`${player.name} tërhoqi një letër. Tani ka ${player.cards.length} letra.`);
+        console.log(`✅ ${player.name} tërhoqi ${drawnCard.v}${drawnCard.s}. Tani ka ${player.cards.length} letra.`);
 
-        // 3. Njoftojmë lojtarin specifik dhe gjithë grupin
-         socket.emit('cardDrawn', drawnCard); // Mund ta mbash, por broadcastState mjafton
+        socket.emit('cardDrawn', drawnCard);
         broadcastState();
     } else {
-        console.log("Deçka është bosh! Nuk ka më letra për të tërhequr.");
-        // Këtu mund të shtosh logjikën për të rrotulluar discardPile nëse dëshiron
+        console.log("❌ Deçka është bosh!");
+        // Opsionale: Rrotullo letrat e hedhura (discardPile) te deku këtu
     }
 });
 
