@@ -428,11 +428,28 @@ function onDragMove(e) {
 
     const t = e.type.includes('touch') ? e.touches[0] : e;
     
-    // Lëvizja e letrës reale (ndjek gishtin 1:1)
-    dragElement.style.left = (t.clientX - parseFloat(dragElement.dataset.offsetX)) + 'px';
-    dragElement.style.top = (t.clientY - parseFloat(dragElement.dataset.offsetY)) + 'px';
+    // 1. Llogarisim pozicionin e ri
+    let x = t.clientX - parseFloat(dragElement.dataset.offsetX);
+    let y = t.clientY - parseFloat(dragElement.dataset.offsetY);
 
-    // Lëvizja e Placeholder-it brenda dorës
+    // --- FILLIMI I UPDATE-IT PËR XHOKERIN ---
+    const isJoker = dragElement.dataset.v === '★' || dragElement.classList.contains('joker');
+    
+    if (isJoker) {
+        const handContainer = document.getElementById('player-hand');
+        const handRect = handContainer.getBoundingClientRect();
+        
+        // Limiton 'y' që Xhokeri të mos dalë lart drejt stivës (Rregulli 18)
+        const limitTop = handRect.top - 70; 
+        if (y < limitTop) y = limitTop;
+    }
+    // --- FUNDI I UPDATE-IT ---
+
+    // Lëvizja e letrës reale
+    dragElement.style.left = x + 'px';
+    dragElement.style.top = y + 'px';
+
+    // Lëvizja e Placeholder-it brenda dorës (Logjika jote origjinale)
     const handContainer = document.getElementById('player-hand');
     const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
     
@@ -446,7 +463,6 @@ function onDragMove(e) {
 
     updateZonesFeedback(t.clientX, t.clientY);
 }
-
 function updateZonesFeedback(x, y) {
     const pile = document.getElementById('discard-pile');
     const victoryZone = document.getElementById('victory-drop-zone');
