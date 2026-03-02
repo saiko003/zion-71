@@ -1183,20 +1183,29 @@ socket.on('yourCards', (cards) => {
     console.log("DEBUG: Eventi yourCards u thirr. Letrat e marra:", cards);
     
     if (cards && Array.isArray(cards) && cards.length > 0) {
-        // FORCIMI: I japim ID çdo letre dhe i vendosim te variabla globale
+        // 1. Shfaqim tabelën e lojës dhe fshehim lobby-n (KRITIKE)
+        const gameTable = document.getElementById('game-table');
+        const lobby = document.getElementById('lobby-controls');
+        
+        if (gameTable) gameTable.style.display = 'block'; // Ose 'flex' varet nga CSS
+        if (lobby) lobby.style.display = 'none';
+        
+        // 2. Ruajmë të dhënat
         doraImeData = cards.map((c, i) => ({
             ...c, 
-            id: c.id || `${c.v}-${c.s}-${i}-${Math.random().toString(36).substr(2, 4)}`
+            id: c.id || `${c.v}-${c.s}-${i}-${Math.random().toString(36).substring(2, 6)}`
         }));
         
-        console.log("DEBUG: doraImeData u mbush. Numri i letrave:", doraImeData.length);
+        console.log("DEBUG: doraImeData u mbush. Numri:", doraImeData.length);
         
-        // E thërrasim renderHand pa kushte për herë të parë
-        renderHand();
-        
-        if (typeof checkZionCondition === "function") {
-            checkZionCondition();
-        }
+        // 3. Vizatojmë letrat me një vonesë të vogël (vonesa ndihmon që DOM-i të jetë gati)
+        setTimeout(() => {
+            renderHand();
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
+        }, 50);
+
     } else {
         console.error("GABIM: Serveri dërgoi 'yourCards' por data ishte e zbrazët!");
     }
@@ -1212,15 +1221,26 @@ document.addEventListener('DOMContentLoaded', () => {
         new Sortable(handContainer, {
             animation: 150,
             ghostClass: 'sortable-ghost',
+            // Shtojmë këtë që të mos bllokohet drag-and-drop në celular
+            delay: 0,
+            touchStartThreshold: 5,
             onEnd: function (evt) {
-                // 1. Ndryshojmë renditjen në array (shumë e rëndësishme!)
+                // KONTROLLI: Nëse nuk ka ndryshuar pozicioni, mos bëj asgjë
+                if (evt.oldIndex === evt.newIndex) return;
+
+                // 1. Përditësojmë vetëm memorien (array-un)
                 const movedCard = doraImeData.splice(evt.oldIndex, 1)[0];
                 doraImeData.splice(evt.newIndex, 0, movedCard);
                 
-                // 2. Rifreskojmë vizatimin dhe kontrollojmë Zion-in
-                renderHand();
+                console.log("Renditja e re në memorie:", doraImeData.map(c => c.v));
+
+                // 2. MOS e thirr renderHand() këtu! 
+                // Sortable e ka lëvizur vetë elementin në ekran.
                 
-                console.log("Renditja u përditësua në memorie!");
+                // 3. Kontrollo vetëm nëse është bërë ZION
+                if (typeof checkZionCondition === "function") {
+                    checkZionCondition();
+                }
             }
         });
     }
