@@ -334,53 +334,49 @@ socket.on('startGame', () => {
 socket.on('drawCard', () => {
     const player = players[activePlayerIndex];
     
-    // 1. Siguria: A ekziston lojtari dhe a është radha e tij?
     if (!player || player.id !== socket.id) {
         console.log(`⚠️ Jo radha e ${player?.name || 'panjohur'}`);
         return; 
     }
 
-    // 2. LOGJIKA E NUMRAVE (10 letra -> 11 letra)
-    // Nëse lojtari ka 11 letra (si Dealer-i në fillim), ai nuk guxon të tërheqë.
-    // Ai duhet të hedhë njëherë që të shkojë në 10, pastaj të tërheqë (nëse ky është rregulli).
-    // OSE sipas logjikës tënde: Lojtari që ka 10 letra, tërheq që të bëhet me 11.
     if (player.cards.length !== 10) {
-        console.log(`⚠️ ${player.name} ka ${player.cards.length} letra. Nuk mund të tërheqësh tani!`);
-        // I dërgojmë gjendjen që t'i zhbllokohet ekrani nëse ka provuar lëvizje të gabuar
-        broadcastState(); 
+        console.log(`⚠️ ${player.name} ka ${player.cards.length} letra. Nuk mund të tërheqësh!`);
+        broadcastState(false); 
         return;
     }
 
-    // 3. PROCESI I TËRHEQJES
     if (gameDeck && gameDeck.length > 0) {
         const drawnCard = gameDeck.pop();
         player.cards.push(drawnCard);
 
-        console.log(`✅ ${player.name} tërhoqi letrën. Tani ka ${player.cards.length} letra.`);
+        console.log(`✅ ${player.name} tërhoqi ${drawnCard.v}${drawnCard.s}.`);
 
-        // Dërgojmë njoftimin te lojtari specifik
+        // 1. Njoftojmë lojtarin që të nisë animacionin në ekranin e tij
         socket.emit('cardDrawn', drawnCard);
         
-        // Përditësojmë gjithë tavolinën
-        // SHËNIM: Këtu nuk e ndërrojmë radhën, sepse lojtari tani ka 11 letra dhe duhet të hedhë!
-        broadcastState();
-    } else {
-        console.log("❌ Deku është bosh! Duke rrotulluar letrat nga toka...");
+        // 2. I dërgojmë vetëm lojtarit dorën e re të përditësuar
+        socket.emit('yourCards', player.cards);
         
-        // Logjika opsionale nëse mbaron deku:
+        // 3. Njoftojmë të tjerët që ky lojtar tani ka 11 letra (pa u dërguar letrat tona)
+        broadcastState(false); 
+
+    } else {
+        console.log("❌ Deku është bosh! Duke rrotulluar letrat...");
         if (discardPile.length > 1) {
-            const lastCard = discardPile.pop(); // Ruajmë letrën e fundit në tokë
-            gameDeck = [...discardPile]; // Kthejmë mbetjet te deku
-            discardPile = [lastCard]; // Lëmë vetëm njërën në tokë
+            const lastCard = discardPile.pop();
+            gameDeck = [...discardPile];
+            discardPile = [lastCard];
             
-            // Përzierja e deku të ri
-            gameDeck.sort(() => Math.random() - 0.5);
+            shuffle(gameDeck); // Përdorim funksionin tonë shuffle
             
-            // Tërheqim pas rrotullimit
             const drawnCard = gameDeck.pop();
             player.cards.push(drawnCard);
+
             socket.emit('cardDrawn', drawnCard);
-            broadcastState();
+            socket.emit('yourCards', player.cards);
+            broadcastState(false);
+        } else {
+            socket.emit('errorMsg', "Nuk ka më letra në dek!");
         }
     }
 });
