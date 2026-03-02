@@ -474,28 +474,39 @@ socket.on('cardDiscarded', (card) => {
     }
 });
     // MBYLLJA (ZION!)
+// MBYLLJA (ZION!)
 socket.on('playerClosed', (data) => {
     const winner = players.find(p => p.id === socket.id);
     
-    // 1. KONTROLLI I SIGURISË
-    // Duhet të jetë radha e tij dhe duhet të ketë 11 letra (pasi ka tërhequr të fundit)
+    // 1. KONTROLLI I SIGURISË DHE VERIFIKIMI I LETRAVE
+    // Duhet të jetë radha e tij dhe duhet të ketë 11 letra
     if (!winner || winner.id !== players[activePlayerIndex].id || winner.cards.length !== 11) {
         console.log(`⚠️ Tentativë mbylljeje e pavlefshme nga ${winner?.name}`);
         socket.emit('errorMsg', "Nuk mund të mbyllësh lojën! Kontrollo letrat ose radhën.");
         return;
     }
 
+    // --- KONTROLLI I ZIONIT (Bllokon Q-K-A-2 dhe kombinimet e gabuara) ---
+    // Ky funksion kontrollon nëse të 11 letrat formojnë grupe/vargje valide
+    const isHandValid = checkRecursive(winner.cards, 0); 
+
+    if (!isHandValid) {
+        console.log(`❌ ${winner.name} tentoi të mbyllet me letra të parregullta!`);
+        socket.emit('errorMsg', "Kombinim i pavlefshëm! Vargu Q-K-A-2 nuk lejohet.");
+        return; // Ndalon procesin e mbylljes nëse letrat nuk janë në rregull
+    }
+    // --------------------------------------------------------------------
+
     // Përcaktojmë nëse u mbyll me letrën e fundit të dekut (Jackpot) 
-    // apo thjesht mbyllje normale
     const isJackpotWin = data.isJackpotClosing || false;
-    console.log(`🏆 RAUNDI U MBYLL: ${winner.name} fiton! (Jackpot: ${isJackpotWin})`);
+    console.log(`🏆 RAUNDI U MBYLL RREGULLISHT: ${winner.name} fiton! (Jackpot: ${isJackpotWin})`);
 
     // 2. LLOGARITJA E PIKËVE PËR TË GJITHË
     players.forEach(p => {
         if (p.isOut) return; // Lojtarët e djegur nuk preken
 
         if (p.id !== winner.id) {
-            // Llogarisim pikët e letrave që i kanë mbetur në dorë
+            // Llogarisim pikët e letrare që i kanë mbetur në dorë
             let roundPoints = calculateScore(p.cards); 
             
             // Nëse fituesi u mbyll me Jackpot, pikët ndëshkuese dyfishohen
@@ -506,7 +517,7 @@ socket.on('playerClosed', (data) => {
             // Shtohen pikët në totalin kumulativ
             p.score += roundPoints;
             
-            // Regjistrojmë historikun (shënojmë me "!" pikët e dyfishuara)
+            // Regjistrojmë historikun
             p.history.push(isJackpotWin ? `${roundPoints}!` : roundPoints);
             
             // Kontrolli i djegies (71 ose më shumë)
@@ -515,7 +526,7 @@ socket.on('playerClosed', (data) => {
                 console.log(`💀 Lojtari ${p.name} u dogj (Score: ${p.score})`);
             }
         } else {
-            // Për fituesin shënojmë "X" dhe nuk i shtojmë pikë
+            // Për fituesin shënojmë "X"
             p.history.push("X");
         }
     });
@@ -536,7 +547,6 @@ socket.on('playerClosed', (data) => {
     // 4. NDRYSHIMI I DEALER-IT PËR RAUNDIN TJETËR
     dealerIndex = (dealerIndex + 1) % players.length;
     
-    // Kalojmë dealer-in te lojtari i radhës që nuk është i djegur
     let safetyCounter = 0;
     while(players[dealerIndex].isOut && safetyCounter < players.length) {
         dealerIndex = (dealerIndex + 1) % players.length;
@@ -547,19 +557,17 @@ socket.on('playerClosed', (data) => {
     discardPile = [];   
     jackpotCard = null; 
 
-    // 5. KONTROLLI I FUNDIT TË LOJËS (A mbeti dikush?)
+    // 5. KONTROLLI I FUNDIT TË LOJËS
     const activePlayers = players.filter(p => !p.isOut);
     
     if (activePlayers.length <= 1) {
         const finalWinner = activePlayers.length === 1 ? activePlayers[0].name : "Askush";
         io.emit('gameOver', { winner: finalWinner });
         console.log(`🏁 LOJA PËRFUNDOI! Fituesi final: ${finalWinner}`);
-        // Këtu mund të resetosh serverin ose të presësh për restart
     } else {
-        // Fillimi i raundit të ri pas 4 sekondave (t'u japim kohë të shohin rezultatet)
         setTimeout(() => {
             console.log("♻️ Duke nisur raundin e ri...");
-            startNewRound(); // Sigurohu që ky funksion jep 11 letra Dealer-it dhe 10 të tjerëve
+            startNewRound(); 
         }, 4000); 
     }
 });
