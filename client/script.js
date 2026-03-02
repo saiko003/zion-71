@@ -472,16 +472,20 @@ function updateZonesFeedback(x, y) {
 function onDragEnd(e) {
     if (!dragElement) return;
 
-    const t = e.type.includes('touch') ? (e.changedTouches[0] || e.touches[0]) : e;
+    // 1. KORRIGJIMI PËR TOUCH (Që stiva ta shohë letrën saktë në Mobile)
+    const t = e.type.includes('touch') ? 
+              (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e.touches[0]) : 
+              e;
+
     const pile = document.getElementById('discard-pile');
     const victoryZone = document.getElementById('victory-drop-zone');
     const handContainer = document.getElementById('player-hand');
-    const tolerance = 50;
+    const tolerance = 60; // E rrita pak për siguri që ta kapë më lehtë stivën
 
     let isOverPile = false;
     let isOverVictory = false;
 
-    // 1. Detektimi i zonave (Logjika jote origjinale)
+    // Detektimi i zonave (Logjika jote origjinale)
     if (pile && t) {
         const r = pile.getBoundingClientRect();
         isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
@@ -500,10 +504,10 @@ function onDragEnd(e) {
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
-    // 2. KUSHTI PËR ZION
+    // 2. KUSHTI PËR ZION (Logjika jote e paprekur)
     if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
-            if (placeholder) placeholder.remove();
+            if (typeof placeholder !== 'undefined' && placeholder) placeholder.remove();
             socket.emit('declareZion', { 
                 discardedCard: { v: dragElement.dataset.v, s: dragElement.dataset.s },
                 hand: doraImeData.filter(c => c.id !== dragElement.dataset.id)
@@ -515,22 +519,22 @@ function onDragEnd(e) {
         }
     } 
 
-    // 3. KUSHTI PËR HEDHJE (Discard)
+    // 3. KUSHTI PËR HEDHJE (Logjika jote e paprekur)
     if (isOverPile && isMyTurn && doraImeData.length === 11) {
-        if (placeholder) placeholder.remove();
+        if (typeof placeholder !== 'undefined' && placeholder) placeholder.remove();
         processDiscard(dragElement);
     } else {
-        // 4. KTHIMI DHE RUAJTJA (Nëse nuk u hodh)
-        if (placeholder && placeholder.parentNode) {
-            // E vendosim letrën ekzaktesisht te vendi që i ruajti placeholder-i
+        // 4. KTHIMI DHE RUAJTJA (Me update për Placeholder)
+        if (typeof placeholder !== 'undefined' && placeholder && placeholder.parentNode) {
+            // E kthejmë te vendi që i ruajti placeholder-i
             placeholder.parentNode.insertBefore(dragElement, placeholder);
         } else if (dragElement.parentNode !== handContainer) {
             handContainer.appendChild(dragElement);
         }
 
-        if (placeholder) placeholder.remove();
+        if (typeof placeholder !== 'undefined' && placeholder) placeholder.remove();
 
-        // Pastrojmë stilet
+        // Pastrimi i stileve inline
         Object.assign(dragElement.style, {
             position: '', zIndex: '', pointerEvents: '', 
             width: '', height: '', left: '', top: '',
@@ -538,7 +542,7 @@ function onDragEnd(e) {
         });
         dragElement.classList.remove('dragging');
 
-        // RUAJTJA E RENDITJES
+        // Ruajtja e renditjes (Logjika jote origjinale)
         const currentCards = [...handContainer.querySelectorAll('.card')];
         doraImeData = currentCards.map(c => ({
             v: c.dataset.v,
