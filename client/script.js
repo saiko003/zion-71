@@ -479,6 +479,9 @@ function onDragEnd(e) {
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
+    // 1. SHTO KËTË: Hiq klasën dragging menjëherë që të ri-aktivizohen stilet e dorës
+    dragElement.classList.remove('dragging');
+
     // VENDIMI
     if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         if (confirm("A dëshiron të MBYLLËSH lojën (ZION) me këtë letër?")) {
@@ -501,11 +504,17 @@ function onDragEnd(e) {
             v: cardEl.dataset.v, s: cardEl.dataset.s, id: cardEl.dataset.id 
         }));
         
+        // 2. SHTO KËTË: Pastrim i plotë i stileve inline që letra të kthehet te CSS-ja bazë
         Object.assign(dragElement.style, {
-            position: '', zIndex: '', pointerEvents: '', width: '', height: '', left: '', top: ''
+            position: '', zIndex: '', pointerEvents: '', 
+            width: '', height: '', left: '', top: '',
+            margin: '', transform: '', transition: '' // SHTO KËTO TË TRIJA
         });
+        
         renderHand(); 
     }
+    
+    // 3. SHTO KËTË: Sigurohu që dragElement bëhet null në fund
     finalizeCleanup();
 }
 
