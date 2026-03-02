@@ -410,47 +410,48 @@ socket.on('drawCard', () => {
 });
     
 socket.on('cardDiscarded', (card) => {
-    // 1. SHTOJE KËTU: Shih nëse po vijnë të dhënat saktë nga Front-end
-    console.log("--- DEBUG: Serveri mori kërkesën për hedhje ---");
-    console.log("Letra që erdhi:", card);
+    // 1. LOG PËR DEBUG (E rëndësishme për të parë terminalin)
+    console.log(`--- Tentativë hedhjeje nga ${socket.id} ---`);
+    console.log("Të dhënat e letrës që erdhën:", card);
 
     const player = players[activePlayerIndex];
 
-    // Sigurohemi që lojtari ekziston dhe është radha e tij
+    // 2. KONTROLLI I RADHËS
     if (!player || player.id !== socket.id) {
         console.log(`⚠️ Tentativë jashtë radhës nga: ${socket.id}`);
+        // Nuk bëjmë broadcastState këtu sepse nuk duam të ndërhyjmë te lojtari që ka radhën
         return;
     }
 
-    // Kontrolli i sasisë
+    // 3. KONTROLLI I SASISË (Duhet të ketë 11 që të hedhë)
     if (player.cards.length < 11) { 
-        console.log(`⚠️ ${player.name} ka vetëm ${player.cards.length} letra.`);
-        socket.emit('errorMsg', "Duhet të kesh 11 letra për të hedhur.");
-        broadcastState(true);
+        console.log(`⚠️ ${player.name} tentoi të hidhte me ${player.cards.length} letra.`);
+        socket.emit('errorMsg', "Duhet të kesh 11 letra për të hedhur (tërhiq një letër).");
+        broadcastState(true); // Refreskojmë dorën e lojtarit
         return;
     }
 
-    // Mbrojtja e Xhokerit
-    if (card.v === '★' || card.v === 'Jokeri' || card.v === 'Xhoker') {
+    // 4. MBROJTJA E XHOKERIT (Ylli nuk lejohet të hidhet)
+    if (card.v === '★' || card.v === 'Jokeri' || card.v === 'joker' || card.v === 'Xhoker') {
         console.log(`🚫 Bllokuar: ${player.name} tentoi të hidhte Xhokerin.`);
-        socket.emit('errorMsg', "Xhokeri nuk mund të hidhet në tokë!");
+        socket.emit('errorMsg', "Xhokeri (Ylli) nuk mund të hidhet në tokë!");
         broadcastState(true); 
         return; 
     }
 
-    // Gjetja e letrës
+    // 5. GJETJA E LETRËS (Me ID ose Vlerë/Shenjë)
     const cardIndex = player.cards.findIndex(c => 
         (card.id && c.id === card.id) || (c.v === card.v && c.s === card.s)
     );
     
     if (cardIndex !== -1) {
-        // RASTI SUKSES: Letra u gjet
+        // SUKSES: Letra u gjet në server
         const removedCard = player.cards.splice(cardIndex, 1)[0];
         discardPile.push(removedCard);
         
-        console.log(`✅ ${player.name} hodhi ${removedCard.v}${removedCard.s}.`);
+        console.log(`✅ ${player.name} hodhi ${removedCard.v}${removedCard.s}. Mbeti me ${player.cards.length} letra.`);
 
-        // Ndërrimi i radhës
+        // 6. NDËRRIMI I RADHËS (Stafeta)
         let startingIndex = activePlayerIndex;
         do {
             activePlayerIndex = (activePlayerIndex + 1) % players.length;
@@ -458,18 +459,16 @@ socket.on('cardDiscarded', (card) => {
         
         console.log(`➡️ Radha kaloi te: ${players[activePlayerIndex].name}`);
 
-        // SHTOJE KËTU: Dërgojmë 'true' që të përditësohen letrat në dorë (nga 11 në 10)
-        broadcastState(true); 
+        // 7. SINKRONIZIMI (Me 'true' për të përditësuar letrat private)
+        broadcastState(true);
 
     } else {
-        // 2. SHTOJE KËTU: Çfarë ndodh nëse letra nuk gjendet?
-        console.log(`❌ GABIM: Letra ${card.v}${card.s} nuk u gjet në dorën e ${player.name}`);
+        // GABIM: Letra nuk u gjet (Sinkronizim i dështuar)
+        console.log(`❌ GABIM: Letra ${card.v}${card.s} me ID ${card.id} nuk u gjet te ${player.name}`);
         
-        // I dërgojmë një gabim lojtarit
-        socket.emit('errorMsg', "Gabim: Letra nuk u gjet në server. Provoni të rifreskoni.");
+        socket.emit('errorMsg', "Gabim sinkronizimi! Letra po kthehet në dorë.");
         
-        // KRITIKE: Thërrasim broadcastState(true) dhe shtojmë RETURN
-        // Kjo ia rikthen letrën lojtarit në dorë që mos t'i zhduket pa u hedhur në stivë
+        // KRITIKE: Ky rresht zhbllokon lojën dhe ia kthen letrën lojtarit
         broadcastState(true);
         return; 
     }
