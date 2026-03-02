@@ -1205,25 +1205,25 @@ socket.on('yourCards', (cards) => {
 // --- FUNDI I SCRIPT.JS ---
 
 // Sigurohemi që DOM është gati para se të aktivizojmë Sortable
-//document.addEventListener('DOMContentLoaded', () => {
- //   const handContainer = document.getElementById('player-hand');
+document.addEventListener('DOMContentLoaded', () => {
+    const handContainer = document.getElementById('player-hand');
 
- //   if (handContainer && typeof Sortable !== 'undefined') {
-   //     new Sortable(handContainer, {
- //           animation: 150,
-     //       ghostClass: 'sortable-ghost',
-   //         onEnd: function (evt) {
+    if (handContainer && typeof Sortable !== 'undefined') {
+        new Sortable(handContainer, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function (evt) {
                 // 1. Ndryshojmë renditjen në array (shumë e rëndësishme!)
-    //            const movedCard = doraImeData.splice(evt.oldIndex, 1)[0];
-    //            doraImeData.splice(evt.newIndex, 0, movedCard);
+                const movedCard = doraImeData.splice(evt.oldIndex, 1)[0];
+                doraImeData.splice(evt.newIndex, 0, movedCard);
                 
-    //            // 2. Rifreskojmë vizatimin dhe kontrollojmë Zion-in
-      //          renderHand();
+                // 2. Rifreskojmë vizatimin dhe kontrollojmë Zion-in
+                renderHand();
                 
-   //             console.log("Renditja u përditësua në memorie!");
-    //        }
-   //     });
-//    }
-// });
+                console.log("Renditja u përditësua në memorie!");
+            }
+        });
+    }
+});
 
 console.log("Lidhja HTML -> Script: OK ✅");
