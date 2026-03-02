@@ -109,6 +109,24 @@ socket.on('updateGameState', (data) => {
         if (lobbyControls) lobbyControls.style.display = 'flex';
         if (gameTable) gameTable.style.display = 'none';
     }
+    // 5. Kontrolli i Radhës (Glow & Status)
+    isMyTurn = (data.activePlayerId === socket.id);
+    document.body.classList.toggle('my-turn-glow', isMyTurn);
+    
+    if (statusTeksti) statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
+    if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
+
+    // --- SHTO KËTË PJESË KËTU ---
+    const deckElement = document.getElementById('deck-zion') || document.getElementById('deck-pile');
+    if (deckElement) {
+        // Logjika: Ndihet vetëm nëse është radha ime DHE kam 10 letra
+        // (Që do të thotë sapo kam hedhur njërën dhe serveri pret të tërheq)
+        if (isMyTurn && doraImeData.length === 10) {
+            deckElement.classList.add('deck-glow');
+        } else {
+            deckElement.classList.remove('deck-glow');
+        }
+    }
     
 // 6. Update i Letrave (Versioni që ruan renditjen dhe bën
 if (data.players) {
