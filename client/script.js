@@ -179,8 +179,9 @@ if (data.players) {
 
 // 7. Kontrolli i dritës së Dekut (E SHTUAR)
 const deckElement = document.getElementById('deck-zion') || document.getElementById('deck-pile');
-if (deckElement) {
-    // Nëse është radha ime dhe kam 10 letra, deku duhet të ndriçojë (Glow)
+
+// Kontrollojmë nëse deckElement ekziston DHE nëse doraImeData nuk është null
+if (deckElement && doraImeData) {
     if (isMyTurn && doraImeData.length === 10) {
         deckElement.classList.add('deck-glow');
     } else {
