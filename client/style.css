@@ -322,11 +322,13 @@ body {
     box-shadow: 0 15px 30px rgba(0,0,0,0.8);
     transform: scale(1.1) !important;
     z-index: 9999 !important;
-    
-    /* KËTO JANË ATO QË E NDALIN KËRCIMIN */
+    position: fixed !important;
+    top: 0;
+    left: 0;
     margin: 0 !important; 
     transition: none !important; 
     pointer-events: none; /* Shumë e rëndësishme për të detektuar stivën poshtë letrës */
+    will-change: transform; /* Optimizim për celular */
 }
 
    #discard-pile.over {
