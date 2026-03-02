@@ -377,37 +377,39 @@ function renderHand() {
 }
 
 function onDragStart(e) {
-    // Nëse po lëvizim diçka, mos nis tjetër
-    if (dragElement) return; 
-    
+    if (dragElement) return;
+
     const isTouch = e.type === 'touchstart';
     const t = isTouch ? e.touches[0] : e;
     const div = e.currentTarget;
     
-    // Mos lejo dragging nëse letra sapo është hedhur
-    if (div.style.opacity === '0') return;
-
+    // 1. Marrim pozicionin e saktë në ekran para se ta lëvizim
     const rect = div.getBoundingClientRect();
+
+    // 2. Ruajmë distancën mes gishtit dhe cepit të letrës
     div.dataset.offsetX = t.clientX - rect.left;
     div.dataset.offsetY = t.clientY - rect.top;
 
     dragElement = div;
     div.classList.add('dragging');
 
+    // 3. E zhvendosim te BODY menjëherë
+    document.body.appendChild(div);
+
+    // 4. I japim stilet FIXED që të mos varet nga pozicioni i dorës
     Object.assign(div.style, {
         position: 'fixed',
         zIndex: '10000',
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px',
+        // Kjo i thotë: Qëndro ekzaktesisht aty ku ishe (në dorë) por si element i lirë
         left: rect.left + 'px',
         top: rect.top + 'px',
         margin: '0',
         transform: 'none',
         transition: 'none'
     });
-
-    document.body.appendChild(div);
 
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('touchmove', onDragMove, { passive: false });
@@ -420,11 +422,14 @@ function onDragMove(e) {
 
     const t = e.type.includes('touch') ? e.touches[0] : e;
     
-    // Lëvizja e lirë në ekran
-    dragElement.style.left = (t.clientX - parseFloat(dragElement.dataset.offsetX)) + 'px';
-    dragElement.style.top = (t.clientY - parseFloat(dragElement.dataset.offsetY)) + 'px';
+    // Përdorim clientX/Y që janë koordinatat e pastra të ekranit
+    const x = t.clientX - parseFloat(dragElement.dataset.offsetX);
+    const y = t.clientY - parseFloat(dragElement.dataset.offsetY);
 
-    // Renditja vizuale (Gjejmë vendin në dorë pa e futur letrën akoma aty)
+    dragElement.style.left = x + 'px';
+    dragElement.style.top = y + 'px';
+
+    // Logjika e renditjes (renditja në dorë ndërkohë që e lëvizim)
     const handContainer = document.getElementById('player-hand');
     const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
     
@@ -433,8 +438,6 @@ function onDragMove(e) {
         return t.clientX <= r.left + r.width / 2;
     });
 
-    // Kjo krijon një "vrimë" vizuale në dorë që lojtari ta shohë ku po e vë letrën
-    // (Për momentin thjesht lëvizim renditjen në DOM)
     if (nextSibling) handContainer.insertBefore(dragElement, nextSibling);
     else handContainer.appendChild(dragElement);
 
