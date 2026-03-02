@@ -86,23 +86,30 @@ function endRound(winnerId) {
         startNewRound(); 
     }, 5000);
 }
-// Krijimi i 2 pakove me letra (104 letra)
 function createDeck() {
     const suits = ['♠', '♣', '♥', '♦'];
     const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     let newDeck = [];
     
-    // 2 pako (104 letra gjithsej)
     for (let p = 0; p < 2; p++) {
         for (let s of suits) {
             for (let v of values) {
-                newDeck.push({ v, s });
+                newDeck.push({ 
+                    v, 
+                    s, 
+                    // ID unike: p-ja tregon nga cila pako vjen, s-simboli, v-vlera
+                    id: `c-${p}-${s}-${v}` 
+                });
             }
         }
     }
     
-    // Shuffle (Përzierja)
-    return newDeck.sort(() => Math.random() - 0.5);
+    // Përzierja më e mirë (Fisher-Yates)
+    for (let i = newDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+    }
+    return newDeck;
 }
 function startNewRound() {
     console.log("==== Duke nisur raund të ri ZION 71 ====");
@@ -139,17 +146,23 @@ function startNewRound() {
             return; 
         }
 
-        // RESET letrat e vjetra
         player.cards = []; 
 
-        // Xhokeri (Ylli i Zionit)
-        const myJoker = { v: '★', s: 'Jokeri' };
+        // Xhokeri (Ylli i Zionit) me ID unike që të mos bllokohet kodi
+        const myJoker = { 
+            v: '★', 
+            s: 'Jokeri', 
+            id: `joker-${player.id}-${Date.now()}`, // ID unike për këtë lojtar
+            fixed: true 
+        };
 
-        // Rregulli yt: Dealer merr 10 nga deck (+1 xhoker = 11), të tjerët 9 (+1 xhoker = 10)
+        // Rregulli yt: Dealer 10 nga deck, të tjerët 9
         let sasiaNgaDeck = (index === dealerIndex) ? 10 : 9;
+        
+        // Sigurohemi që marrim letrat me ID-të e tyre unike nga createDeck i ri
         let letratNgaDeck = gameDeck.splice(0, sasiaNgaDeck);
 
-        // Bashkim i letrave
+        // Bashkimi: Xhokeri + letrat normale
         player.cards = [myJoker, ...letratNgaDeck];
 
         console.log(`DEBUG: ${player.name} - Mori ${player.cards.length} letra.`);
