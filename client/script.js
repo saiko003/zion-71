@@ -366,7 +366,17 @@ function renderHand() {
 }
 
 function onDragStart(e) {
+    // Kjo parandalon që telefoni ta llogarisë prekjen si Mouse Click dhe Touch në të njëjtën kohë
+    if (e.type === 'touchstart') {
+        // e.preventDefault(); // Mund ta aktivizosh nëse browseri nuk ankohet për passive
+        e.stopPropagation(); 
+    }
+
     const div = e.currentTarget;
+    
+    // Sigurohemi që nuk po zvarritim një letër që është tashmë duke u lëvizur
+    if (div.classList.contains('dragging')) return;
+
     const t = e.type.includes('touch') ? e.touches[0] : e;
     const rect = div.getBoundingClientRect();
 
@@ -385,11 +395,14 @@ function onDragStart(e) {
         top: rect.top + 'px'
     });
 
-    // Eventet globale
-    document.addEventListener('mousemove', onDragMove);
-    document.addEventListener('touchmove', onDragMove, { passive: false });
-    document.addEventListener('mouseup', onDragEnd);
-    document.addEventListener('touchend', onDragEnd);
+    // Shto dëgjuesit globalë bazuar në llojin e pajisjes
+    if (e.type === 'touchstart') {
+        document.addEventListener('touchmove', onDragMove, { passive: false });
+        document.addEventListener('touchend', onDragEnd);
+    } else {
+        document.addEventListener('mousemove', onDragMove);
+        document.addEventListener('mouseup', onDragEnd);
+    }
 }
 
 function onDragMove(e) {
