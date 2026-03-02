@@ -366,44 +366,32 @@ function renderHand() {
 }
 
 function onDragStart(e) {
-    // 1. Përcaktojmë nëse është Touch apo Mouse
     const isTouch = e.type === 'touchstart';
-    
-    // 2. Parandalojmë konfliktet në Mobile (Ghost Clicks)
-    if (isTouch) {
-        // e.preventDefault(); // Hiqe komentin nëse nuk të bllokon scroll-in
-        e.stopPropagation();
-    }
-
+    const t = isTouch ? e.touches[0] : e;
     const div = e.currentTarget;
     
-    // Siguri që nuk po kapim dy letra njëherësh
-    if (div.classList.contains('dragging')) return;
-
-    const t = isTouch ? e.touches[0] : e;
     const rect = div.getBoundingClientRect();
 
-    dragElement = div;
+    // Kjo llogaritje eshte kyc: sa pixel larg skajit te majte/lart te letres eshte gishtit yt?
     div.dataset.offsetX = t.clientX - rect.left;
     div.dataset.offsetY = t.clientY - rect.top;
+
+    dragElement = div;
     div.classList.add('dragging');
 
-    // Stilet vizuale
     Object.assign(div.style, {
         position: 'fixed',
         zIndex: '1000',
         pointerEvents: 'none',
         width: rect.width + 'px',
         height: rect.height + 'px',
+        // I japim pozicionin fiks aty ku eshte aktualisht letra
         left: rect.left + 'px',
         top: rect.top + 'px'
     });
 
-    // 3. SHTOJMË TË DYJA LLOJET E EVENTEVE (Zgjidhja e problemit të mausit)
-    // Kjo siguron që kodi dëgjon si mausin ashtu edhe gishtin
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('touchmove', onDragMove, { passive: false });
-    
     document.addEventListener('mouseup', onDragEnd);
     document.addEventListener('touchend', onDragEnd);
 }
@@ -414,21 +402,25 @@ function onDragMove(e) {
 
     const t = e.type.includes('touch') ? e.touches[0] : e;
     
-    dragElement.style.left = (t.clientX - parseFloat(dragElement.dataset.offsetX)) + 'px';
-    dragElement.style.top = (t.clientY - parseFloat(dragElement.dataset.offsetY)) + 'px';
+    // Llogaritja e pozicionit te ri
+    const x = t.clientX - parseFloat(dragElement.dataset.offsetX);
+    const y = t.clientY - parseFloat(dragElement.dataset.offsetY);
 
-    // Renditja dinamike në dorë
+    dragElement.style.left = x + 'px';
+    dragElement.style.top = y + 'px';
+
+    // Renditja dinamike (pjesa jote qe punon mire)
     const handContainer = document.getElementById('player-hand');
     const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
     const nextSibling = siblings.find(sibling => {
         const r = sibling.getBoundingClientRect();
+        // Kontrollojme nese jemi ne gjysmen e letres tjeter per ta lene vendin
         return t.clientX <= r.left + r.width / 2;
     });
 
     if (nextSibling) handContainer.insertBefore(dragElement, nextSibling);
     else handContainer.appendChild(dragElement);
 
-    // Feedback vizual për Piles
     updateZonesFeedback(t.clientX, t.clientY);
 }
 
