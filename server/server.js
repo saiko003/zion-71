@@ -90,25 +90,33 @@ function createDeck() {
     const suits = ['♠', '♣', '♥', '♦'];
     const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     let newDeck = [];
+    let idCounter = 1; // Numërues për ID unike
     
+    // Krijojmë 2 pako letra (104 letra gjithsej)
     for (let p = 0; p < 2; p++) {
         for (let s of suits) {
             for (let v of values) {
                 newDeck.push({ 
-                    v, 
-                    s, 
-                    // ID unike: p-ja tregon nga cila pako vjen, s-simboli, v-vlera
-                    id: `c-${p}-${s}-${v}` 
+                    v: v, 
+                    s: s, 
+                    // ID unike e pastër: psh "c-1", "c-2"... deri në "c-104"
+                    id: `c-${idCounter++}` 
                 });
             }
         }
     }
+
+    // Shto 2 Xhokerë (nëse i përdorni në Zion 71)
+    // newDeck.push({ v: '★', s: 'Joker', id: `j-105` });
+    // newDeck.push({ v: '★', s: 'Joker', id: `j-106` });
     
-    // Përzierja më e mirë (Fisher-Yates)
+    // Përzierja (Fisher-Yates Shuffle) - E ke bërë shumë mirë!
     for (let i = newDeck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
     }
+
+    console.log("Deku u krijua me", newDeck.length, "letra.");
     return newDeck;
 }
 function startNewRound() {
