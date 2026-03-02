@@ -35,43 +35,67 @@ socket.on('lobbyMessage', (msg) => {
     if (lobbyText) lobbyText.innerText = msg;
 });
 
+// 1. LIDHJA E BUTONIT START
 const btnstart = document.getElementById('btn-start');
 
-// 2. Kontrollojmë nëse butoni ekziston para se t'i vëmë "EventListener"
 if (btnstart) {
+    btnstart.onclick = null; // Siguria e parë
     btnstart.addEventListener('click', () => {
         console.log("🚀 Po dërgoj startGame te serveri...");
         socket.emit('startGame');
     });
-} else {
-    // Kjo të ndihmon të kuptosh nëse ID-ja në HTML është e saktë
-    console.error("Butoni 'btn-start' nuk u gjet në HTML!");
 }
 
-if (deckElement) {
-    deckElement.onclick = () => {
-        // Tërheqim letër vetëm nëse është radha jonë dhe kemi 10 letra
+// 2. LIDHJA E VETME DHE E PASTER PER DEKUN (ZION)
+const realDeck = document.getElementById('deck-zion') || document.getElementById('deck-pile');
+
+if (realDeck) {
+    // Fshijmë onclick-un e vjetër që kishe te 'deckElement'
+    realDeck.onclick = null; 
+
+    realDeck.addEventListener('click', () => {
+        console.log("Klikuar mbi dekun...");
+
+        // Logjika e saktë: Radha jote dhe 10 letra
         if (isMyTurn && doraImeData.length === 10) {
+            tookJackpotThisTurn = false; 
             socket.emit('drawCard');
-        } else if (doraImeData.length === 11) {
-            alert("Duhet të hedhësh një letër para se të marrësh një tjetër!");
+            console.log("✅ Kërkesa u dërgua: drawCard");
+        } 
+        else if (isMyTurn && doraImeData.length === 11) {
+            alert("Ti e ke marrë letrën! Tani duhet të hedhësh një në tokë.");
         }
-    };
+        else if (!isMyTurn) {
+            console.warn("Prit radhën tënde!");
+        }
+    });
 }
 
-// 1. LIDHJA E KLIKIMIT TË DEKUT (ZION)
+// 1. LIDHJA E KLIKIMIT TË DEKUT (ZION) - Versioni i Pastër
 const deckZion = document.getElementById('deck-zion'); 
 
 if (deckZion) {
-    deckZion.onclick = () => {
-        // Kontrollojmë: A është radha ime dhe a kam 10 letra?
+    // Fshijmë çdo 'onclick' të vjetër që mund të jetë deklaruar diku tjetër
+    deckZion.onclick = null; 
+
+    // Përdorim addEventListener që është më i sigurt
+    deckZion.addEventListener('click', () => {
+        // Kontrollojmë: A është radha ime dhe a kam saktësisht 10 letra?
         if (isMyTurn && doraImeData.length === 10) {
+            
+            // Opsionale: Mund ta markojmë që sapo tërhoqi letër që të mos klikohet dot 2 herë brenda sekondës
+            // tookJackpotThisTurn = false; 
+
             socket.emit('drawCard');
-            console.log("U dërgua kërkesa për të marrë letër nga deku.");
-        } else if (doraImeData.length === 11) {
+            console.log("✅ U dërgua kërkesa për të marrë letër nga deku.");
+        } 
+        else if (isMyTurn && doraImeData.length === 11) {
             alert("Ti e ke marrë letrën! Tani duhet të hedhësh një në tokë.");
         }
-    };
+        else if (!isMyTurn) {
+            console.log("Nuk është radha jote, prit pak.");
+        }
+    });
 }
 
 socket.on('updateGameState', (data) => {
@@ -85,42 +109,47 @@ socket.on('updateGameState', (data) => {
         if (lobbyControls) lobbyControls.style.display = 'flex';
         if (gameTable) gameTable.style.display = 'none';
     }
-
-// 6. Update i Letrave (Versioni që ruan renditjen dhe bën animacion)
+    
+// 6. Update i Letrave (Versioni që ruan renditjen dhe bën
 if (data.players) {
     const me = data.players.find(p => p.id === socket.id);
     if (me && me.cards) {
         
+        // 1. Sigurohemi që ID-të janë konsistente
         const serverCardsWithIds = me.cards.map((card, index) => ({
             ...card,
-            id: card.id || `${card.v}-${card.s}-${index}` 
+            id: card.id || `${card.v}-${card.s}` // Përdorim vetëm vlerën dhe simbolin si ID bazë
         }));
 
         const isDragging = document.querySelector('.card.dragging');
 
+        // 2. Sinkronizimi i mençur (VETËM nëse nuk jemi duke tërhequr një letër)
         if (!isDragging) {
-            // A kemi marrë letër të re? (Dora rritet psh nga 10 në 11)
+            
+            // RASTI A: Kemi marrë letër të re (Animacioni)
             if (doraImeData.length > 0 && serverCardsWithIds.length > doraImeData.length) {
                 serverCardsWithIds.forEach(sCard => {
                     const exists = doraImeData.some(myCard => myCard.id === sCard.id);
                     if (!exists) {
-                        // KETU THIRRET ANIMACIONI QE SHTUAM
                         pickCardFromDeck(sCard); 
                     }
                 });
             } 
-            // A kemi hedhur letër? (Dora zvogëlohet)
-            else if (doraImeData.length > 0 && serverCardsWithIds.length < doraImeData.length) {
+            // RASTI B: Kemi hedhur letër ose serveri thotë që kemi më pak letra
+            else if (serverCardsWithIds.length < doraImeData.length) {
                 doraImeData = doraImeData.filter(myCard => 
                     serverCardsWithIds.some(sCard => sCard.id === myCard.id)
                 );
                 renderHand();
             }
-            // Fillimi i lojës (Kur dora është bosh)
+            // RASTI C: Fillimi i lojës OSE sinkronizim i detyruar (nëse ID-të nuk përputhen fare)
             else if (doraImeData.length === 0) {
                 doraImeData = [...serverCardsWithIds];
                 renderHand();
             }
+            
+            // SHËNIM: Nëse numri i letrave është i njëjtë (psh 10 me 10), 
+            // ne NUK bëjmë renderHand(). Kjo mbron 3 K-shat e tu që të mos lëvizin.
         }
     }
 }
@@ -260,23 +289,14 @@ function updateGameFlow(data) {
 }
 
 socket.on('cardDrawn', (newCard) => {
-    animateCardDraw();
+    // 1. Përdorim funksionin e ri të animacionit (fshihet animateCardDraw)
+    // Ky funksion do të merret edhe me shtimin e letrës në 'doraImeData'
+    pickCardFromDeck(newCard); 
 
-    // 1. I japim letrës së re një ID unike që të mos ngatërrohet me të tjerat
-    const cardWithId = {
-        ...newCard,
-        id: `card-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
-    };
-
-    // 2. E shtojmë në fund të dorës sate (kështu nuk preken ato që i ke rendit vetë)
-    doraImeData.push(cardWithId);
-
-    // 3. Vizatojmë dorën dhe kontrollojmë Zion-in
-    renderHand();
-    
-    // Nëse checkZionCondition() e ke brenda renderHand, 
-    // rreshtin më poshtë mund ta fshish fare.
-    checkZionCondition(); 
+    // 2. Kontrollojmë Zion-in (nëse nuk thirret brenda renderHand)
+    if (typeof checkZionCondition === "function") {
+        checkZionCondition();
+    }
 });
 
 function checkZionCondition() {
@@ -347,7 +367,7 @@ function renderHand() {
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
-        div.dataset.id = card.id || `${card.v}-${card.s}-${index}`; 
+        div.dataset.id = card.id || div.dataset.id || `card-${card.v}-${card.s}-${Math.random().toString(36).substr(2, 5)}`;
 
         if (card.v === '★') {
             div.classList.add('joker');
@@ -362,9 +382,9 @@ function renderHand() {
         div.style.left = '';
         div.style.top = '';
         div.style.zIndex = '';
-        
-        div.addEventListener('mousedown', onDragStart);
-        div.addEventListener('touchstart', onDragStart, { passive: false });
+         
+        div.onmousedown = onDragStart;
+        div.ontouchstart = (e) => onDragStart(e);
 
         handContainer.appendChild(div);
     });
@@ -646,46 +666,67 @@ function isDoraValid(cards) {
     return false;
 }
 function pickCardFromDeck(newCardData) {
-    const deckElement = document.getElementById('deck-pile'); 
+    // 1. Referencat e elementeve
+    const deckElement = document.getElementById('deck-pile') || document.getElementById('deck-zion'); 
     const handContainer = document.getElementById('player-hand');
     
+    // Siguria: Nëse diçka mungon, shtoje letrën pa animacion që mos të bllokohet loja
     if (!deckElement || !handContainer) {
-        doraImeData.push(newCardData);
-        renderHand();
+        const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
+        if (!alreadyExists) {
+            doraImeData.push(newCardData);
+            renderHand();
+        }
         return;
     }
 
+    // 2. Krijo "fantazmën" e letrës për animacion
     const tempCard = document.createElement('div');
-    tempCard.className = 'temp-animating';
+    tempCard.className = 'temp-animating'; // Sigurohu që e ke këtë në CSS
     
     const deckRect = deckElement.getBoundingClientRect();
     
+    // Pozicioni fillestar (mbi dekun)
     Object.assign(tempCard.style, {
         position: 'fixed',
         left: deckRect.left + 'px',
         top: deckRect.top + 'px',
+        width: '60px',  // Përshtate me madhësinë e letrave tua
+        height: '90px',
+        zIndex: '5000',
         transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
     });
 
     document.body.appendChild(tempCard);
 
+    // 3. Cakto pikën e mbërritjes (në fund të dorës sate)
     const handRect = handContainer.getBoundingClientRect();
     const targetLeft = handRect.right - 40; 
     const targetTop = handRect.top;
 
+    // Nis fluturimin
     requestAnimationFrame(() => {
         tempCard.style.left = targetLeft + 'px';
         tempCard.style.top = targetTop + 'px';
         tempCard.style.transform = 'rotate(15deg) scale(0.8)';
-        tempCard.style.opacity = '0.7';
+        tempCard.style.opacity = '0.5';
     });
 
+    // 4. Pasi mbaron fluturimi (600ms)
     setTimeout(() => {
         if (tempCard.parentNode) tempCard.remove();
+        
+        // Kontrollojmë nëse letra është shtuar tashmë (mbrojtje nga dublikimi)
         const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
+        
         if (!alreadyExists) {
+            // SHTIMI KRITIK: E shtojmë letrën me ID-në origjinale të serverit
             doraImeData.push(newCardData);
+            
+            // Rifreskojmë pamjen e dorës
             renderHand();
+            
+            console.log("Letra e re u shtua në fund të renditjes ekzistuese.");
         }
     }, 600);
 }
@@ -701,31 +742,6 @@ if (deckElement) {
             alert("Ti i ke 11 letra, duhet të hedhësh një në tokë!");
         }
     });
-}
-
-// Animacioni i letrës që lëviz nga Deck te Dora
-function animateCardDraw() {
-    const tempCard = document.createElement('div');
-    tempCard.className = 'card temp-anim';
-    tempCard.style.position = 'fixed';
-    
-    const deckRect = deckElement.getBoundingClientRect();
-    tempCard.style.left = deckRect.left + 'px';
-    tempCard.style.top = deckRect.top + 'px';
-    tempCard.innerHTML = "ZION"; // Shpina e letrës
-    
-    document.body.appendChild(tempCard);
-
-    // Lëvizja drejt dorës
-    const handRect = handContainer.getBoundingClientRect();
-    
-    setTimeout(() => {
-        tempCard.style.transform = `translate(${handRect.left - deckRect.left}px, ${handRect.top - deckRect.top}px) rotate(10deg)`;
-        tempCard.style.opacity = '0';
-    }, 50);
-
-    // Fshijmë letrën e animacionit pas 0.5 sekondash
-    setTimeout(() => tempCard.remove(), 500);
 }
 
 // ==========================================
