@@ -1045,7 +1045,7 @@ function checkRecursive(cards, jokers) {
 // Kur një lojtar mbyll lojën (ZION!)
 socket.on('roundOver', (data) => {
     // Referencat sipas HTML-së tënde
-    const modal = document.getElementById('score-modal');
+    const modal = document.getElementById('round-modal');
     const tableBody = document.getElementById('score-body');
     
     if (modal && tableBody) {
