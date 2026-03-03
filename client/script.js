@@ -1200,34 +1200,48 @@ socket.on('yourCards', (cards) => {
 // Sigurohemi që DOM është gati para se të aktivizojmë Sortable
 document.addEventListener('DOMContentLoaded', () => {
     const handContainer = document.getElementById('player-hand');
+    const discardPile = document.getElementById('discard-pile');
 
-    if (handContainer && typeof Sortable !== 'undefined') {
-        new Sortable(handContainer, {
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            // Shtojmë këtë që të mos bllokohet drag-and-drop në celular
-            delay: 0,
-            touchStartThreshold: 5,
-            onEnd: function (evt) {
-                // KONTROLLI: Nëse nuk ka ndryshuar pozicioni, mos bëj asgjë
-                if (evt.oldIndex === evt.newIndex) return;
-
-                // 1. Përditësojmë vetëm memorien (array-un)
+    // 1. Instanca për dorën e lojtarit
+    new Sortable(handContainer, {
+        group: {
+            name: 'zion-game',
+            pull: true,  // Lejon nxjerrjen e letrës nga dora
+            put: false   // Nuk lejon futjen e letrave nga jashtë (p.sh. nga deku) me drag
+        },
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        onEnd: function (evt) {
+            // Nëse letra thjesht ka ndërruar vend brenda dorës
+            if (evt.from === evt.to) {
                 const movedCard = doraImeData.splice(evt.oldIndex, 1)[0];
                 doraImeData.splice(evt.newIndex, 0, movedCard);
-                
-                console.log("Renditja e re në memorie:", doraImeData.map(c => c.v));
-
-                // 2. MOS e thirr renderHand() këtu! 
-                // Sortable e ka lëvizur vetë elementin në ekran.
-                
-                // 3. Kontrollo vetëm nëse është bërë ZION
-                if (typeof checkZionCondition === "function") {
-                    checkZionCondition();
-                }
+                console.log("Renditja u ruajt!");
             }
-        });
-    }
+        }
+    });
+
+    // 2. Instanca për zonën e hedhjes (HEDH KËTU)
+    new Sortable(discardPile, {
+        group: 'zion-game', // I njëjti emër grupi
+        onAdd: function (evt) {
+            // Ky funksion thirret kur lëshon letrën te "HEDH KËTU"
+            const cardEl = evt.item;
+            const v = cardEl.dataset.v;
+            const s = cardEl.dataset.s;
+
+            // 1. Largojmë letrën vizualisht (sepse do ta bëjmë render përsëri)
+            cardEl.remove();
+
+            // 2. Thërrasim funksionin tënd ekzistues që njofton serverin
+            // Supozojmë se emri i funksionit është hedhLetren(vlerë, shenjë)
+            if (typeof hedhLetren === "function") {
+                hedhLetren(v, s); 
+            }
+            
+            console.log(`U hodh letra: ${v} ${s}`);
+        }
+    });
 });
 
 console.log("Lidhja HTML -> Script: OK ✅");
