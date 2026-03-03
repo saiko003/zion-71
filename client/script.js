@@ -171,46 +171,40 @@ function updateGameFlow(data) {
     if (!data) data = {};
 
 // 2. RREGULLIMI I DORËS (Mbrojtja e Renditjes Lokale)
+// 2. RREGULLIMI I DORËS (Mbrojtja e "Hekurt" e Renditjes)
 if (data.myCards && Array.isArray(data.myCards)) {
+    // Rasti A: Nëse dora është bosh (fillimi i lojës), merri siç janë
     if (doraImeData.length === 0) {
-        // Rasti i parë: Dora është bosh (sapo ka filluar loja)
         doraImeData = data.myCards;
         renderHand();
     } 
+    // Rasti B: Nëse ke marrë letër të re (nga 10 u bënë 11)
     else if (doraImeData.length < data.myCards.length) {
-        // Rasti i dytë: Serveri thotë që kemi më shumë letra (kemi tërhequr një)
-        // Gjejmë cilat letra janë të reja (që nuk i kemi në doraImeData)
         const letraTeReja = data.myCards.filter(serverCard => 
             !doraImeData.some(localCard => localCard.id === serverCard.id)
         );
-
         if (letraTeReja.length > 0) {
-            // I shtojmë vetëm letrat e reja NË FUND të dorës aktuale
-            // Kjo e mbron renditjen që ke bërë ti me Drag & Drop
-            doraImeData.push(...letraTeReja);
+            doraImeData.push(...letraTeReja); // E shton VETËM në fund
             renderHand();
         }
-    } 
+    }
+    // Rasti C: Nëse ke hedhur letër (nga 11 u bënë 10)
     else if (doraImeData.length > data.myCards.length) {
-        // Rasti i tretë: Kemi më pak letra (kemi hedhur një letër)
-        // Sinkronizojmë dorën me serverin sepse letra është hequr
+        // Kur hedh letër, për siguri sinkronizohemi me serverin
         doraImeData = data.myCards;
         renderHand();
     }
-    // Nëse numri është i njëjtë (psh 10=10), nuk bëjmë ASGJË.
-    // Kjo parandalon "kërcimin" e letrave kur vijnë update-et e tjera.
+    // Rasti D: Nëse numri është i njëjtë (10=10 ose 11=11)
+    // MOS BËJ ASGJË! Ky është momenti ku ruhet rradha jote.
 }
 
-// 3. LOGJIKA E RADHËS
-// Prioritet ka ID-ja nga serveri, por e konfirmojmë edhe me numrin e letrave
+// 3. LOGJIKA E RADHËS (E thjeshtësuar)
 if (data.activePlayerId) {
     isMyTurn = (data.activePlayerId === socket.id);
-} else if (doraImeData && doraImeData.length === 11) {
-    isMyTurn = true;
 } else {
-    isMyTurn = false;
+    // Fallback: nëse ke 11 letra, është radha jote për të hedhur
+    isMyTurn = (doraImeData.length === 11);
 }
-
     // 4. VIZUALIZIMI I RADHËS (Glow)
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
