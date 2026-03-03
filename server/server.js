@@ -499,15 +499,11 @@ socket.on('declareZion', (data) => {
     
     // 1. KONTROLLI I SIGURISË
     if (!winner || winner.id !== players[activePlayerIndex].id || winner.cards.length !== 11) {
-        console.log(`⚠️ Tentativë mbylljeje e pavlefshme nga ${winner?.name}`);
-        socket.emit('errorMsg', "Nuk mund të mbyllësh lojën! Nuk është radha jote ose s'ke 11 letra.");
+        console.log(`⚠️ Tentativë e pavlefshme nga ${winner?.name}`);
+        socket.emit('errorMsg', "Nuk mund të mbyllësh lojën! Kontrollo radhën ose numrin e letrave.");
         return;
     }
 
-    // --- KONTROLLI I ZIONIT (KORRIGJIM) ---
-    // Ne duhet të provojmë të heqim NJË letër (letrën mbyllëse) 
-    // dhe të shohim nëse 10 të tjerat formojnë Zion valid.
-    
     let isHandValid = false;
     let closingCard = null;
 
@@ -517,12 +513,12 @@ socket.on('declareZion', (data) => {
         const removed = testHand.splice(i, 1)[0];
 
         // Rregull: Xhokeri nuk lejohet si letër mbyllëse
-        if (removed.v === '★' || removed.v === 'Xhoker' || removed.v === 'Jokeri') continue;
+        if (['★', 'Xhoker', 'Jokeri'].includes(removed.v)) continue;
 
-        // Kontrollojmë nëse 10 letrat e mbetura janë valide
-        if (checkRecursive(testHand, 0)) {
+        // Kontrollojmë nëse 10 letrat e mbetura formojnë grupe valide
+        if (isDoraValid(testHand)) {
             isHandValid = true;
-            closingCard = removed; // Kjo është letra që do shkojë te discardPile
+            closingCard = removed; 
             winner.cards.splice(i, 1); // E heqim përfundimisht nga dora e fituesit
             break;
         }
@@ -530,14 +526,12 @@ socket.on('declareZion', (data) => {
 
     if (!isHandValid) {
         console.log(`❌ ${winner.name} tentoi të mbyllet me letra të parregullta!`);
-        socket.emit('errorMsg', "Kombinim i pavlefshëm! Sigurohu që ke 10 letra në rregull dhe 1 për ta hedhur.");
+        socket.emit('errorMsg', "Kombinim i pavlefshëm! Letrat nuk janë të grupuara saktë.");
         return;
     }
 
     // Shtojmë letrën mbyllëse te stiva
     if (closingCard) discardPile.push(closingCard);
-
-    // --------------------------------------------------------------------
 
     const isJackpotWin = data.isJackpotClosing || false;
     console.log(`🏆 ZION! ${winner.name} fiton! (Jackpot: ${isJackpotWin})`);
@@ -545,23 +539,12 @@ socket.on('declareZion', (data) => {
     // 2. LLOGARITJA E PIKËVE
     players.forEach(p => {
         if (p.isOut) return;
-
         if (p.id !== winner.id) {
             let roundPoints = calculateScore(p.cards); 
-            
-            if (isJackpotWin) {
-                roundPoints *= 2; // Rregulli i Jackpot x2
-            }
-
+            if (isJackpotWin) roundPoints *= 2;
             p.score += roundPoints;
-            
-            // Regjistrojmë historikun me simbolin "!" për Jackpot
             p.history.push(isJackpotWin ? `${roundPoints}!` : roundPoints);
-            
-            if (p.score >= 71) {
-                p.isOut = true;
-                console.log(`💀 Lojtari ${p.name} u eliminua!`);
-            }
+            if (p.score >= 71) p.isOut = true;
         } else {
             p.history.push("X");
         }
@@ -585,21 +568,20 @@ socket.on('declareZion', (data) => {
     while(players[dealerIndex].isOut) {
         dealerIndex = (dealerIndex + 1) % players.length;
     }
-    activePlayerIndex = (dealerIndex + 1) % players.length; // Lojtari pas dealer-it nis raundin e ri
+    activePlayerIndex = (dealerIndex + 1) % players.length;
 
     discardPile = [];   
     jackpotCard = null; 
 
     // 5. KONTROLLI I FUNDIT TË LOJËS
     const activePlayers = players.filter(p => !p.isOut);
-    
     if (activePlayers.length <= 1) {
         const finalWinner = activePlayers.length === 1 ? activePlayers[0].name : "Askush";
         io.emit('gameOver', { winner: finalWinner });
     } else {
         setTimeout(() => {
             startNewRound(); 
-        }, 5000); // 5 sekonda vonesë që lojtarët të shohin tabelën
+        }, 5000); 
     }
 });
    socket.on('disconnect', () => {
