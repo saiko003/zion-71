@@ -494,7 +494,7 @@ socket.on('discardCard', (card) => {
 
     
 // MBYLLJA (ZION!)
-socket.on('playerClosed', (data) => {
+socket.on('declareZion', (data) => {
     const winner = players.find(p => p.id === socket.id);
     
     // 1. KONTROLLI I SIGURISË
