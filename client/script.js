@@ -239,16 +239,30 @@ function checkZionCondition() {
 
     if (!btnMbyll) return;
 
-    // 1. Kushti kryesor: Duhet të jetë radha jote dhe të kesh 11 letra
+    // 1. KUSHTI I RADHËS DHE NUMRIT TË LETRAVE
     if (isMyTurn && doraImeData.length === 11) {
         
-        // 2. Thërrasim algoritmin e mençur që kontrollon grupet (isDoraValid)
-        // Shënim: Sigurohu që emri i funksionit këtu të jetë ai që dërgova më parë
-        const eshteGati = isDoraValid(doraImeData);
-        
-        if (eshteGati) {
+        let mundTeMbyllet = false;
+
+        // 2. PROVOJMË SECILËN LETËR SI LETËR MBYLLËSE
+        // Kjo bën që isDoraValid të marrë 10 letra saktësisht
+        for (let i = 0; i < doraImeData.length; i++) {
+            let testHand = [...doraImeData];
+            let removedCard = testHand.splice(i, 1)[0];
+
+            // Xhokeri nuk mund të përdoret si letër mbyllëse
+            if (['★', 'Jokeri', 'Xhoker'].includes(removedCard.v)) continue;
+
+            if (isDoraValid(testHand)) {
+                mundTeMbyllet = true;
+                break; 
+            }
+        }
+
+        // 3. SHFAQJA E BUTONIT DHE STATUSIT
+        if (mundTeMbyllet) {
             btnMbyll.style.display = 'block';
-            btnMbyll.style.background = "#2ecc71"; // Jeshile e bukur
+            btnMbyll.style.background = "#2ecc71"; // Jeshile
             btnMbyll.innerHTML = "MBYLL LOJËN (ZION)";
             
             if (statusDrita) statusDrita.className = 'led-green';
@@ -258,13 +272,14 @@ function checkZionCondition() {
                     : "ZION! Mund të mbyllesh.";
             }
         } else {
-            // Radha jote, ke 11 letra, por NUK i ke të rregulluara
+            // Radha jote, ke 11 letra, por NUK janë të rregulluara mirë
             btnMbyll.style.display = 'none';
-            if (statusDrita) statusDrita.className = 'led-orange'; // Portokalli: "Amigo, rregulloi letrat"
-            if (statusTeksti) statusTeksti.innerText = "Rendit letrat në grupe...";
+            if (statusDrita) statusDrita.className = 'led-orange'; 
+            if (statusTeksti) statusTeksti.innerText = "Rregullo grupet (3 ose 4 letra)...";
         }
+
     } else {
-        // Kur nuk është radha ose s'ke 11 letra (ende s'ke tërhequr)
+        // Kur nuk është radha ose nuk ke 11 letra
         btnMbyll.style.display = 'none';
         if (statusDrita) {
             statusDrita.className = isMyTurn ? 'led-yellow' : 'led-red';
