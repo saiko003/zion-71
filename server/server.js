@@ -31,7 +31,16 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
     console.log('Një lojtar u lidh:', socket.id);
 });
-
+// 3. SHTOJE KËTU (Zëvendësoje atë që ke pasur për marrjen e letrës)
+socket.on('marrLeitër', (data) => {
+    console.log("Mora letër të re:", data.letraERe);
+    
+    // E shtojmë te lista jonë lokale (që mban renditjen tonë)
+    doraImeData.push(data.letraERe); 
+    
+    // E rifreskojmë pamjen
+    renderHand(); 
+});
 
 // ==========================================
 // 1. VARIABLAT E LOJËS (Pika 1, 2)
