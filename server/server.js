@@ -74,40 +74,40 @@ function isSet(cards) {
 function endRound(winnerId) {
     console.log("==== Përfundimi i Raundit ====");
 
-    // 1️⃣ Llogaritja e pikëve (Kodi yt origjinal i paprekur)
+    // 1. Llogaritja e pikëve
     players.forEach(player => {
         if (player.id === winnerId) {
-            // Fituesi (ai që bëri ZION)
-            player.score += 0; 
             player.history.push('X');
         } else {
-            // HUMBËSIT: Llogarit pikët e letrave që nuk janë lidhur në grupe
             let penalty = calculateScore(player.cards); 
-            
             player.score += penalty;
             player.history.push(penalty);
         }
         
-        // Rregulli i eliminimit në 71
         if (player.score >= 71) {
             player.isOut = true;
         }
     });
 
-    // 2️⃣ Kontrolli i fituesit final (GameOver)
     const activePlayers = players.filter(p => !p.isOut);
 
-    if (activePlayers.length === 1) {
-        console.log("LOJA PËRFUNDOI! Fituesi:", activePlayers[0].name);
-        io.emit('gameOver', { winner: activePlayers[0].name });
-        return; // Ndal ekzekutimin, nuk ka më raunde
-    } else if (activePlayers.length === 0) {
-        // Rast i rrallë barazimi (të gjithë mbi 71)
-        io.emit('gameOver', { winner: "Barazim (Të gjithë u eliminuan)" });
-        return;
+    // 2. Njoftojmë Front-end-in (Ky rresht duhet patjetër!)
+    io.emit('roundOver', {
+        winnerName: players.find(p => p.id === winnerId)?.name || "Dikush",
+        updatedPlayers: players,
+        isGameOver: activePlayers.length <= 1
+    });
+
+    // 3. Kontrolli i GameOver
+    if (activePlayers.length <= 1) {
+        const finalWinner = activePlayers.length === 1 ? activePlayers[0].name : "Barazim";
+        console.log("LOJA PËRFUNDOI! Fituesi:", finalWinner);
+        io.emit('gameOver', { winner: finalWinner });
+        gameStarted = false; // Ndalojmë lojën
+        return; 
     }
 
-    // 3️⃣ Rrotullimi i Dealer-it (Kodi yt origjinal)
+    // 4. Rrotullimi i Dealer-it
     dealerIndex = (dealerIndex + 1) % players.length;
     let attempts = 0;
     while(players[dealerIndex].isOut && attempts < players.length) {
@@ -115,10 +115,10 @@ function endRound(winnerId) {
         attempts++;
     }
 
-    // 4️⃣ NISJA E RAUNDIT TË RI
-    // I japim lojtarëve 5 sekonda kohë të shohin rezultatet në tabelë para se të fshihen letrat
+    // 5. NISJA E RAUNDIT TË RI
     console.log("Raundi tjetër nis pas 5 sekondave...");
     setTimeout(() => {
+        // Sigurohu që startNewRound i zbraz letrat në tokë (discardPile = [])
         startNewRound(); 
     }, 5000);
 }
