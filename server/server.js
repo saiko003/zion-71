@@ -239,26 +239,26 @@ function startNewRound() {
     
     if (playerWith11) {
         activePlayerIndex = players.indexOf(playerWith11);
-        activePlayerId = playerWith11.id;
+        activePlayerId = playerWith11.id; // Sigurohu që kjo variabël është globale në server.js
         
-        // Kjo i thotë lojtarit specifik "LUAJ!"
-        io.emit('playerTurn', { 
-            activePlayerId: activePlayerId,
-            message: `Radhën e ka ${playerWith11.name}` 
-        });
-        
-        console.log("👉 Lojtari që nis lojën (11 letra):", playerWith11.name);
-    } else {
-        console.warn("⚠️ Askush nuk ka 11 letra! Po zgjedhim Dealer-in si default.");
-        activePlayerIndex = dealerIndex;
-        activePlayerId = players[dealerIndex]?.id;
+        console.log("👉 Lojtari fillestar:", playerWith11.name);
     }
 
-    // 6️⃣ BROADCAST GJENDJA
-    // Kjo dërgon të gjitha të dhënat (letrat, emrat, etj.) te të gjithë
-    broadcastState(true);
+    // 6️⃣ NJOFTIMI FINAL (Shumë i rëndësishëm)
+    // Dërgojmë letrat private
+    players.forEach(p => {
+        io.to(p.id).emit('yourCards', p.cards);
+    });
 
-    console.log("✅ Raundi i ri është gati, mesazhet u dërguan.");
+    // Dërgojmë gjendjen e lojës (kush e ka radhën) te të gjithë
+    io.emit('updateGameState', {
+        activePlayerId: activePlayerId,
+        gameStarted: true,
+        jackpotCard: jackpotCard,
+        discardPile: discardPile
+    });
+
+    console.log("✅ Serveri sapo dërgoi updateGameState te të gjithë.");
 }
 // ==========================================
 // 2. KOMUNIKIMI ME LOJTARËT
