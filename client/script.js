@@ -566,7 +566,7 @@ if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         processDiscard(dragElement); 
         
     } else {
-        // 4. KTHIMI NË DORË (I paprekur, me pastrim stilesh)
+        // 4. KTHIMI NË DORË
         if (placeholder && placeholder.parentNode) {
             placeholder.parentNode.insertBefore(dragElement, placeholder);
         } else if (dragElement.parentNode !== handContainer) {
@@ -575,12 +575,14 @@ if (isOverVictory && isMyTurn && doraImeData.length === 11) {
 
         if (placeholder) placeholder.remove();
 
+        // I japim stilet e fundit para se ta bëjmë null
         Object.assign(dragElement.style, {
             position: '', zIndex: '', pointerEvents: 'auto', 
             width: '', height: '', left: '', top: '',
             margin: '', transform: '', transition: 'all 0.2s ease'
         });
 
+        // KËTU RUAHET RRADHA - Saktësisht pas insertBefore
         const currentCards = [...handContainer.querySelectorAll('.card')];
         doraImeData = currentCards.map(c => ({
             v: c.dataset.v,
@@ -588,15 +590,20 @@ if (isOverVictory && isMyTurn && doraImeData.length === 11) {
             id: c.dataset.id
         }));
 
+        console.log("Rradha e re u regjistrua:", doraImeData.map(c => c.v));
+
+        // Ruajmë referencën e elementit që po lëvizim që ta pastrojmë pas animacionit
+        const tempElement = dragElement; 
         setTimeout(() => {
-            if (dragElement) dragElement.style.transition = '';
-            renderHand();
+            if (tempElement) tempElement.style.transition = '';
+            renderHand(); // Rindërtojmë dorën me rradhën e re
         }, 200);
     }
     
+    // Pastrim i variablave globale të drag-ut
     dragElement = null; 
     placeholder = null;
-    finalizeCleanup();
+    if (typeof finalizeCleanup === "function") finalizeCleanup();
 }
 function finalizeCleanup() {
     if (dragElement) dragElement.classList.remove('dragging');
