@@ -5,35 +5,27 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-
-// 1. Konfigurimi i CORS
 app.use(cors());
 
-// 2. SHËRBIMI I SKEDARËVE (Këtu ishte problemi)
-// Ky rresht i thotë Express-it të shërbejë çdo gjë në folderin rrënjë
-app.use(express.static(__dirname)); 
+// --- KORRIGJIMI I RRUGËS PËR RENDER ---
+// Duke qenë se server.js është brenda folderit /server, 
+// duhet të dalim një nivel lart (..) dhe të hyjmë te /client
+const clientPath = path.join(__dirname, '..', 'client');
+app.use(express.static(clientPath));
 
-// Rruga kryesore (Fallback)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(clientPath, 'index.html'));
 });
 
 const server = http.createServer(app);
 
-// 3. Konfigurimi i Socket.io
 const io = new Server(server, {
     cors: {
-        origin: "*", // Gjatë testimit, vendose "*" që të mos kesh bllokime
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
 
-// 4. PORTA (Shumë e rëndësishme për Render)
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-    console.log(`🚀 Serveri po punon në portën ${PORT}`);
-});
 
 // Shto një log të thjeshtë për të parë nëse dikush lidhet
 io.on('connection', (socket) => {
@@ -631,11 +623,6 @@ socket.on('playerClosed', (data) => {
     broadcastState();
     });
 });
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Serveri po punon në portën ${PORT}`));
-
-// server.js
 
 // Ky funksion do të përdoret kur dikush thërret "ZION"
 function calculateScore(cards) {
