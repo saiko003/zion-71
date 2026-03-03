@@ -616,69 +616,70 @@ function finalizeCleanup() {
 function isDoraValid(cards) {
     if (!cards || cards.length === 0) return true;
 
+    // 1. Ndajmë Xhokerat nga letrat normale
     let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker'].includes(c.v)).length;
     let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker'].includes(c.v));
 
-    // Renditja sipas suitës dhe vlerës
+    // 2. Renditja fillestare (Asi si 1)
     normalCards.sort((a, b) => {
         if (a.s !== b.s) return a.s.localeCompare(b.s);
-        return getVal(a.v) - getVal(b.v);
+        return getVal(a, false) - getVal(b, false);
     });
 
     function solve(remaining, jks) {
         if (remaining.length === 0) return true;
 
         let first = remaining[0];
-        
-    console.log("Duke provuar grupin për:", first.v, first.s, "me xhokera:", jks)
-        
-        // --- 1. PROVOJMË SET (psh: 8-8-8) ---
+        console.log("Duke provuar grupin për:", first.v, first.s, "Xhokera mbetur:", jks);
+
+        // --- A. PROVOJMË SET (7-7-7 ose 7-7-7-7) ---
         let sameValue = remaining.filter(c => c.v === first.v);
-        for (let size = 3; size <= 4; size++) {
+        // Provon madhësitë 4 pastaj 3 (prioritet katërshes)
+        for (let size of [4, 3]) {
             let maxNormal = Math.min(sameValue.length, size);
             for (let n = maxNormal; n >= 1; n--) {
                 let jNeeded = size - n;
                 if (jNeeded <= jks) {
                     let nextCards = [...remaining];
                     let removed = 0;
-                    nextCards = nextCards.filter(c => {
+                    // Heqim vetëm n letra me vlerë të njëjtë
+                    let filtered = [];
+                    for (let c of nextCards) {
                         if (removed < n && c.v === first.v) {
                             removed++;
-                            return false;
+                        } else {
+                            filtered.push(c);
                         }
-                        return true;
-                    });
-                    if (solve(nextCards, jks - jNeeded)) return true;
+                    }
+                    if (solve(filtered, jks - jNeeded)) return true;
                 }
             }
         }
 
-        // --- 2. PROVOJMË VARG (psh: 5-6-7 ose Q-K-A) ---
+        // --- B. PROVOJMË VARG (5-6-7, 3-4-★, ose Q-K-A) ---
         for (let size = 3; size <= 5; size++) {
             let currentJks = jks;
             let tempRemaining = [...remaining];
-            let firstVal = getVal(first.v);
+            let firstVal = getVal(first, false); // Startojmë vargun
             let suit = first.s;
             
             let possible = true;
-            let usedFromNormal = [tempRemaining.shift()]; // Heqim letrën e parë
+            tempRemaining.shift(); // Heqim letrën e parë
 
             for (let i = 1; i < size; i++) {
                 let targetVal = firstVal + i;
                 
-                // KORRIGJIMI PËR ASIN: Nëse targetVal shkon në 14, kërkojmë Asin (A)
-                let searchVal = (targetVal === 14) ? 'A' : targetVal.toString();
-                // Për letrat 11, 12, 13 kthejmë në J, Q, K për kërkim
-                if (targetVal === 11) searchVal = 'J';
-                if (targetVal === 12) searchVal = 'Q';
-                if (targetVal === 13) searchVal = 'K';
+                // Gjejmë nëse e kemi letrën target në tempRemaining
+                let idx = tempRemaining.findIndex(c => {
+                    // Kjo është pjesa kritike: nëse kërkojmë 14, getVal duhet ta shohë A si 14
+                    let v = getVal(c, targetVal === 14); 
+                    return v === targetVal && c.s === suit;
+                });
 
-                let idx = tempRemaining.findIndex(c => (c.v === searchVal || getVal(c.v) === targetVal) && c.s === suit);
-                
                 if (idx !== -1) {
                     tempRemaining.splice(idx, 1);
                 } else if (currentJks > 0) {
-                    currentJks--;
+                    currentJks--; // Përdorim xhokerin
                 } else {
                     possible = false;
                     break;
