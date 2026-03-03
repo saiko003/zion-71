@@ -601,7 +601,6 @@ function finalizeCleanup() {
 function isDoraValid(cards) {
     if (!cards || cards.length === 0) return true;
 
-    // Ndajmë Xhokerat nga letrat normale
     let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker'].includes(c.v)).length;
     let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker'].includes(c.v));
 
@@ -610,7 +609,7 @@ function isDoraValid(cards) {
         return mapping[v] || parseInt(v);
     };
 
-    // Renditja ndihmon algoritmin të gjejë vargjet dhe setet më shpejt
+    // Renditja sipas suitës dhe vlerës
     normalCards.sort((a, b) => {
         if (a.s !== b.s) return a.s.localeCompare(b.s);
         return getVal(a.v) - getVal(b.v);
@@ -621,12 +620,11 @@ function isDoraValid(cards) {
 
         let first = remaining[0];
 
-        // --- PROVOJMË SET (psh: 8-8-8) ---
+        // --- 1. PROVOJMË SET (psh: 8-8-8) ---
         let sameValue = remaining.filter(c => c.v === first.v);
-        // Setet janë 3 ose 4 letra
         for (let size = 3; size <= 4; size++) {
-            let neededFromNormal = Math.min(sameValue.length, size);
-            for (let n = neededFromNormal; n >= 1; n--) {
+            let maxNormal = Math.min(sameValue.length, size);
+            for (let n = maxNormal; n >= 1; n--) {
                 let jNeeded = size - n;
                 if (jNeeded <= jks) {
                     let nextCards = [...remaining];
@@ -643,29 +641,41 @@ function isDoraValid(cards) {
             }
         }
 
-        // --- PROVOJMË VARG (psh: 5-6-7 e së njëjtës suitë) ---
-        // --- PROVOJMË VARG (psh: 5-6-7 e së njëjtës suitë) ---
-// Provojmë madhësi të ndryshme vargjesh (3, 4, ose 5 letra)
-for (let size = 3; size <= Math.min(remaining.length + jks, 11); size++) {
-    let currentJks = jks;
-    let tempRemaining = [...remaining];
-    tempRemaining.splice(0, 1); // Heqim letrën e parë (start)
-    let possible = true;
+        // --- 2. PROVOJMË VARG (psh: 5-6-7 ose Q-K-A) ---
+        for (let size = 3; size <= 5; size++) {
+            let currentJks = jks;
+            let tempRemaining = [...remaining];
+            let firstVal = getVal(first.v);
+            let suit = first.s;
+            
+            let possible = true;
+            let usedFromNormal = [tempRemaining.shift()]; // Heqim letrën e parë
 
-    for (let v = getVal(first.v) + 1; v < getVal(first.v) + size; v++) {
-        let idx = tempRemaining.findIndex(c => getVal(c.v) === v && c.s === first.s);
-        if (idx !== -1) {
-            tempRemaining.splice(idx, 1);
-        } else if (currentJks > 0) {
-            currentJks--;
-        } else {
-            possible = false;
-            break;
+            for (let i = 1; i < size; i++) {
+                let targetVal = firstVal + i;
+                
+                // KORRIGJIMI PËR ASIN: Nëse targetVal shkon në 14, kërkojmë Asin (A)
+                let searchVal = (targetVal === 14) ? 'A' : targetVal.toString();
+                // Për letrat 11, 12, 13 kthejmë në J, Q, K për kërkim
+                if (targetVal === 11) searchVal = 'J';
+                if (targetVal === 12) searchVal = 'Q';
+                if (targetVal === 13) searchVal = 'K';
+
+                let idx = tempRemaining.findIndex(c => (c.v === searchVal || getVal(c.v) === targetVal) && c.s === suit);
+                
+                if (idx !== -1) {
+                    tempRemaining.splice(idx, 1);
+                } else if (currentJks > 0) {
+                    currentJks--;
+                } else {
+                    possible = false;
+                    break;
+                }
+            }
+
+            if (possible && solve(tempRemaining, currentJks)) return true;
         }
-    }
-    // E RËNDËSISHME: Provojmë rrugën rekursive vetëm nëse ky varg është i mundur
-    if (possible && solve(tempRemaining, currentJks)) return true;
-}
+
         return false;
     }
 
