@@ -83,7 +83,7 @@ socket.on('yourCards', (cards) => {
     doraImeData = cards; // Përditësojmë listën tonë të letrave
     
     // 1. I shfaqim letrat në ekran (vizualisht)
-    renderMyCards(cards); 
+    renderHand(); 
 
     // 2. Përditësojmë statusin (p.sh. nëse u bëmë me 11 letra)
     // Nuk i dërgojmë activePlayerId këtu, sepse e merr updateGameState
