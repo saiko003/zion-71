@@ -626,7 +626,8 @@ if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         }));
 
         console.log("Renditja e re u ruajt lokalisht:", doraImeData.map(c => c.v));
-
+        if (typeof checkZionCondition === "function") checkZionCondition();
+        
         // 3. I japim pak kohë animacionit dhe pastaj bëjmë renderHand
         // Përdorim një variabël që tregon se po bëjmë renditje manuale
         const tempElement = dragElement; 
