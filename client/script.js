@@ -28,6 +28,7 @@ const deckElement = document.getElementById('deck-zion') || document.getElementB
 let gameStarted = false;
 let isMyTurn = false;
 let doraImeData = [];
+let isDraggingCard = false; 
 let tookJackpotThisTurn = false;
 let placeholder = null;
 socket.on('lobbyMessage', (msg) => {
