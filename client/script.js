@@ -1002,23 +1002,23 @@ function checkRecursive(cards, jokers) {
 
 // Kur një lojtar mbyll lojën (ZION!)
 socket.on('roundOver', (data) => {
-    // 1. SHFAQJA E TABELËS MODALE (E re!)
+    // Referencat sipas HTML-së tënde
     const modal = document.getElementById('score-modal');
     const tableBody = document.getElementById('score-body');
+    
     if (modal && tableBody) {
         tableBody.innerHTML = ''; // Pastrojmë rreshtat e vjetër
 
         data.updatedPlayers.forEach(p => {
             const lastScore = p.history[p.history.length - 1]; // "X", "15", ose "30!"
-            const isEliminated = p.score >= 71;
+            const isEliminated = p.isOut; // Përdorim variablin nga serveri
             
-            // Përcaktojmë klasën për ngjyrën e pikëve (nëse ka "!" është Jackpot)
             let scoreClass = "";
             if (lastScore === 'X') scoreClass = "winner-x";
             else if (typeof lastScore === 'string' && lastScore.includes('!')) scoreClass = "jackpot-points";
 
             const row = document.createElement('tr');
-            if (p.id === socket.id) row.className = 'active-row'; // Rreshti yt ndriçohet
+            if (p.id === socket.id) row.className = 'active-row'; // Rreshti yt
 
             row.innerHTML = `
                 <td class="${isEliminated ? 'eliminated' : ''}">${p.name}</td>
@@ -1029,37 +1029,23 @@ socket.on('roundOver', (data) => {
             tableBody.appendChild(row);
         });
 
-        modal.style.display = 'flex'; // SHFAQET TABELA
+        modal.style.display = 'flex'; // Shfaqim modalin (overlay-in)
     }
 
-    // 2. LOGJIKA JOTE EKZISTUESE (E ruajtur plotësisht)
-    console.log(`ZION! ${data.winnerName} e mbylli raundin!`);
-    
-    // Përditëso scoreboard-in anësor (nëse e ke atë funksion)
-    if (typeof updateScoreboard === "function") {
-        updateScoreboard(data.updatedPlayers, null);
-    }
-
-    // 3. Pastrimi i tavolinës (I ruajtur)
+    // Pastrojmë dorën dhe tavolinën vizualisht
     doraImeData = [];
     renderHand();
     
-    // Pastrojmë vizualisht elementet
+    // Pastrojmë discard pile (stivën e hedhjes)
     const discardPileElement = document.getElementById('discard-pile');
-    if (discardPileElement) discardPileElement.innerHTML = '<span class="label">HEDH KËTU</span>';
-    
-    const jackpotElement = document.getElementById('jackpot');
-    if (jackpotElement) jackpotElement.style.display = 'none';
-
-    // 4. Kontrolli i mbylljes finale
-    if (data.isGameOver) {
-        alert(`Loja përfundoi! Fituesi final është: ${data.finalWinner}`);
+    if (discardPileElement) {
+        discardPileElement.innerHTML = '<span class="label">ZION 71</span>';
     }
 
-    // 5. AUTO-MBYLLJA E TABELËS (Pas 4 sekondave)
+    // Mbyllim tabelën automatikisht pas 4.5 sekondave (pak para se të vijë raundi i ri)
     setTimeout(() => {
         if (modal) modal.style.display = 'none';
-    }, 4000);
+    }, 4500);
 });
 
 // Kur një lojtar eliminohet (Pika 9)
