@@ -170,32 +170,32 @@ function updateGameFlow(data) {
     // 1. Sigurohemi që 'data' nuk është null
     if (!data) data = {};
 
-// 2. RREGULLIMI I DORËS (Mbrojtja e Renditjes Lokale)
-// 2. RREGULLIMI I DORËS (Mbrojtja e "Hekurt" e Renditjes)
+
+
 if (data.myCards && Array.isArray(data.myCards)) {
-    // Rasti A: Nëse dora është bosh (fillimi i lojës), merri siç janë
-    if (doraImeData.length === 0) {
+    // 1. Nëse numri i letrave është i NJËJTË (psh. 10 me 10)
+    if (doraImeData.length === data.myCards.length) {
+        // MOS BËJ ASGJË. 
+        // Mos e prek doraImeData sepse lojtari sapo i ka rregulluar vetë.
+        return; 
+    } 
+    
+    // 2. Nëse numri ka ndryshuar (ke marrë ose hedhur letër)
+    if (doraImeData.length === 0 || Math.abs(doraImeData.length - data.myCards.length) > 1) {
         doraImeData = data.myCards;
         renderHand();
-    } 
-    // Rasti B: Nëse ke marrë letër të re (nga 10 u bënë 11)
-    else if (doraImeData.length < data.myCards.length) {
-        const letraTeReja = data.myCards.filter(serverCard => 
-            !doraImeData.some(localCard => localCard.id === serverCard.id)
-        );
-        if (letraTeReja.length > 0) {
-            doraImeData.push(...letraTeReja); // E shton VETËM në fund
+    } else if (doraImeData.length < data.myCards.length) {
+        // Ke marrë letër: Shtoje vetëm atë që mungon në fund
+        const newCard = data.myCards.find(sc => !doraImeData.some(lc => lc.id === sc.id));
+        if (newCard) {
+            doraImeData.push(newCard);
             renderHand();
         }
-    }
-    // Rasti C: Nëse ke hedhur letër (nga 11 u bënë 10)
-    else if (doraImeData.length > data.myCards.length) {
-        // Kur hedh letër, për siguri sinkronizohemi me serverin
+    } else {
+        // Ke hedhur letër: Prano listën e re
         doraImeData = data.myCards;
         renderHand();
     }
-    // Rasti D: Nëse numri është i njëjtë (10=10 ose 11=11)
-    // MOS BËJ ASGJË! Ky është momenti ku ruhet rradha jote.
 }
 
 // 3. LOGJIKA E RADHËS (ZHBLLOKIMI)
