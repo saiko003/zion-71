@@ -35,10 +35,13 @@ socket.on('lobbyMessage', (msg) => {
     if (lobbyText) lobbyText.innerText = msg;
 });
 const cardOrder = {
-    'A': 14, // E lartë për vargun 12-13-14 (Q-K-A)
+    'A': 1,  // E llogarisim si 1 fillimisht
     '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
     'J': 11, 'Q': 12, 'K': 13
 };
+
+// DHE kjo logjikë brenda isDoraValid për Q-K-A:
+const getVal = (v) => cardOrder[v] || parseInt(v);
 // 1. LIDHJA E BUTONIT START
 const btnstart = document.getElementById('btn-start');
 if (btnstart) {
