@@ -464,7 +464,7 @@ function updateZonesFeedback(x, y) {
 function onDragEnd(e) {
     if (!dragElement) return;
 
-    // 1. KORRIGJIMI PËR TOUCH (Që stiva ta shohë letrën saktë në Mobile)
+    // 1. KORRIGJIMI PËR TOUCH/MOUSE
     const t = e.type.includes('touch') ? 
               (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e.touches[0]) : 
               e;
@@ -472,12 +472,12 @@ function onDragEnd(e) {
     const pile = document.getElementById('discard-pile');
     const victoryZone = document.getElementById('victory-drop-zone');
     const handContainer = document.getElementById('player-hand');
-    const tolerance = 60; // E rrita pak për siguri që ta kapë më lehtë stivën
+    const tolerance = 60; 
 
     let isOverPile = false;
     let isOverVictory = false;
 
-    // Detektimi i zonave (Logjika jote origjinale)
+    // Detektimi i zonave
     if (pile && t) {
         const r = pile.getBoundingClientRect();
         isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
@@ -490,60 +490,63 @@ function onDragEnd(e) {
                         t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
-    // Heqja e eventeve
+    // Heqja e menjëhershme e eventeve që të mos ketë vonesa (lag)
     document.removeEventListener('mousemove', onDragMove);
     document.removeEventListener('touchmove', onDragMove);
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
-   // 2. KUSHTI PËR ZION
-if (isOverVictory && isMyTurn && doraImeData.length === 11) {
-    if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
-        isMyTurn = false; // Bllokoje menjëherë që të mos klikohet asgjë tjetër
-        if (typeof placeholder !== 'undefined' && placeholder) placeholder.remove();
-        
-        socket.emit('declareZion', { 
-            discardedCard: { 
-                v: dragElement.dataset.v, 
-                s: dragElement.dataset.s, 
-                id: dragElement.dataset.id  // SHTO KËTË
-            }, 
-            hand: doraImeData.filter(c => c.id !== dragElement.dataset.id)
-        });
-        finalizeCleanup();
-        dragElement = null;
-        placeholder = null;
-        return;
-    }
-}
+    // KTHIMI I POINTER EVENTS (Zgjidhja për "Sticky Mouse")
+    dragElement.style.pointerEvents = 'auto'; 
+    dragElement.classList.remove('dragging');
 
-    // 3. KUSHTI PËR HEDHJE
-if (isOverPile && isMyTurn && doraImeData.length === 11) {
-    isMyTurn = false; // JETIKE: E bëjmë false këtu që të mos bllokohet loja
-    if (typeof placeholder !== 'undefined' && placeholder) placeholder.remove();
-    
-    // Thërrasim funksionin për dërgim
-    processDiscard(dragElement);
-} else {
-        // 4. KTHIMI DHE RUAJTJA (Me update për Placeholder)
-        if (typeof placeholder !== 'undefined' && placeholder && placeholder.parentNode) {
-            // E kthejmë te vendi që i ruajti placeholder-i
+    // 2. KUSHTI PËR ZION
+    if (isOverVictory && isMyTurn && doraImeData.length === 11) {
+        if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
+            isMyTurn = false;
+            if (placeholder) placeholder.remove();
+            
+            socket.emit('declareZion', { 
+                discardedCard: { 
+                    v: dragElement.dataset.v, 
+                    s: dragElement.dataset.s, 
+                    id: dragElement.dataset.id 
+                }, 
+                hand: doraImeData.filter(c => c.id !== dragElement.dataset.id)
+            });
+            finalizeCleanup();
+            dragElement = null;
+            return;
+        }
+    }
+
+    // 3. KUSHTI PËR HEDHJE (PËRMIRËSUAR)
+    if (isOverPile && isMyTurn && doraImeData.length === 11) {
+        isMyTurn = false; 
+        if (placeholder) placeholder.remove();
+        
+        // E heqim stilin 'fixed' para se ta dërgojmë te processDiscard
+        dragElement.style.position = '';
+        
+        processDiscard(dragElement); // Sigurohu që ky funksion shton vizualisht letrën te stiva
+    } else {
+        // 4. KTHIMI DHE RUAJTJA
+        if (placeholder && placeholder.parentNode) {
             placeholder.parentNode.insertBefore(dragElement, placeholder);
         } else if (dragElement.parentNode !== handContainer) {
             handContainer.appendChild(dragElement);
         }
 
-        if (typeof placeholder !== 'undefined' && placeholder) placeholder.remove();
+        if (placeholder) placeholder.remove();
 
-        // Pastrimi i stileve inline
+        // Pastrim total i stileve inline (Për Safari & PC)
         Object.assign(dragElement.style, {
-            position: '', zIndex: '', pointerEvents: '', 
+            position: '', zIndex: '', pointerEvents: 'auto', 
             width: '', height: '', left: '', top: '',
             margin: '', transform: '', transition: ''
         });
-        dragElement.classList.remove('dragging');
 
-        // Ruajtja e renditjes (Logjika jote origjinale)
+        // Ruajtja e renditjes së re
         const currentCards = [...handContainer.querySelectorAll('.card')];
         doraImeData = currentCards.map(c => ({
             v: c.dataset.v,
@@ -551,12 +554,13 @@ if (isOverPile && isMyTurn && doraImeData.length === 11) {
             id: c.dataset.id
         }));
 
-        console.log("Renditja u ruajt:", doraImeData.length);
         renderHand(); 
     }
     
+    // Resetimi i variablave globale
     dragElement = null; 
     placeholder = null;
+    if (pile) pile.classList.remove('drag-over');
     finalizeCleanup();
 }
 function finalizeCleanup() {
