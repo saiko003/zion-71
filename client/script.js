@@ -1218,20 +1218,22 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         animation: 150,
         ghostClass: 'sortable-ghost',
-        onEnd: function (evt) {
-        // Në vend që të besojmë te oldIndex/newIndex, lexojmë gjendjen reale të ekranit
-        const cardElements = Array.from(handContainer.querySelectorAll('.card'));
+onEnd: function (evt) {
+    // 1. Marrim të gjitha letrat nga HTML saktësisht si janë radhitur pas drag-ut
+    const cardElements = Array.from(document.querySelectorAll('#player-hand .card'));
     
+    // 2. Rindërtojmë array-un tonë nga zero duke u bazuar në HTML
     doraImeData = cardElements.map(el => ({
         v: el.dataset.v,
         s: el.dataset.s,
         id: el.dataset.id
     }));
 
-    console.log("Renditja e re u vulos në memorie:", doraImeData.map(c => c.v));
+    console.log("Renditja u 'gozhdua' në memorie:", doraImeData.map(c => c.v));
     
-    // OPSIONALE: Tregoi serverit renditjen tënde të re që ta mbajë mend edhe ai
-    // socket.emit('ruaj_renditjen', doraImeData);
+    // 3. SHUMË E RËNDËSISHME: Njofto serverin për renditjen e re
+    // Nëse nuk e bën këtë, serveri do të të dërgojë renditjen e vjetër prapë
+    socket.emit('update_my_hand_order', doraImeData);
 }    
     });
 
