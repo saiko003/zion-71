@@ -577,83 +577,79 @@ function finalizeCleanup() {
         victoryZone.style.display = 'none';
     }
 }
+// 1. FUNKSIONI NDihmës PËR KONTROLLIN E DORËS
+// ==========================================
 function isDoraValid(cards) {
     if (!cards || cards.length === 0) return true;
 
-    // 1. Ndajmë Xhokerat dhe Letrat Normale
-    const jokers = cards.filter(c => ['★', 'Jokeri', 'joker', 'Xhoker'].includes(c.v)).length;
-    const normalCards = cards.filter(c => !['★', 'Jokeri', 'joker', 'Xhoker'].includes(c.v));
+    // Ndajmë Xhokerat nga letrat normale
+    let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker'].includes(c.v)).length;
+    let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker'].includes(c.v));
 
-    // 2. Kthejmë vlerat në numra për kalkulim më të lehtë
     const getVal = (v) => {
         const mapping = { 'A': 1, 'J': 11, 'Q': 12, 'K': 13 };
         return mapping[v] || parseInt(v);
     };
 
-    // 3. Funksioni Rekursiv (Zemra e Algoritmit)
-    function canSolve(remainingCards, availableJokers) {
-        if (remainingCards.length === 0) return true;
+    // Renditja ndihmon algoritmin të gjejë vargjet dhe setet më shpejt
+    normalCards.sort((a, b) => {
+        if (a.s !== b.s) return a.s.localeCompare(b.s);
+        return getVal(a.v) - getVal(b.v);
+    });
 
-        // Marrim letrën e parë të mbetur
-        let first = remainingCards[0];
+    function solve(remaining, jks) {
+        if (remaining.length === 0) return true;
 
-        // --- PROVOJMË TË FORMOJMË SET (psh: 8-8-8) ---
-        let sameValue = remainingCards.filter(c => c.v === first.v);
-        // Një set mund të ketë 3 ose 4 letra (duke përfshirë xhokerat)
+        let first = remaining[0];
+
+        // --- PROVOJMË SET (psh: 8-8-8) ---
+        let sameValue = remaining.filter(c => c.v === first.v);
+        // Setet janë 3 ose 4 letra
         for (let size = 3; size <= 4; size++) {
-            for (let jUsed = 0; jUsed <= availableJokers; jUsed++) {
-                let nNeeded = size - jUsed;
-                if (nNeeded > 0 && nNeeded <= sameValue.length) {
-                    // Kemi mjaftueshëm letra për këtë SET
-                    let nextCards = [...remainingCards];
-                    // Heqim letrat normale që përdorëm
-                    for (let i = 0; i < nNeeded; i++) {
-                        let idx = nextCards.findIndex(c => c.v === first.v);
-                        nextCards.splice(idx, 1);
-                    }
-                    if (canSolve(nextCards, availableJokers - jUsed)) return true;
-                }
-            }
-        }
-
-        // --- PROVOJMË TË FORMOJMË VARG (psh: 5♠-6♠-7♠) ---
-        let suitCards = remainingCards.filter(c => c.s === first.s);
-        let firstVal = getVal(first.v);
-
-        for (let size = 3; size <= 5; size++) { // Vargjet zakonisht deri ne 5-6 letra
-            for (let jUsed = 0; jUsed <= availableJokers; jUsed++) {
-                let nextCards = [...remainingCards];
-                let foundAll = true;
-                let cardsToRemove = [];
-
-                for (let v = firstVal; v < firstVal + size; v++) {
-                    let cardIdx = nextCards.findIndex(c => getVal(c.v) === v && c.s === first.s);
-                    if (cardIdx !== -1) {
-                        cardsToRemove.push(nextCards[cardIdx]);
-                        nextCards.splice(cardIdx, 1);
-                    } else {
-                        // Këtu duhet xhokeri
-                        if (jUsed > 0) {
-                            // Improvizojmë xhokerin (nuk heqim letër, por ulim numrin e jUsed)
-                            // Por kjo kërkon logjikë më të kujdesshme për jUsed brenda loop-it
-                        } else {
-                            foundAll = false; break;
+            let neededFromNormal = Math.min(sameValue.length, size);
+            for (let n = neededFromNormal; n >= 1; n--) {
+                let jNeeded = size - n;
+                if (jNeeded <= jks) {
+                    let nextCards = [...remaining];
+                    let removed = 0;
+                    nextCards = nextCards.filter(c => {
+                        if (removed < n && c.v === first.v) {
+                            removed++;
+                            return false;
                         }
-                    }
+                        return true;
+                    });
+                    if (solve(nextCards, jks - jNeeded)) return true;
                 }
-                // (Thjeshtëzim: Logjika e vargut me xhoker është më komplekse, 
-                // por parimi rekursiv është ky që po sheh)
             }
         }
 
+        // --- PROVOJMË VARG (psh: 5-6-7 e së njëjtës suitë) ---
+        for (let size = 3; size <= 10; size++) {
+            let currentJks = jks;
+            let possible = true;
+            let tempRemaining = [...remaining];
+            
+            // Heqim letrën e parë (fillimi i vargut)
+            tempRemaining.splice(0, 1);
+
+            for (let v = getVal(first.v) + 1; v < getVal(first.v) + size; v++) {
+                let idx = tempRemaining.findIndex(c => getVal(c.v) === v && c.s === first.s);
+                if (idx !== -1) {
+                    tempRemaining.splice(idx, 1);
+                } else if (currentJks > 0) {
+                    currentJks--;
+                } else {
+                    possible = false;
+                    break;
+                }
+            }
+            if (possible && solve(tempRemaining, currentJks)) return true;
+        }
         return false;
     }
 
-    // Renditja e letrës ndihmon rekursionin të punojë më shpejt
-    normalCards.sort((a, b) => getVal(a.v) - getVal(b.v));
-    
-    // Për Zion, ne kontrollojmë nëse 10 letra janë komplet të grupuara
-    return canSolve(normalCards, jokers);
+    return solve(normalCards, jokers);
 }
 function pickCardFromDeck(newCardData) {
     // 1. Referencat e elementeve (I deklarojmë vetëm NJË HERË këtu)
