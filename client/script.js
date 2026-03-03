@@ -198,12 +198,15 @@ if (data.myCards && Array.isArray(data.myCards)) {
     // MOS BËJ ASGJË! Ky është momenti ku ruhet rradha jote.
 }
 
-// 3. LOGJIKA E RADHËS (E thjeshtësuar)
+// 3. LOGJIKA E RADHËS (ZHBLLOKIMI)
 if (data.activePlayerId) {
+    // Radha përcaktohet VETËM nga serveri
     isMyTurn = (data.activePlayerId === socket.id);
-} else {
-    // Fallback: nëse ke 11 letra, është radha jote për të hedhur
-    isMyTurn = (doraImeData.length === 11);
+} 
+
+// Korigjim: Nëse kam 11 letra, UNË duhet të hedh, pavarësisht çka thotë activePlayerId
+if (doraImeData.length === 11) {
+    isMyTurn = true;
 }
     // 4. VIZUALIZIMI I RADHËS (Glow)
     document.body.classList.toggle('my-turn-glow', isMyTurn);
