@@ -836,22 +836,32 @@ function processDiscard(cardElement) {
         });
         
         // 2. PASTRIMI PAS ANIMACIONIT
-        setTimeout(() => {
-            // Heqim letrën nga array lokal (doraImeData)
-            doraImeData.splice(cardIndex, 1); 
-            
-            // Heqim elementin fizik nga DOM
-            if (cardElement.parentNode) cardElement.remove();
-            
-            // Rivizatojmë dorën e mbetur (tani me 10 letra)
-            renderHand(); 
-            
-            // Kontrollojmë nëse lojtari ka fituar apo ka ndonjë kusht tjetër (Zion)
-            if (typeof checkZionCondition === "function") {
-                checkZionCondition();
-            }
-        }, 400);
+setTimeout(() => {
+    // --- SHTO KËTË PJESË KËTU (Për pikën 11) ---
+    const visualDiscard = document.createElement('div');
+    visualDiscard.className = 'card discarded-static';
+    visualDiscard.innerHTML = cardElement.innerHTML;
+    visualDiscard.style.color = cardElement.style.color;
+    
+    // Rrotullim random që të duket si shkartisje reale
+    const randomRot = Math.floor(Math.random() * 40) - 20; 
+    visualDiscard.style.transform = `rotate(${randomRot}deg)`;
+    
+    // E pastrojmë stivën nga letrat shumë të vjetra (mbajmë psh 3)
+    if (discardZone.children.length >= 3) {
+        discardZone.removeChild(discardZone.firstChild);
+    }
+    discardZone.appendChild(visualDiscard);
+    // ------------------------------------------
 
+    doraImeData.splice(cardIndex, 1); 
+    if (cardElement.parentNode) cardElement.remove();
+    renderHand(); 
+    
+    if (typeof checkZionCondition === "function") {
+        checkZionCondition();
+    }
+}, 400);
     } else {
         // RASTI I GABIMIT: Nëse letra nuk gjendet në memorjen lokale
         console.error("GABIM: Letra nuk u gjet lokalisht! ID:", cardId);
