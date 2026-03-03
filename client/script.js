@@ -15,16 +15,6 @@ socket.on('connect', () => {
     console.log("U lidha! Po dërgoj joinGame...");
     socket.emit('joinGame', testi);
 });
-// 3. SHTOJE KËTU (Zëvendësoje atë që ke pasur për marrjen e letrës)
-socket.on('marrLeitër', (data) => {
-    console.log("Mora letër të re:", data.letraERe);
-    
-    // E shtojmë te lista jonë lokale (që mban renditjen tonë)
-    doraImeData.push(data.letraERe); 
-    
-    // E rifreskojmë pamjen
-    renderHand(); 
-});
 
 const handContainer = document.getElementById('player-hand');
 const jackpotElement = document.getElementById('jackpot');
@@ -180,11 +170,14 @@ function updateGameFlow(data) {
     // 1. Sigurohemi që 'data' nuk është null
     if (!data) data = {};
 
-    // 2. MBROJTJA E LETRAVE (KORRIGJIM KRITIK)
-    // Kjo parandalon që doraImeData të bëhet 'undefined' nëse serveri 
-    // dërgon një update pa 'myCards'.
-    if (data.myCards && Array.isArray(data.myCards) && data.myCards.length > 0) {
+    // Te updateGameFlow, rregullo pikën 2:
+if (data.myCards && Array.isArray(data.myCards)) {
+    // Vetëm nëse dora jote lokale është bosh (psh. sapo ke hyrë në lojë) 
+    // ose nëse numri i letrave ka ndryshuar drastikisht
+    if (doraImeData.length === 0 || doraImeData.length !== data.myCards.length) {
         doraImeData = data.myCards;
+        renderHand();
+    }
     }
 
     // 3. LOGJIKA E RADHËS
@@ -247,14 +240,26 @@ function updateGameFlow(data) {
 }
 
 socket.on('cardDrawn', (newCard) => {
-    // 1. Përdorim funksionin e ri të animacionit (fshihet animateCardDraw)
-    // Ky funksion do të merret edhe me shtimin e letrës në 'doraImeData'
-    pickCardFromDeck(newCard); 
-
-    // 2. Kontrollojmë Zion-in (nëse nuk thirret brenda renderHand)
-    if (typeof checkZionCondition === "function") {
-        checkZionCondition();
+    console.log("=== EVENT: cardDrawn ===");
+    
+    // 1. KONTROLLI I SIGURISË (Mos e shto nëse ekziston)
+    const exists = doraImeData.some(c => c.id === newCard.id);
+    
+    if (!exists) {
+        // 2. THIRR ANIMACIONIN
+        // Ky funksion do të bëjë doraImeData.push(newCard) automatikisht
+        pickCardFromDeck(newCard); 
+        console.log("Letra e re u dërgua te animacioni.");
+    } else {
+        console.warn("Kujdes: Kjo letër ekziston një herë në dorë!");
     }
+
+    // 3. KONTROLLI I ZION-IT (Me vonesë që të përfundojë animacioni)
+    setTimeout(() => {
+        if (typeof checkZionCondition === "function") {
+            checkZionCondition();
+        }
+    }, 700);
 });
 
 function checkZionCondition() {
