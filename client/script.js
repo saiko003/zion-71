@@ -146,24 +146,31 @@ players.forEach(player => {
 });
 }
 function updateGameFlow(data) {
-    // Sigurohemi që data ekziston që mos të dështojë kodi
-    if (!data) return;
+    // 1. Sigurohemi që 'data' nuk është null/undefined
+    if (!data) data = {};
 
-    isMyTurn = (data.activePlayerId === socket.id);
-    
-    // Përditësojmë variablën lokale të letrave nëse vjen nga serveri
+    // 2. LOGJIKA E RADHËS (KORRIGJIM KRITIK)
+    // Nëse kam 11 letra, unë e kam radhën (Hidh një letër)
+    // Nëse kam 10 letra, kontrollojmë nëse serveri thotë që është radha ime (Tërhiq një letër)
+    if (doraImeData && doraImeData.length === 11) {
+        isMyTurn = true;
+    } else if (data.activePlayerId) {
+        isMyTurn = (data.activePlayerId === socket.id);
+    }
+
+    // Përditësojmë variablën lokale të letrave nëse vijnë direkt te ky objekt
     if (data.myCards) doraImeData = data.myCards;
 
-    // 1. Vizualizimi i radhës
+    // 3. VIZUALIZIMI I RADHËS (Glow)
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
-    // 2. Kontrolli i Deck-ut
+    // 4. KONTROLLI I DECK-UT (SHKËLQIMI)
     const deck = document.getElementById('deck-zion') || document.getElementById('deck');
     if (deck) {
-        // Kontrollojmë gjatësinë e letrave me kujdes
-        const kaDhjetLetra = doraImeData && doraImeData.length === 10;
+        // Shkëlqen VETËM nëse është radha jote DHE ke 10 letra
+        const duhetTeTerheq = isMyTurn && doraImeData.length === 10;
         
-        if (isMyTurn && kaDhjetLetra) {
+        if (duhetTeTerheq) {
             deck.classList.add('active-deck');
             deck.style.pointerEvents = "auto";
             deck.style.cursor = "pointer";
@@ -174,7 +181,7 @@ function updateGameFlow(data) {
         }
     }
 
-    // 3. Përditësojmë Jackpot-in
+    // 5. JACKPOT
     const jackpot = document.getElementById('jackpot');
     if (jackpot && data.jackpotCard) {
         const isRed = ['♥', '♦'].includes(data.jackpotCard.s);
@@ -185,16 +192,22 @@ function updateGameFlow(data) {
         jackpot.style.color = isRed ? '#e74c3c' : '#2c3e50';
     }
 
-    // 4. Status Message
-    const statusMsg = document.getElementById('status-message');
+    // 6. STATUS MESSAGE (PËRDITËSUAR)
+    // Kontrollojmë të gjitha ID-të e mundshme të statusit që mund të kesh në HTML
+    const statusMsg = document.getElementById('status-message') || document.getElementById('status-teksti');
     if (statusMsg) {
         if (isMyTurn) {
             statusMsg.innerText = (doraImeData.length === 10) ? "Tërhiq një letër!" : "Hidh një letër!";
-            statusMsg.style.color = "#2ecc71";
+            statusMsg.style.color = "#2ecc71"; // Jeshile
         } else {
             statusMsg.innerText = "Pret radhën...";
-            statusMsg.style.color = "#bdc3c7";
+            statusMsg.style.color = "#bdc3c7"; // Gri
         }
+    }
+
+    // 7. RINDËRTIMI I DORËS (Vizualizimi i letrave)
+    if (typeof renderHand === "function") {
+        renderHand();
     }
 }
 
