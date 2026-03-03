@@ -137,14 +137,17 @@ function updateGameFlow(data) {
     
     // 2. Kontrolli i Deck-ut (Shkëlqen vetëm kur duhet të tërheqësh)
     const deck = document.getElementById('deck-zion') || document.getElementById('deck');
-    if (deck) {
-        // Shkëlqen nëse është radha jote DHE ke 10 letra (duhet të bëhesh me 11)
-        if (isMyTurn && doraImeData.length === 10) {
-            deck.classList.add('active-deck');
-        } else {
-            deck.classList.remove('active-deck');
-        }
+    // Te pika 2 e kodit tënd:
+if (deck) {
+    // Shkëlqen VETËM nëse është radha jote DHE ke 10 letra
+    if (isMyTurn && doraImeData.length === 10) {
+        deck.classList.add('active-deck');
+        deck.style.pointerEvents = "auto"; // Lejo klikimin
+    } else {
+        deck.classList.remove('active-deck');
+        deck.style.pointerEvents = "none"; // Blloko klikimin kur s'është radha
     }
+}
 
     // 3. Përditësojmë Jackpot-in
     const jackpot = document.getElementById('jackpot');
