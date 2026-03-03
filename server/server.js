@@ -492,7 +492,84 @@ socket.on('discardCard', (card) => {
 }); // Kjo kllapë mbyll socket.on
 
 
-    
+// KËTO DUHET TË JENË EDHE NË SERVER.JS
+function getVal(card, highAce = false) {
+    const v = (typeof card === 'object') ? card.v : card;
+    if (['★', 'Jokeri', 'Xhoker'].includes(v)) return 0;
+    if (v === 'A') return highAce ? 14 : 1;
+    if (v === 'J') return 11;
+    if (v === 'Q') return 12;
+    if (v === 'K') return 13;
+    return parseInt(v) || 0;
+}
+
+function isDoraValid(cards) {
+    if (!cards || cards.length === 0) return true;
+    let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker'].includes(c.v)).length;
+    let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker'].includes(c.v));
+
+    normalCards.sort((a, b) => {
+        if (a.s !== b.s) return a.s.localeCompare(b.s);
+        return getVal(a, false) - getVal(b, false);
+    });
+
+    function solve(remaining, jks) {
+        if (remaining.length === 0) return true;
+        let first = remaining[0];
+
+        // SET (3-3-3 ose 3-3-3-3)
+        let sameValueCards = remaining.filter(c => c.v === first.v);
+        for (let size of [4, 3]) {
+            if (sameValueCards.length >= size - jks) {
+                let maxNormal = Math.min(sameValueCards.length, size);
+                for (let n = maxNormal; n >= 1; n--) {
+                    let jNeeded = size - n;
+                    if (jNeeded <= jks) {
+                        let nextCards = [...remaining];
+                        let count = 0;
+                        for (let i = 0; i < nextCards.length; i++) {
+                            if (count < n && nextCards[i].v === first.v) {
+                                nextCards.splice(i, 1);
+                                i--; count++;
+                            }
+                        }
+                        if (solve(nextCards, jks - jNeeded)) return true;
+                    }
+                }
+            }
+        }
+
+        // VARG (5-6-7 ose Q-K-A)
+        for (let size = 3; size <= 5; size++) {
+            let currentJks = jks;
+            let tempRemaining = [...remaining];
+            let firstVal = getVal(first, false);
+            let suit = first.s;
+            let possible = true;
+            tempRemaining.shift(); 
+
+            for (let i = 1; i < size; i++) {
+                let targetVal = firstVal + i;
+                let idx = tempRemaining.findIndex(c => {
+                    let v = getVal(c, targetVal === 14); 
+                    return v === targetVal && c.s === suit;
+                });
+
+                if (idx !== -1) {
+                    tempRemaining.splice(idx, 1);
+                } else if (currentJks > 0) {
+                    currentJks--;
+                } else {
+                    possible = false;
+                    break;
+                }
+            }
+            if (possible && solve(tempRemaining, currentJks)) return true;
+        }
+        return false;
+    }
+    return solve(normalCards, jokers);
+}    
 // MBYLLJA (ZION!)
 socket.on('declareZion', (data) => {
     const winner = players.find(p => p.id === socket.id);
