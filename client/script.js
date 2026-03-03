@@ -601,8 +601,8 @@ if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         dragElement.style.position = '';
         processDiscard(dragElement); 
         
-    } else {
-        // 4. KTHIMI NË DORË
+} else {
+        // 4. KTHIMI NË DORË DHE RUAJTJA E RENDITJES
         if (placeholder && placeholder.parentNode) {
             placeholder.parentNode.insertBefore(dragElement, placeholder);
         } else if (dragElement.parentNode !== handContainer) {
@@ -611,28 +611,32 @@ if (isOverVictory && isMyTurn && doraImeData.length === 11) {
 
         if (placeholder) placeholder.remove();
 
-        // I japim stilet e fundit para se ta bëjmë null
+        // 1. I japim stilet për animacionin e kthimit
         Object.assign(dragElement.style, {
             position: '', zIndex: '', pointerEvents: 'auto', 
             width: '', height: '', left: '', top: '',
             margin: '', transform: '', transition: 'all 0.2s ease'
         });
 
-        // KËTU RUAHET RRADHA - Saktësisht pas insertBefore
+        // 2. KËTU NDRYSHIMI: Lexojmë renditjen direkt nga DOM
         const currentCards = [...handContainer.querySelectorAll('.card')];
+        
+        // Kjo e bën doraImeData saktësisht siç e sheh lojtari në ekran
         doraImeData = currentCards.map(c => ({
             v: c.dataset.v,
             s: c.dataset.s,
             id: c.dataset.id
         }));
 
-        console.log("Rradha e re u regjistrua:", doraImeData.map(c => c.v));
+        console.log("Renditja e re u ruajt lokalisht:", doraImeData.map(c => c.v));
 
-        // Ruajmë referencën e elementit që po lëvizim që ta pastrojmë pas animacionit
+        // 3. I japim pak kohë animacionit dhe pastaj bëjmë renderHand
+        // Përdorim një variabël që tregon se po bëjmë renditje manuale
         const tempElement = dragElement; 
         setTimeout(() => {
             if (tempElement) tempElement.style.transition = '';
-            renderHand(); // Rindërtojmë dorën me rradhën e re
+            // Nuk thërrasim renderHand() nëse nuk është e nevojshme 
+            // sepse DOM-i tashmë është në rregull nga insertBefore
         }, 200);
     }
     
