@@ -430,10 +430,22 @@ body:has(.dragging) {
 .card:active { cursor: grabbing; }
 
   
-/* Glow kur lojtari e ka radhën (Pika 15) */
-.my-turn-glow {
-    box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.2);
-    border: 2px solid #00ff00;
+
+body.my-turn-glow {
+    box-shadow: inset 0 0 80px rgba(0, 255, 0, 0.15); /* Dritë më e përhapur */
+    border: 4px solid #00ff00; /* Kufi më i trashë për t'u dukur */
+    transition: all 0.4s ease-in-out; /* Animacion që të mos kërcejë papritur */
+}
+
+/* Opsionale: Një pulsim i lehtë që lojtari ta kuptojë që po e pret ai */
+@keyframes pulse-green {
+    0% { border-color: rgba(0, 255, 0, 0.5); }
+    50% { border-color: rgba(0, 255, 0, 1); }
+    100% { border-color: rgba(0, 255, 0, 0.5); }
+}
+
+body.my-turn-glow {
+    animation: pulse-green 2s infinite;
 }
 #deck-zion {
     width: 80px;
