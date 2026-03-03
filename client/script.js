@@ -789,7 +789,7 @@ function processDiscard(cardElement) {
 
         // 1. DËRGIMI I MENJËHERSHËM TE SERVERI
         // Përdorim objektin e plotë që serveri ta gjejë me .findIndex() pa gabime
-        socket.emit('cardDiscarded', letraObjekt);
+        socket.emit('discardCard', letraObjekt);
 
         // --- PJESA E ANIMACIONIT ---
         const discardZone = document.getElementById('discard-pile');
