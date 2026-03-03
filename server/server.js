@@ -496,6 +496,8 @@ socket.on('discardCard', (card) => {
 // MBYLLJA (ZION!)
 socket.on('declareZion', (data) => {
     const winner = players.find(p => p.id === socket.id);
+    console.log("Tentativë mbylljeje nga:", winner?.name);
+    console.log("Letrat e lojtarit në server:", winner?.cards.length);
     
     // 1. KONTROLLI I SIGURISË
     if (!winner || winner.id !== players[activePlayerIndex].id || winner.cards.length !== 11) {
