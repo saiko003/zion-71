@@ -214,8 +214,8 @@ body {
     border: 2px dashed rgba(255, 255, 255, 0.3);
     position: relative; /* Kjo është e saktë! */
     
-    min-width: 150px;
-    height: 120px; /* Pak më shumë hapësirë për siguri */
+    min-width: 500px;
+    height: 300px; /* Pak më shumë hapësirë për siguri */
     display: flex; /* Ndryshojeni në flex */
     justify-content: center; /* I mban letrat në qendër */
     align-items: center;
