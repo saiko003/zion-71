@@ -41,30 +41,29 @@ const cardOrder = {
 };
 // 1. LIDHJA E BUTONIT START
 const btnstart = document.getElementById('btn-start');
-
 if (btnstart) {
-    btnstart.onclick = null; // Siguria e parë
-    btnstart.addEventListener('click', () => {
+    // Përdorim onclick që të jemi 100% sigurt që ka vetëm 1 funksion lidhës
+    btnstart.onclick = () => {
         console.log("🚀 Po dërgoj startGame te serveri...");
         socket.emit('startGame');
-    });
+    };
 }
 
-// 2. LIDHJA E VETME DHE E PASTER PER DEKUN (ZION)
-const realDeck = document.getElementById('deck-zion') || document.getElementById('deck-pile');
+// 2. LIDHJA E DEKUT (ZION) - Vetëm 1 herë!
+const deckZion = document.getElementById('deck-zion') || document.getElementById('deck-pile');
 
-if (realDeck) {
-    // Fshijmë onclick-un e vjetër që kishe te 'deckElement'
-    realDeck.onclick = null; 
-
-    realDeck.addEventListener('click', () => {
+if (deckZion) {
+    deckZion.onclick = () => {
         console.log("Klikuar mbi dekun...");
 
         // Logjika e saktë: Radha jote dhe 10 letra
         if (isMyTurn && doraImeData.length === 10) {
-            tookJackpotThisTurn = false; 
+            // tookJackpotThisTurn = false; // Nëse e përdor këtë variabël
             socket.emit('drawCard');
             console.log("✅ Kërkesa u dërgua: drawCard");
+            
+            // Heqim shkëlqimin menjëherë që lojtari të mos klikojë përsëri deri në update-in tjetër
+            deckZion.classList.remove('active-deck');
         } 
         else if (isMyTurn && doraImeData.length === 11) {
             alert("Ti e ke marrë letrën! Tani duhet të hedhësh një në tokë.");
@@ -72,111 +71,8 @@ if (realDeck) {
         else if (!isMyTurn) {
             console.warn("Prit radhën tënde!");
         }
-    });
+    };
 }
-
-// 1. LIDHJA E KLIKIMIT TË DEKUT (ZION) - Versioni i Pastër
-const deckZion = document.getElementById('deck-zion'); 
-
-if (deckZion) {
-    // Fshijmë çdo 'onclick' të vjetër që mund të jetë deklaruar diku tjetër
-    deckZion.onclick = null; 
-
-    // Përdorim addEventListener që është më i sigurt
-    deckZion.addEventListener('click', () => {
-        // Kontrollojmë: A është radha ime dhe a kam saktësisht 10 letra?
-        if (isMyTurn && doraImeData.length === 10) {
-            
-            // Opsionale: Mund ta markojmë që sapo tërhoqi letër që të mos klikohet dot 2 herë brenda sekondës
-            // tookJackpotThisTurn = false; 
-
-            socket.emit('drawCard');
-            console.log("✅ U dërgua kërkesa për të marrë letër nga deku.");
-        } 
-        else if (isMyTurn && doraImeData.length === 11) {
-            alert("Ti e ke marrë letrën! Tani duhet të hedhësh një në tokë.");
-        }
-        else if (!isMyTurn) {
-            console.log("Nuk është radha jote, prit pak.");
-        }
-    });
-}
-
-socket.on('updateGameState', (data) => {
-    console.log("DEBUG: Përditësim i ri nga serveri.");
-
-    // 1. Kontrolli i Pamjes (Lobby vs Table)
-    if (data.gameStarted) {
-        if (lobbyControls) lobbyControls.style.display = 'none';
-        if (gameTable) gameTable.style.display = 'block';
-    } else {
-        if (lobbyControls) lobbyControls.style.display = 'flex';
-        if (gameTable) gameTable.style.display = 'none';
-        return; // Ndalo këtu nëse loja s'ka nisur
-    }
-
-    // 2. Përditëso Tabelën e Pikëve
-    if (typeof updateScoreboard === "function") {
-        updateScoreboard(data.players, data.activePlayerId);
-    }
-
-    // 3. Përditëso Letrat në Tokë (Discard Pile)
-    const discardPileElement = document.getElementById('discard-pile');
-    if (discardPileElement && data.discardPile) {
-        discardPileElement.innerHTML = ''; 
-        
-        if (data.discardPile.length === 0) {
-            discardPileElement.innerHTML = '<span class="label">HEDH KËTU</span>';
-        } else {
-            data.discardPile.forEach((card, index) => {
-                const cardDiv = document.createElement('div');
-                cardDiv.className = 'card-on-table';
-                const isRed = ['♥', '♦'].includes(card.s);
-                cardDiv.style.color = isRed ? 'red' : 'black';
-                
-                // Efekti "lepe-lepe" (shkallë-shkallë)
-                cardDiv.style.position = 'absolute';
-                cardDiv.style.left = (index * 12) + 'px'; 
-                
-                cardDiv.innerHTML = `${card.v}<br>${card.s}`;
-                discardPileElement.appendChild(cardDiv);
-            });
-        }
-    }
-
-    // 4. Përditëso Jackpot-in
-    if (jackpotElement) {
-        if (data.jackpotCard) {
-            const isRedJackpot = ['♥', '♦'].includes(data.jackpotCard.s);
-            jackpotElement.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
-            jackpotElement.style.color = isRedJackpot ? 'red' : 'black';
-            jackpotElement.style.display = 'block';
-        } else {
-            jackpotElement.style.display = 'none';
-        }
-    }
-
-    // 5. Kontrolli i Radhës (Glow & Status) - VETËM NJË HERË
-    isMyTurn = (data.activePlayerId === socket.id);
-    document.body.classList.toggle('my-turn-glow', isMyTurn);
-    
-    if (statusTeksti) statusTeksti.innerText = isMyTurn ? "Rradha jote!" : "Pret rradhën...";
-    if (statusDrita) statusDrita.className = isMyTurn ? 'led-green' : 'led-red';
-
-    // 6. Shkëlqimi i Dekut (Nëse duhet të tërheqësh letër)
-    const deckZion = document.getElementById('deck-zion');
-    if (deckZion) {
-        // Shkëlqen vetëm nëse është radha jote dhe ke më pak se 11 letra
-        if (isMyTurn && doraImeData.length < 11) {
-            deckZion.classList.add('active-deck');
-        } else {
-            deckZion.classList.remove('active-deck');
-        }
-    }
-
-    // 7. Kontrollo kushtet e fitores (Zion)
-    if (typeof checkZionCondition === "function") checkZionCondition();
-});
 
 function updateScoreboard(players, activeId) {
     // NDRYSHIMI I VETËM: Përdorim ID-në e re 'side-score-body' dhe 'side-score-table'
@@ -236,12 +132,13 @@ players.forEach(player => {
 function updateGameFlow(data) {
     isMyTurn = (data.activePlayerId === socket.id);
     
-    // Vizualizimi i radhës
+    // 1. Vizualizimi i radhës (Glow)
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
-    // Kontrolli i Deck-ut (Stiva)
-    const deck = document.getElementById('deck');
-    if (deck) { // SHTO KËTË KONTROLL
+    // 2. Kontrolli i Deck-ut (Shkëlqen vetëm kur duhet të tërheqësh)
+    const deck = document.getElementById('deck-zion') || document.getElementById('deck');
+    if (deck) {
+        // Shkëlqen nëse është radha jote DHE ke 10 letra (duhet të bëhesh me 11)
         if (isMyTurn && doraImeData.length === 10) {
             deck.classList.add('active-deck');
         } else {
@@ -249,12 +146,30 @@ function updateGameFlow(data) {
         }
     }
 
-    // Përditësojmë Jackpot-in
+    // 3. Përditësojmë Jackpot-in
     const jackpot = document.getElementById('jackpot');
-    if (jackpot && data.jackpotCard) { // SHTO KONTROLLIN 'jackpot &&'
-        jackpot.innerHTML = `${data.jackpotCard.v}<br>${data.jackpotCard.s}`;
-        jackpot.style.color = ['♥', '♦'].includes(data.jackpotCard.s) ? 'red' : 'white';
+    if (jackpot && data.jackpotCard) {
+        const isRed = ['♥', '♦'].includes(data.jackpotCard.s);
+        
+        // Përdorim një strukturë më të pastër për letrën
+        jackpot.innerHTML = `
+            <div class="v">${data.jackpotCard.v}</div>
+            <div class="s">${data.jackpotCard.s}</div>
+        `;
+        jackpot.style.color = isRed ? '#e74c3c' : '#2c3e50';
         jackpot.style.display = 'block';
+    }
+
+    // 4. Përditësojmë statusin (Opsionale por shumë e dobishme)
+    const statusMsg = document.getElementById('status-message');
+    if (statusMsg) {
+        if (isMyTurn) {
+            statusMsg.innerText = (doraImeData.length === 10) ? "Tërhiq një letër!" : "Hidh një letër!";
+            statusMsg.style.color = "#2ecc71"; // Jeshile
+        } else {
+            statusMsg.innerText = "Pret radhën...";
+            statusMsg.style.color = "#bdc3c7"; // Gri
+        }
     }
 }
 
@@ -764,18 +679,31 @@ function pickCardFromDeck(newCardData) {
         tempCard.style.opacity = '0.5';
     });
 
-    // 4. Pas animacionit
+// 4. PAS ANIMACIONIT
     setTimeout(() => {
         if (tempCard.parentNode) tempCard.remove();
         
+        // KONTROLLI I SIGURISË
         const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
         
         if (!alreadyExists) {
             doraImeData.push(newCardData);
+            
+            // RENDITJA (Opsionale: I rendit letrat që mos të bëhen rrëmujë)
+            // doraImeData.sort((a, b) => cardOrder[a.v] - cardOrder[b.v]); 
+
             renderHand();
             
-            // MBAS TËRHEQJES: Heqim Glow sepse tani lojtari ka 11 letra
-            deckElement.classList.remove('deck-glow');
+            // HEQIM GLOW - E rëndësishme: Tani ka 11 letra, duhet të HEDHË
+            if (deckElement) {
+                deckElement.classList.remove('deck-glow');
+                deckElement.classList.remove('active-deck'); // Hiq çdo klasë tjetër shkëlqimi
+            }
+
+            // SHTO KËTË: Kontrollo menjëherë nëse me këtë letër u bë ZION
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
         }
     }, 600);
 }
