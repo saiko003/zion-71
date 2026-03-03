@@ -368,8 +368,8 @@ function renderHand() {
         });
          
         // Lidhja e eventeve për lëvizjen e letrave
-       // div.onmousedown = onDragStart;
-       // div.ontouchstart = (e) => onDragStart(e);
+        div.onmousedown = onDragStart;
+        div.ontouchstart = (e) => onDragStart(e);
 
         handContainer.appendChild(div);
     });
