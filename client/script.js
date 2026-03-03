@@ -176,21 +176,32 @@ function updateGameFlow(data) {
 // 2. RREGULLIMI I DORËS
 if (data.myCards && Array.isArray(data.myCards)) {
     
-    // NËSE JE DUKE E LËVIZUR LETRËN, MOS PREK ASGJË!
-    if (isDraggingCard) return; 
+    // 1. Mbrojtja gjatë lëvizjes (Drag & Drop)
+    if (typeof isDraggingCard !== 'undefined' && isDraggingCard) return; 
 
+    // 2. Nëse numri i letrave është i NJËJTË, mos e prek renditjen lokalisht
+    if (doraImeData.length === data.myCards.length) {
+        return; 
+    }
+
+    // 3. Nëse dora është bosh (fillimi i lojës)
     if (doraImeData.length === 0) {
         doraImeData = data.myCards;
         renderHand();
     } 
-    else if (doraImeData.length !== data.myCards.length) {
-        // ... kodi tjetër që kemi shkruar për filter/push ...
-        // Vetëm nëse numri ka ndryshuar vërtet (jo nga drag-i)
+    // 4. Nëse ke marrë letër të re (Serveri > Lokale)
+    else if (data.myCards.length > doraImeData.length) {
         const letraTeReja = data.myCards.filter(sc => !doraImeData.some(lc => lc.id === sc.id));
         if (letraTeReja.length > 0) {
-            doraImeData.push(...letraTeReja);
+            doraImeData.push(...letraTeReja); // Shtohet vetëm në fund
             renderHand();
         }
+    } 
+    // 5. Nëse ke hedhur letër (Serveri < Lokale)
+    else if (data.myCards.length < doraImeData.length) {
+        // Mbajmë vetëm letrat që serveri konfirmon se i kemi ende
+        doraImeData = doraImeData.filter(lc => data.myCards.some(sc => sc.id === lc.id));
+        renderHand();
     }
 }
 
@@ -341,6 +352,9 @@ function checkZionCondition() {
 let dragElement = null;
 
 function renderHand() {
+    // SHTO KËTË RRESHT: Ky është kyçi i stabilitetit
+    if (typeof isDraggingCard !== 'undefined' && isDraggingCard) return;
+
     console.log("--- DEBUG: renderHand nisi ---");
     const handContainer = document.getElementById('player-hand');
     
@@ -353,50 +367,42 @@ function renderHand() {
     // 2. KONTROLLI I DYTË: A ka letra?
     if (!doraImeData || doraImeData.length === 0) {
         console.warn("KUJDES: doraImeData është bosh. Nuk kam çfarë të vizatoj.");
-        handContainer.innerHTML = ""; // Sigurohemi që është pastër
+        handContainer.innerHTML = ""; 
         return;
     }
 
+    // ... Pjesa tjetër e kodit tënd mbetet e njëjtë ...
     console.log("Duke vizatuar", doraImeData.length, "letra...");
 
-    // Pastrojmë mbetjet vizuale te body (letrat që mbeten pezull gjatë drag-and-drop)
+    // Pastrojmë mbetjet vizuale te body
     const ghostCards = document.querySelectorAll('body > .card.dragging');
     ghostCards.forEach(card => card.remove());
 
-    // Pastrojmë kontejnerin para rindërtimit
     handContainer.innerHTML = '';
 
     doraImeData.forEach((card, index) => {
         const div = document.createElement('div');
         div.className = 'card';
         
-        // Datasetet për identifikim dhe logjikë
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
         div.dataset.id = card.id || `card-${card.v}-${card.s}-${index}`;
 
-        // Pamja e letrës (Xhoker/Zion apo Letër normale)
         if (card.v === '★' || card.v === 'Xhoker') {
             div.classList.add('joker');
             div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
         } else {
             div.innerHTML = `${card.v}<br>${card.s}`;
-            // Ngjyrosja e letrave të kuqe (Zemër dhe Kokëshqollë)
             if (['♥', '♦'].includes(card.s)) {
                 div.style.color = 'red';
             }
         }
         
-        // Resetimi i stileve inline për t'u siguruar që letrat rreshtohen saktë në kontejner
         Object.assign(div.style, {
-            position: '', 
-            left: '', 
-            top: '', 
-            zIndex: ''
+            position: '', left: '', top: '', zIndex: ''
         });
          
-        // Lidhja e eventeve për lëvizjen e letrave
         div.onmousedown = onDragStart;
         div.ontouchstart = (e) => onDragStart(e);
 
@@ -405,7 +411,6 @@ function renderHand() {
 
     console.log("--- DEBUG: renderHand përfundoi ---");
     
-    // Kontrolli i kushtit Zion pas çdo vizatimi
     if (typeof checkZionCondition === "function") {
         checkZionCondition();
     }
