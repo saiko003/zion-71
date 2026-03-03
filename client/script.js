@@ -73,24 +73,21 @@ if (deckZion) {
         }
     };
 }
+// 1. Dëgjuesi për përditësimin e përgjithshëm të lojës
 socket.on('updateGameState', (data) => {
     console.log("Mora statusin e ri:", data);
     updateGameFlow(data);
 });
 
+// 2. Dëgjuesi për marrjen e letrave (Fillimi i lojës ose pas Draw)
 socket.on('yourCards', (cards) => {
-    console.log("Letrat fillestare erdhën:", cards);
+    console.log("Letrat erdhën:", cards);
     doraImeData = cards;
-    renderHand(); // Vizatoji menjëherë
-});
     
-    // 1. I shfaqim letrat në ekran (vizualisht)
-    renderHand(); 
-
-    // 2. Përditësojmë statusin (p.sh. nëse u bëmë me 11 letra)
-    // Nuk i dërgojmë activePlayerId këtu, sepse e merr updateGameState
-    updateGameFlow({}); 
-});
+    // Në vend që të thërrasim renderHand() vetëm, thërrasim updateGameFlow.
+    // Kjo siguron që edhe Status Message (Hidh/Tërhiq) përditësohet menjëherë.
+    updateGameFlow({ myCards: cards }); 
+}); 
 
 function updateScoreboard(players, activeId) {
     // NDRYSHIMI I VETËM: Përdorim ID-në e re 'side-score-body' dhe 'side-score-table'
