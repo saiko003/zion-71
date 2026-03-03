@@ -155,30 +155,32 @@ socket.on('updateGameState', (data) => {
     updateGameFlow(data);
 });
 function updateGameFlow(data) {
-    // 1. Sigurohemi që 'data' nuk është null/undefined
+    // 1. Sigurohemi që 'data' nuk është null
     if (!data) data = {};
 
-    // 2. LOGJIKA E RADHËS (KORRIGJIM KRITIK)
-    // Nëse kam 11 letra, unë e kam radhën (Hidh një letër)
-    // Nëse kam 10 letra, kontrollojmë nëse serveri thotë që është radha ime (Tërhiq një letër)
+    // 2. MBROJTJA E LETRAVE (KORRIGJIM KRITIK)
+    // Kjo parandalon që doraImeData të bëhet 'undefined' nëse serveri 
+    // dërgon një update pa 'myCards'.
+    if (data.myCards && Array.isArray(data.myCards) && data.myCards.length > 0) {
+        doraImeData = data.myCards;
+    }
+
+    // 3. LOGJIKA E RADHËS
+    // Prioritet ka numri i letrave (11 letra = radha ime për të hedhur)
     if (doraImeData && doraImeData.length === 11) {
         isMyTurn = true;
     } else if (data.activePlayerId) {
         isMyTurn = (data.activePlayerId === socket.id);
+    } else {
+        // Nëse nuk ka të dhëna për ID, mos e ndrysho statusin aktual
     }
 
-    // Përditësojmë variablën lokale të letrave nëse vijnë direkt te ky objekt
-    if (data.myCards && data.myCards.length > 0) {
-    doraImeData = data.myCards;
-    }
-
-    // 3. VIZUALIZIMI I RADHËS (Glow)
+    // 4. VIZUALIZIMI I RADHËS (Glow)
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
-    // 4. KONTROLLI I DECK-UT (SHKËLQIMI)
+    // 5. KONTROLLI I DECK-UT (SHKËLQIMI)
     const deck = document.getElementById('deck-zion') || document.getElementById('deck');
     if (deck) {
-        // Shkëlqen VETËM nëse është radha jote DHE ke 10 letra
         const duhetTeTerheq = isMyTurn && doraImeData.length === 10;
         
         if (duhetTeTerheq) {
@@ -192,7 +194,7 @@ function updateGameFlow(data) {
         }
     }
 
-    // 5. JACKPOT
+    // 6. JACKPOT
     const jackpot = document.getElementById('jackpot');
     if (jackpot && data.jackpotCard) {
         const isRed = ['♥', '♦'].includes(data.jackpotCard.s);
@@ -203,8 +205,7 @@ function updateGameFlow(data) {
         jackpot.style.color = isRed ? '#e74c3c' : '#2c3e50';
     }
 
-    // 6. STATUS MESSAGE (PËRDITËSUAR)
-    // Kontrollojmë të gjitha ID-të e mundshme të statusit që mund të kesh në HTML
+    // 7. STATUS MESSAGE
     const statusMsg = document.getElementById('status-message') || document.getElementById('status-teksti');
     if (statusMsg) {
         if (isMyTurn) {
@@ -216,8 +217,9 @@ function updateGameFlow(data) {
         }
     }
 
-    // 7. RINDËRTIMI I DORËS (Vizualizimi i letrave)
-    if (typeof renderHand === "function") {
+    // 8. RINDËRTIMI I DORËS
+    // E thërrasim VETËM nëse kemi letra për të vizatuar
+    if (typeof renderHand === "function" && doraImeData.length > 0) {
         renderHand();
     }
 }
