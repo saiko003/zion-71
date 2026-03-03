@@ -2,34 +2,44 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const path = require('path'); // Importi i nevojshëm
+const path = require('path');
 
 const app = express();
+
+// 1. Konfigurimi i CORS
 app.use(cors());
 
-// --- SHTO KËTO DY RRESHTA ---
-app.use(express.static(path.join(__dirname, '.'))); 
+// 2. SHËRBIMI I SKEDARËVE (Këtu ishte problemi)
+// Ky rresht i thotë Express-it të shërbejë çdo gjë në folderin rrënjë
+app.use(express.static(__dirname)); 
 
+// Rruga kryesore (Fallback)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
-// ----------------------------
 
 const server = http.createServer(app);
 
+// 3. Konfigurimi i Socket.io
 const io = new Server(server, {
     cors: {
-        origin: [
-            "https://zion-71.onrender.com", 
-            "http://127.0.0.1:5500",        
-            "http://localhost:5500"
-        ],
-        methods: ["GET", "POST"],
-        credentials: true
+        origin: "*", // Gjatë testimit, vendose "*" që të mos kesh bllokime
+        methods: ["GET", "POST"]
     }
 });
 
-// Vazhdon kodi tjetër...
+// 4. PORTA (Shumë e rëndësishme për Render)
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+    console.log(`🚀 Serveri po punon në portën ${PORT}`);
+});
+
+// Shto një log të thjeshtë për të parë nëse dikush lidhet
+io.on('connection', (socket) => {
+    console.log('Një lojtar u lidh:', socket.id);
+});
+
 
 // ==========================================
 // 1. VARIABLAT E LOJËS (Pika 1, 2)
