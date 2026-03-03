@@ -424,19 +424,18 @@ socket.on('drawCard', () => {
 });
     
 socket.on('cardDiscarded', (card) => {
-    // 1. LOG PËR DEBUG
-    console.log(`--- Tentativë hedhjeje nga ${socket.id} ---`);
-    console.log("Të dhënat e letrës që erdhën:", card);
+    // 1. Identifikojmë lojtarin që po tenton të hedhë letrën
+    // Përdorim findIndex për siguri që të dimë saktë cilin index po prekim
+    const currentIndex = players.findIndex(p => p.id === socket.id);
+    const player = players[currentIndex];
 
-    const player = players[activePlayerIndex];
-
-    // 2. KONTROLLI I RADHËS
-    if (!player || player.id !== socket.id) {
-        console.log(`⚠️ Tentativë jashtë radhës nga: ${socket.id}`);
+    // 2. KONTROLLI I RADHËS (A është ky lojtari aktiv?)
+    if (!player || socket.id !== activePlayerId) {
+        console.log(`⚠️ Tentativë jashtë radhës nga: ${player?.name || socket.id}`);
         return;
     }
 
-    // 3. KONTROLLI I SASISË (Duhet të ketë saktësisht 11 letra për të hedhur)
+    // 3. KONTROLLI I SASISË
     if (player.cards.length !== 11) { 
         console.log(`⚠️ ${player.name} tentoi të hidhte me ${player.cards.length} letra.`);
         socket.emit('errorMsg', "Duhet të kesh 11 letra për të hedhur.");
@@ -444,61 +443,56 @@ socket.on('cardDiscarded', (card) => {
         return;
     }
 
-    // 4. MBROJTJA E XHOKERIT (Ylli nuk lejohet të hidhet)
+    // 4. MBROJTJA E XHOKERIT
     if (card.v === '★' || card.v === 'Xhoker' || card.v === 'Jokeri') {
-        console.log(`🚫 Bllokuar: ${player.name} tentoi të hidhte Xhokerin.`);
         socket.emit('errorMsg', "Xhokeri nuk mund të hidhet në tokë!");
         broadcastState(true); 
         return; 
     }
 
-    // 5. GJETJA E LETRËS (Prioritet absolut ID-ja për sinkronizim 100%)
+    // 5. GJETJA DHE HEQJA E LETRËS
     const cardIndex = player.cards.findIndex(c => {
         if (card.id && c.id) return c.id === card.id;
         return c.v === card.v && c.s === card.s;
     });
     
     if (cardIndex !== -1) {
-        // SUKSES: Letra u gjet në server
         const removedCard = player.cards.splice(cardIndex, 1)[0];
-        
-        // Sigurohemi që discardPile ekziston
         if (typeof discardPile === 'undefined') discardPile = [];
         discardPile.push(removedCard);
         
-        console.log(`✅ ${player.name} hodhi ${removedCard.v}${removedCard.s}. Mbeti me ${player.cards.length} letra.`);
+        console.log(`✅ ${player.name} hodhi ${removedCard.v}${removedCard.s}.`);
 
-        // 6. NDËRRIMI I RADHËS (Stafeta)
+        // 6. NDËRRIMI I RADHËS (STAFETA)
         let foundNext = false;
-        let nextIdx = activePlayerIndex;
-
+        // Fillojmë kërkimin nga lojtari tjetër në rradhë
         for (let i = 1; i < players.length; i++) {
-            let checkIdx = (activePlayerIndex + i) % players.length;
+            let checkIdx = (currentIndex + i) % players.length;
             if (!players[checkIdx].isOut) {
                 activePlayerIndex = checkIdx;
+                activePlayerId = players[activePlayerIndex].id; // Përditësojmë ID-në globale
                 foundNext = true;
                 break;
             }
         }
         
-        // Nëse nuk u gjet lojtar tjetër aktiv, radha mbetet te ky lojtar
         if (!foundNext) {
-            console.log("⚠️ Nuk u gjet lojtar tjetër aktiv.");
+            activePlayerId = players[currentIndex].id;
         }
 
         console.log(`➡️ Radha kaloi te: ${players[activePlayerIndex].name}`);
 
-        // 7. SINKRONIZIMI FINAL
+        // 7. SINKRONIZIMI FINAL (Njoftojmë të gjithë)
         broadcastState(true);
 
     } else {
-        // GABIM: Letra nuk u gjet
-        console.log(`❌ GABIM SINKRONIZIMI: Letra ${card.v}${card.s} nuk u gjet te ${player.name}`);
-        socket.emit('errorMsg', "Gabim sinkronizimi! Letra po kthehet në dorë.");
+        console.log(`❌ Letra nuk u gjet te ${player.name}`);
         broadcastState(true);
     }
-});
-    // MBYLLJA (ZION!)
+}); // Kjo kllapë mbyll socket.on
+
+
+    
 // MBYLLJA (ZION!)
 socket.on('playerClosed', (data) => {
     const winner = players.find(p => p.id === socket.id);
