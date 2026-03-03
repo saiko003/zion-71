@@ -167,16 +167,7 @@ function createDeck() {
     console.log(`✅ Deku u krijua me ${newDeck.length} letra.`);
     return newDeck;
 }
-// 3. SHTOJE KËTU (Zëvendësoje atë që ke pasur për marrjen e letrës)
-socket.on('marrLeitër', (data) => {
-    console.log("Mora letër të re:", data.letraERe);
-    
-    // E shtojmë te lista jonë lokale (që mban renditjen tonë)
-    doraImeData.push(data.letraERe); 
-    
-    // E rifreskojmë pamjen
-    renderHand(); 
-});
+
 
 function startNewRound() {
     console.log("==== Duke nisur raund të ri ZION 71 ====");
