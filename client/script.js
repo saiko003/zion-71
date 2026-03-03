@@ -173,29 +173,24 @@ function updateGameFlow(data) {
 
 
 
+// 2. RREGULLIMI I DORËS
 if (data.myCards && Array.isArray(data.myCards)) {
-    // 1. Nëse numri i letrave është i NJËJTË (psh. 10 me 10)
-    if (doraImeData.length === data.myCards.length) {
-        // MOS BËJ ASGJË. 
-        // Mos e prek doraImeData sepse lojtari sapo i ka rregulluar vetë.
-        return; 
-    } 
     
-    // 2. Nëse numri ka ndryshuar (ke marrë ose hedhur letër)
-    if (doraImeData.length === 0 || Math.abs(doraImeData.length - data.myCards.length) > 1) {
+    // NËSE JE DUKE E LËVIZUR LETRËN, MOS PREK ASGJË!
+    if (isDraggingCard) return; 
+
+    if (doraImeData.length === 0) {
         doraImeData = data.myCards;
         renderHand();
-    } else if (doraImeData.length < data.myCards.length) {
-        // Ke marrë letër: Shtoje vetëm atë që mungon në fund
-        const newCard = data.myCards.find(sc => !doraImeData.some(lc => lc.id === sc.id));
-        if (newCard) {
-            doraImeData.push(newCard);
+    } 
+    else if (doraImeData.length !== data.myCards.length) {
+        // ... kodi tjetër që kemi shkruar për filter/push ...
+        // Vetëm nëse numri ka ndryshuar vërtet (jo nga drag-i)
+        const letraTeReja = data.myCards.filter(sc => !doraImeData.some(lc => lc.id === sc.id));
+        if (letraTeReja.length > 0) {
+            doraImeData.push(...letraTeReja);
             renderHand();
         }
-    } else {
-        // Ke hedhur letër: Prano listën e re
-        doraImeData = data.myCards;
-        renderHand();
     }
 }
 
@@ -418,7 +413,9 @@ function renderHand() {
 
 function onDragStart(e) {
     if (dragElement) return;
-
+    
+    isDraggingCard = true;
+    
     const isTouch = e.type === 'touchstart';
     const t = isTouch ? e.touches[0] : e;
     const div = e.currentTarget;
@@ -583,7 +580,7 @@ if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         if (dragElement && dragElement.parentNode) {
             dragElement.parentNode.removeChild(dragElement);
         }
-
+        
         finalizeCleanup();
         dragElement = null;
         placeholder = null;
@@ -639,7 +636,8 @@ if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         }, 200);
     }
     
-    // Pastrim i variablave globale të drag-ut
+    isDraggingCard = false;
+    
     dragElement = null; 
     placeholder = null;
     if (typeof finalizeCleanup === "function") finalizeCleanup();
