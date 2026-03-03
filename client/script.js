@@ -1219,13 +1219,20 @@ document.addEventListener('DOMContentLoaded', () => {
         animation: 150,
         ghostClass: 'sortable-ghost',
         onEnd: function (evt) {
-            // Nëse letra thjesht ka ndërruar vend brenda dorës
-            if (evt.from === evt.to) {
-                const movedCard = doraImeData.splice(evt.oldIndex, 1)[0];
-                doraImeData.splice(evt.newIndex, 0, movedCard);
-                console.log("Renditja u ruajt!");
-            }
-        }
+        // Në vend që të besojmë te oldIndex/newIndex, lexojmë gjendjen reale të ekranit
+        const cardElements = Array.from(handContainer.querySelectorAll('.card'));
+    
+    doraImeData = cardElements.map(el => ({
+        v: el.dataset.v,
+        s: el.dataset.s,
+        id: el.dataset.id
+    }));
+
+    console.log("Renditja e re u vulos në memorie:", doraImeData.map(c => c.v));
+    
+    // OPSIONALE: Tregoi serverit renditjen tënde të re që ta mbajë mend edhe ai
+    // socket.emit('ruaj_renditjen', doraImeData);
+}    
     });
 
     // 2. Instanca për zonën e hedhjes (HEDH KËTU)
