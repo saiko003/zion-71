@@ -240,10 +240,8 @@ body {
     justify-content: center; /* I mban letrat në qendër */
     align-items: center;
     border-radius: 10px;
-    
-    /* Hiqi overflow-et nëse dëshiron që letrat të mos priten */
     overflow: visible; 
-}
+   }
 
 }
 .led-orange {
