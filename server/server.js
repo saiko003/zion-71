@@ -235,7 +235,10 @@ function startNewRound() {
     }
 
     // 5️⃣ Vendosim lojtarin aktiv (Dealer-i)
-    activePlayerIndex = dealerIndex;
+    activePlayerId = players[activePlayerIndex].id;
+    io.emit('playerTurn', { activePlayerId: activePlayerId }); 
+    
+    console.log("Radha iu dha lojtarit:", players[activePlayerIndex].name);
 
     attempts = 0;
     while (players[activePlayerIndex]?.isOut && attempts < players.length) {
