@@ -170,25 +170,46 @@ function updateGameFlow(data) {
     // 1. Sigurohemi që 'data' nuk është null
     if (!data) data = {};
 
-    // Te updateGameFlow, rregullo pikën 2:
+// 2. RREGULLIMI I DORËS (Mbrojtja e Renditjes Lokale)
 if (data.myCards && Array.isArray(data.myCards)) {
-    // Vetëm nëse dora jote lokale është bosh (psh. sapo ke hyrë në lojë) 
-    // ose nëse numri i letrave ka ndryshuar drastikisht
-    if (doraImeData.length === 0 || doraImeData.length !== data.myCards.length) {
+    if (doraImeData.length === 0) {
+        // Rasti i parë: Dora është bosh (sapo ka filluar loja)
+        doraImeData = data.myCards;
+        renderHand();
+    } 
+    else if (doraImeData.length < data.myCards.length) {
+        // Rasti i dytë: Serveri thotë që kemi më shumë letra (kemi tërhequr një)
+        // Gjejmë cilat letra janë të reja (që nuk i kemi në doraImeData)
+        const letraTeReja = data.myCards.filter(serverCard => 
+            !doraImeData.some(localCard => localCard.id === serverCard.id)
+        );
+
+        if (letraTeReja.length > 0) {
+            // I shtojmë vetëm letrat e reja NË FUND të dorës aktuale
+            // Kjo e mbron renditjen që ke bërë ti me Drag & Drop
+            doraImeData.push(...letraTeReja);
+            renderHand();
+        }
+    } 
+    else if (doraImeData.length > data.myCards.length) {
+        // Rasti i tretë: Kemi më pak letra (kemi hedhur një letër)
+        // Sinkronizojmë dorën me serverin sepse letra është hequr
         doraImeData = data.myCards;
         renderHand();
     }
-    }
+    // Nëse numri është i njëjtë (psh 10=10), nuk bëjmë ASGJË.
+    // Kjo parandalon "kërcimin" e letrave kur vijnë update-et e tjera.
+}
 
-    // 3. LOGJIKA E RADHËS
-    // Prioritet ka numri i letrave (11 letra = radha ime për të hedhur)
-    if (doraImeData && doraImeData.length === 11) {
-        isMyTurn = true;
-    } else if (data.activePlayerId) {
-        isMyTurn = (data.activePlayerId === socket.id);
-    } else {
-        // Nëse nuk ka të dhëna për ID, mos e ndrysho statusin aktual
-    }
+// 3. LOGJIKA E RADHËS
+// Prioritet ka ID-ja nga serveri, por e konfirmojmë edhe me numrin e letrave
+if (data.activePlayerId) {
+    isMyTurn = (data.activePlayerId === socket.id);
+} else if (doraImeData && doraImeData.length === 11) {
+    isMyTurn = true;
+} else {
+    isMyTurn = false;
+}
 
     // 4. VIZUALIZIMI I RADHËS (Glow)
     document.body.classList.toggle('my-turn-glow', isMyTurn);
