@@ -952,13 +952,18 @@ function findAndRemoveSequence(suitCards, len, jokers) {
 /**
  * Kthen vlerën numerike të letrës.
  */
-function getVal(card) {
+function getVal(card, highAce = false) {
     const v = card.v;
-    if (v === 'A') return 1; 
+    
+    // Kontrolli për Xhokerin (për siguri)
+    if (['★', 'Jokeri', 'Xhoker'].includes(v)) return 0;
+
+    if (v === 'A') return highAce ? 14 : 1; 
     if (v === 'J') return 11;
     if (v === 'Q') return 12;
     if (v === 'K') return 13;
-    return parseInt(v);
+    
+    return parseInt(v) || 0;
 }
 
 document.getElementById('btn-mbyll').addEventListener('click', () => {
