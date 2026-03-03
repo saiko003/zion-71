@@ -130,48 +130,54 @@ players.forEach(player => {
 });
 }
 function updateGameFlow(data) {
+    // Sigurohemi që data ekziston që mos të dështojë kodi
+    if (!data) return;
+
     isMyTurn = (data.activePlayerId === socket.id);
     
-    // 1. Vizualizimi i radhës (Glow)
+    // Përditësojmë variablën lokale të letrave nëse vjen nga serveri
+    if (data.myCards) doraImeData = data.myCards;
+
+    // 1. Vizualizimi i radhës
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
-    // 2. Kontrolli i Deck-ut (Shkëlqen vetëm kur duhet të tërheqësh)
+    // 2. Kontrolli i Deck-ut
     const deck = document.getElementById('deck-zion') || document.getElementById('deck');
-    // Te pika 2 e kodit tënd:
-if (deck) {
-    // Shkëlqen VETËM nëse është radha jote DHE ke 10 letra
-    if (isMyTurn && doraImeData.length === 10) {
-        deck.classList.add('active-deck');
-        deck.style.pointerEvents = "auto"; // Lejo klikimin
-    } else {
-        deck.classList.remove('active-deck');
-        deck.style.pointerEvents = "none"; // Blloko klikimin kur s'është radha
+    if (deck) {
+        // Kontrollojmë gjatësinë e letrave me kujdes
+        const kaDhjetLetra = doraImeData && doraImeData.length === 10;
+        
+        if (isMyTurn && kaDhjetLetra) {
+            deck.classList.add('active-deck');
+            deck.style.pointerEvents = "auto";
+            deck.style.cursor = "pointer";
+        } else {
+            deck.classList.remove('active-deck');
+            deck.style.pointerEvents = "none";
+            deck.style.cursor = "default";
+        }
     }
-}
 
     // 3. Përditësojmë Jackpot-in
     const jackpot = document.getElementById('jackpot');
     if (jackpot && data.jackpotCard) {
         const isRed = ['♥', '♦'].includes(data.jackpotCard.s);
-        
-        // Përdorim një strukturë më të pastër për letrën
         jackpot.innerHTML = `
             <div class="v">${data.jackpotCard.v}</div>
             <div class="s">${data.jackpotCard.s}</div>
         `;
         jackpot.style.color = isRed ? '#e74c3c' : '#2c3e50';
-        jackpot.style.display = 'block';
     }
 
-    // 4. Përditësojmë statusin (Opsionale por shumë e dobishme)
+    // 4. Status Message
     const statusMsg = document.getElementById('status-message');
     if (statusMsg) {
         if (isMyTurn) {
             statusMsg.innerText = (doraImeData.length === 10) ? "Tërhiq një letër!" : "Hidh një letër!";
-            statusMsg.style.color = "#2ecc71"; // Jeshile
+            statusMsg.style.color = "#2ecc71";
         } else {
             statusMsg.innerText = "Pret radhën...";
-            statusMsg.style.color = "#bdc3c7"; // Gri
+            statusMsg.style.color = "#bdc3c7";
         }
     }
 }
