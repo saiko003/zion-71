@@ -787,10 +787,11 @@ function processDiscard(cardElement) {
         const targetRect = discardZone.getBoundingClientRect();
 
         // Vendosim stilet fillestare për animacionin (fixed që të lëvizë lirisht në ekran)
+  // GJEJE KËTË PJESË DHE KORRIGJOJE:
         Object.assign(cardElement.style, {
             position: 'fixed',
-            left: rect.left + 'px',
-            top: rect.top + 'px',
+            left: rect.left + 'px',  // SHTO + 'px'
+            top: rect.top + 'px',    // SHTO + 'px'
             zIndex: '2000',
             pointerEvents: 'none',
             transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
