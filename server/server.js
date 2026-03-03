@@ -1,14 +1,22 @@
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io'); // MBAJE KËTË
+const { Server } = require('socket.io');
 const cors = require('cors');
+const path = require('path'); // Importi i nevojshëm
 
 const app = express();
 app.use(cors());
 
+// --- SHTO KËTO DY RRESHTA ---
+app.use(express.static(path.join(__dirname, '.'))); 
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+// ----------------------------
+
 const server = http.createServer(app);
 
-// KËTU bëhet bashkimi - Përdorim { Server } që importuam sipër
 const io = new Server(server, {
     cors: {
         origin: [
@@ -696,3 +704,8 @@ function shuffle(array) {
     }
     return array;
 }
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Serveri po punon ne porten ${PORT}`);
+});
