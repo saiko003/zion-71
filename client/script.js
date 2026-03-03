@@ -629,7 +629,9 @@ function isDoraValid(cards) {
         if (remaining.length === 0) return true;
 
         let first = remaining[0];
-
+        
+    console.log("Duke provuar grupin për:", first.v, first.s, "me xhokera:", jks)
+        
         // --- 1. PROVOJMË SET (psh: 8-8-8) ---
         let sameValue = remaining.filter(c => c.v === first.v);
         for (let size = 3; size <= 4; size++) {
