@@ -629,27 +629,28 @@ function isDoraValid(cards) {
         }
 
         // --- PROVOJMË VARG (psh: 5-6-7 e së njëjtës suitë) ---
-        for (let size = 3; size <= 10; size++) {
-            let currentJks = jks;
-            let possible = true;
-            let tempRemaining = [...remaining];
-            
-            // Heqim letrën e parë (fillimi i vargut)
-            tempRemaining.splice(0, 1);
+        // --- PROVOJMË VARG (psh: 5-6-7 e së njëjtës suitë) ---
+// Provojmë madhësi të ndryshme vargjesh (3, 4, ose 5 letra)
+for (let size = 3; size <= Math.min(remaining.length + jks, 11); size++) {
+    let currentJks = jks;
+    let tempRemaining = [...remaining];
+    tempRemaining.splice(0, 1); // Heqim letrën e parë (start)
+    let possible = true;
 
-            for (let v = getVal(first.v) + 1; v < getVal(first.v) + size; v++) {
-                let idx = tempRemaining.findIndex(c => getVal(c.v) === v && c.s === first.s);
-                if (idx !== -1) {
-                    tempRemaining.splice(idx, 1);
-                } else if (currentJks > 0) {
-                    currentJks--;
-                } else {
-                    possible = false;
-                    break;
-                }
-            }
-            if (possible && solve(tempRemaining, currentJks)) return true;
+    for (let v = getVal(first.v) + 1; v < getVal(first.v) + size; v++) {
+        let idx = tempRemaining.findIndex(c => getVal(c.v) === v && c.s === first.s);
+        if (idx !== -1) {
+            tempRemaining.splice(idx, 1);
+        } else if (currentJks > 0) {
+            currentJks--;
+        } else {
+            possible = false;
+            break;
         }
+    }
+    // E RËNDËSISHME: Provojmë rrugën rekursive vetëm nëse ky varg është i mundur
+    if (possible && solve(tempRemaining, currentJks)) return true;
+}
         return false;
     }
 
