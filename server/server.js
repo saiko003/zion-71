@@ -234,30 +234,31 @@ function startNewRound() {
         console.log("Jackpot-i fillestar (në tokë):", `${jackpotCard.v}${jackpotCard.s}`);
     }
 
-    // 5️⃣ Vendosim lojtarin aktiv (Dealer-i)
-    activePlayerId = players[activePlayerIndex].id;
-    io.emit('playerTurn', { activePlayerId: activePlayerId }); 
+// 5️⃣ VENDOSIM LOJTARIN AKTIV (Ai që ka 11 letra)
+    const playerWith11 = players.find(p => p.cards.length === 11 && !p.isOut);
     
-    console.log("Radha iu dha lojtarit:", players[activePlayerIndex].name);
-
-    attempts = 0;
-    while (players[activePlayerIndex]?.isOut && attempts < players.length) {
-        activePlayerIndex = (activePlayerIndex + 1) % players.length;
-        attempts++;
+    if (playerWith11) {
+        activePlayerIndex = players.indexOf(playerWith11);
+        activePlayerId = playerWith11.id;
+        
+        // Kjo i thotë lojtarit specifik "LUAJ!"
+        io.emit('playerTurn', { 
+            activePlayerId: activePlayerId,
+            message: `Radhën e ka ${playerWith11.name}` 
+        });
+        
+        console.log("👉 Lojtari që nis lojën (11 letra):", playerWith11.name);
+    } else {
+        console.warn("⚠️ Askush nuk ka 11 letra! Po zgjedhim Dealer-in si default.");
+        activePlayerIndex = dealerIndex;
+        activePlayerId = players[dealerIndex]?.id;
     }
 
-    if (!players[activePlayerIndex]) {
-        console.warn("Nuk u gjet lojtari aktiv!");
-        activePlayerIndex = 0;
-    }
-    
-    activePlayerId = players[activePlayerIndex]?.id || null;
-    console.log("Lojtari aktiv (Dealer):", players[activePlayerIndex]?.name);
-
-    // 6️⃣ Broadcast gjendja
+    // 6️⃣ BROADCAST GJENDJA
+    // Kjo dërgon të gjitha të dhënat (letrat, emrat, etj.) te të gjithë
     broadcastState(true);
 
-    console.log("Raundi i ri është gati, gjendja u dërgua.");
+    console.log("✅ Raundi i ri është gati, mesazhet u dërguan.");
 }
 // ==========================================
 // 2. KOMUNIKIMI ME LOJTARËT
