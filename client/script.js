@@ -933,12 +933,22 @@ function getVal(card) {
 }
 
 document.getElementById('btn-mbyll').addEventListener('click', () => {
-    if (confirm("A dëshiron të mbyllësh lojën?")) {
-        // Dërgojmë informacionin nëse u mbyll me Jackpot
-        socket.emit('playerClosed', { 
-            cards: doraImeData, 
-            isJackpotClosing: tookJackpotThisTurn 
+    // 1. Kontrolli i radhës dhe letrave
+    if (!isMyTurn || doraImeData.length !== 11) {
+        alert("Nuk mund të mbyllësh! Duhet të kesh 11 letra dhe të jetë radha jote.");
+        return;
+    }
+
+    if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
+        // 2. KORRIGJIMI: Emri i eventit duhet të jetë 'declareZion'
+        // Nuk kemi nevojë të dërgojmë letrat sepse serveri i ka ato
+        socket.emit('declareZion', { 
+            isJackpotClosing: (typeof tookJackpotThisTurn !== 'undefined') ? tookJackpotThisTurn : false 
         });
+
+        // 3. Fshehim butonin që mos të klikohet dy herë
+        document.getElementById('btn-mbyll').style.display = 'none';
+        isMyTurn = false; 
     }
 });
 // ==========================================
