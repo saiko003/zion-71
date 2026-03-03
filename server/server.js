@@ -423,7 +423,7 @@ socket.on('drawCard', () => {
     broadcastState();
 });
     
-socket.on('cardDiscarded', (card) => {
+socket.on('discardCard', (card) => {
     // 1. Identifikojmë lojtarin që po tenton të hedhë letrën
     // Përdorim findIndex për siguri që të dimë saktë cilin index po prekim
     const currentIndex = players.findIndex(p => p.id === socket.id);
