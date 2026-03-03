@@ -79,8 +79,10 @@ socket.on('updateGameState', (data) => {
 });
 
 socket.on('yourCards', (cards) => {
-    console.log("Mora letrat e mia:", cards);
-    doraImeData = cards; // Përditësojmë listën tonë të letrave
+    console.log("Letrat fillestare erdhën:", cards);
+    doraImeData = cards;
+    renderHand(); // Vizatoji menjëherë
+});
     
     // 1. I shfaqim letrat në ekran (vizualisht)
     renderHand(); 
@@ -145,6 +147,13 @@ players.forEach(player => {
     scoreBody.appendChild(row);
 });
 }
+// KËTU dëgjojmë serverin
+socket.on('updateGameState', (data) => {
+    console.log("Mora gjendjen e re të lojës:", data);
+    
+    // THIRRJA E FUNKSIONIT TËND
+    updateGameFlow(data);
+});
 function updateGameFlow(data) {
     // 1. Sigurohemi që 'data' nuk është null/undefined
     if (!data) data = {};
@@ -159,7 +168,9 @@ function updateGameFlow(data) {
     }
 
     // Përditësojmë variablën lokale të letrave nëse vijnë direkt te ky objekt
-    if (data.myCards) doraImeData = data.myCards;
+    if (data.myCards && data.myCards.length > 0) {
+    doraImeData = data.myCards;
+    }
 
     // 3. VIZUALIZIMI I RADHËS (Glow)
     document.body.classList.toggle('my-turn-glow', isMyTurn);
