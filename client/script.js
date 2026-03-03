@@ -40,8 +40,20 @@ const cardOrder = {
     'J': 11, 'Q': 12, 'K': 13
 };
 
-// DHE kjo logjikë brenda isDoraValid për Q-K-A:
-const getVal = (v) => cardOrder[v] || parseInt(v);
+function getVal(card, highAce = false) {
+    const v = card.v;
+    
+    // Kontrolli për Xhokerin (për siguri)
+    if (['★', 'Jokeri', 'Xhoker'].includes(v)) return 0;
+
+    if (v === 'A') return highAce ? 14 : 1; 
+    if (v === 'J') return 11;
+    if (v === 'Q') return 12;
+    if (v === 'K') return 13;
+    
+    return parseInt(v) || 0;
+}
+
 // 1. LIDHJA E BUTONIT START
 const btnstart = document.getElementById('btn-start');
 if (btnstart) {
@@ -607,11 +619,6 @@ function isDoraValid(cards) {
     let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker'].includes(c.v)).length;
     let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker'].includes(c.v));
 
-    const getVal = (v) => {
-        const mapping = { 'A': 1, 'J': 11, 'Q': 12, 'K': 13 };
-        return mapping[v] || parseInt(v);
-    };
-
     // Renditja sipas suitës dhe vlerës
     normalCards.sort((a, b) => {
         if (a.s !== b.s) return a.s.localeCompare(b.s);
@@ -949,22 +956,6 @@ function findAndRemoveSequence(suitCards, len, jokers) {
     return null;
 }
 
-/**
- * Kthen vlerën numerike të letrës.
- */
-function getVal(card, highAce = false) {
-    const v = card.v;
-    
-    // Kontrolli për Xhokerin (për siguri)
-    if (['★', 'Jokeri', 'Xhoker'].includes(v)) return 0;
-
-    if (v === 'A') return highAce ? 14 : 1; 
-    if (v === 'J') return 11;
-    if (v === 'Q') return 12;
-    if (v === 'K') return 13;
-    
-    return parseInt(v) || 0;
-}
 
 document.getElementById('btn-mbyll').addEventListener('click', () => {
     // 1. Kontrolli i radhës dhe letrave
