@@ -794,21 +794,19 @@ if (deckElement) {
 // ==========================================
 
 function processDiscard(cardElement) {
-    if (!isMyTurn) return; // Mbrojtje e parë
-    isMyTurn = false; // Bllokoje menjëherë radhën vizualisht
+    if (!isMyTurn) return; 
+    isMyTurn = false; // Bllokoje radhën menjëherë
 
     const cardId = cardElement.dataset.id; 
-    
-    // Gjejmë objektin e PLOTË të letrës në memorje (doraImeData)
     const cardIndex = doraImeData.findIndex(c => c.id === cardId);
     
     if (cardIndex !== -1) {
-        const letraObjekt = doraImeData[cardIndex]; // Marrim objektin origjinal me v, s dhe id
+        const letraObjekt = doraImeData[cardIndex]; 
 
-        console.log("Duke dërguar letrën në server:", letraObjekt);
+        // 1. HIQE NGA ARRAY MENJËHERË (Kjo parandalon kthimin në dorë)
+        doraImeData.splice(cardIndex, 1); 
 
-        // 1. DËRGIMI I MENJËHERSHËM TE SERVERI
-        // Përdorim objektin e plotë që serveri ta gjejë me .findIndex() pa gabime
+        // 2. DËRGIMI NË SERVER
         socket.emit('discardCard', letraObjekt);
 
         // --- PJESA E ANIMACIONIT ---
@@ -816,57 +814,64 @@ function processDiscard(cardElement) {
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
 
-        // Vendosim stilet fillestare për animacionin (fixed që të lëvizë lirisht në ekran)
-  // GJEJE KËTË PJESË DHE KORRIGJOJE:
+        // I japim stilet fixed për të nisur fluturimin nga pozicioni aktual
         Object.assign(cardElement.style, {
             position: 'fixed',
-            left: rect.left + 'px',  // SHTO + 'px'
-            top: rect.top + 'px',    // SHTO + 'px'
+            left: rect.left + 'px',
+            top: rect.top + 'px',
+            width: rect.width + 'px',
+            height: rect.height + 'px',
             zIndex: '2000',
             pointerEvents: 'none',
-            transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
+            margin: '0',
+            transition: "all 0.4s cubic-bezier(0.25, 1, 0.5, 1)"
         });
 
-        // Nisim lëvizjen drejt stivës
-        requestAnimationFrame(() => {
-            cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
-            cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
-            cardElement.style.transform = "scale(0.3) rotate(30deg)";
-            cardElement.style.opacity = "0";
-        });
+        // Përdorim një vonesë minimale që browser-i të regjistrojë ndryshimin e stilit
+        setTimeout(() => {
+            // Llogarisim qendrën e stivës
+            const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
+            const targetY = targetRect.top + (targetRect.height / 2) - (rect.height / 2);
+
+            cardElement.style.left = targetX + 'px';
+            cardElement.style.top = targetY + 'px';
+            cardElement.style.transform = "scale(0.4) rotate(45deg)";
+            cardElement.style.opacity = "0.2";
+        }, 10);
         
-        // 2. PASTRIMI PAS ANIMACIONIT
-setTimeout(() => {
-    // --- SHTO KËTË PJESË KËTU (Për pikën 11) ---
-    const visualDiscard = document.createElement('div');
-    visualDiscard.className = 'card discarded-static';
-    visualDiscard.innerHTML = cardElement.innerHTML;
-    visualDiscard.style.color = cardElement.style.color;
-    
-    // Rrotullim random që të duket si shkartisje reale
-    const randomRot = Math.floor(Math.random() * 40) - 20; 
-    visualDiscard.style.transform = `rotate(${randomRot}deg)`;
-    
-    // E pastrojmë stivën nga letrat shumë të vjetra (mbajmë psh 3)
-    if (discardZone.children.length >= 3) {
-        discardZone.removeChild(discardZone.firstChild);
-    }
-    discardZone.appendChild(visualDiscard);
-    // ------------------------------------------
+        // 3. PASTRIMI DHE KRIJIMII I LETRËS STATIKE
+        setTimeout(() => {
+            // Krijojmë kopjen që mbetet te stiva (Pika 11)
+            const visualDiscard = document.createElement('div');
+            visualDiscard.className = 'card discarded-static';
+            visualDiscard.innerHTML = cardElement.innerHTML;
+            visualDiscard.style.color = cardElement.style.color;
+            
+            // Rrotullim random (-20 deri 20 gradë)
+            const randomRot = Math.floor(Math.random() * 40) - 20; 
+            visualDiscard.style.transform = `translate(-50%, -50%) rotate(${randomRot}deg)`;
+            
+            // Mbajmë vetëm 3 letrat e fundit në stivë për performancë
+            if (discardZone.children.length >= 3) {
+                discardZone.removeChild(discardZone.firstChild);
+            }
+            discardZone.appendChild(visualDiscard);
 
-    doraImeData.splice(cardIndex, 1); 
-    if (cardElement.parentNode) cardElement.remove();
-    renderHand(); 
-    
-    if (typeof checkZionCondition === "function") {
-        checkZionCondition();
-    }
-}, 400);
+            // Heqim elementin e animacionit
+            if (cardElement.parentNode) cardElement.remove();
+            
+            // Rivizatojmë dorën (tani me 10 letra)
+            renderHand(); 
+            
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
+        }, 400);
+
     } else {
-        // RASTI I GABIMIT: Nëse letra nuk gjendet në memorjen lokale
         console.error("GABIM: Letra nuk u gjet lokalisht! ID:", cardId);
-        isMyTurn = true; // Ktheja radhën lojtarit pasi nuk u realizua hedhja
-        renderHand(); // Rifresko pamjen për siguri
+        isMyTurn = true; 
+        renderHand(); 
     }
 }
 // ==========================================
