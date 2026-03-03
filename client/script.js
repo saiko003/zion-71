@@ -501,27 +501,31 @@ function onDragEnd(e) {
                         t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
-    // 2. KUSHTI PËR ZION (I paprekur)
-    if (isOverVictory && isMyTurn && doraImeData.length === 11) {
-        if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
-            isMyTurn = false;
-            if (placeholder) placeholder.remove();
-            
-            socket.emit('declareZion', { 
-                discardedCard: { 
-                    v: dragElement.dataset.v, 
-                    s: dragElement.dataset.s, 
-                    id: dragElement.dataset.id 
-                }, 
-                hand: doraImeData.filter(c => c.id !== dragElement.dataset.id)
-            });
+    // 2. KUSHTI PËR ZION (KORRIGJUAR)
+if (isOverVictory && isMyTurn && doraImeData.length === 11) {
+    if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
+        
+        // MOS e filtro dorën këtu. Dërgoje të plotë me 11 letra 
+        // që serveri t'i testojë të gjitha kombinimet.
+        socket.emit('declareZion', { 
+            isJackpotClosing: false // ose true nese ke buton specifik
+        });
 
-            finalizeCleanup();
-            dragElement = null;
-            placeholder = null;
-            return; 
+        // Pastrim i menjëhershëm i ndërfaqes
+        isMyTurn = false;
+        if (placeholder) placeholder.remove();
+        
+        // Fshijmë elementin vizualisht
+        if (dragElement && dragElement.parentNode) {
+            dragElement.parentNode.removeChild(dragElement);
         }
+
+        finalizeCleanup();
+        dragElement = null;
+        placeholder = null;
+        return; 
     }
+}
 
     // 3. KUSHTI PËR HEDHJE NË STIVË
     if (isOverPile && isMyTurn && doraImeData.length === 11) {
