@@ -464,12 +464,11 @@ function updateZonesFeedback(x, y) {
 function onDragEnd(e) {
     if (!dragElement) return;
 
-    // 1. KORRIGJIMI PËR TOUCH/MOUSE (Marrja e koordinatave fundore)
+    // 1. KORRIGJIMI PËR TOUCH/MOUSE
     const t = e.type.includes('touch') ? 
               (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e.touches[0]) : 
               e;
 
-    // Hiq menjëherë dritën (glow) e stivës
     const pile = document.getElementById('discard-pile');
     if (pile) pile.classList.remove('drag-over');
 
@@ -477,21 +476,19 @@ function onDragEnd(e) {
     const handContainer = document.getElementById('player-hand');
     const tolerance = 60; 
 
-    // Heqja e eventeve (E bëjmë në fillim që të jemi të sigurt)
+    // Heqja e eventeve
     document.removeEventListener('mousemove', onDragMove);
     document.removeEventListener('touchmove', onDragMove);
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('touchend', onDragEnd);
 
-    // KTHIMI I POINTER EVENTS (Zgjidhja për "Sticky Mouse")
-    // E detyrojmë letrën të jetë përsëri "e kapshme" nga sistemi
+    // KORRIGJIM: Lirojmë mausin menjëherë që të mos "ngjisë"
     dragElement.style.pointerEvents = 'auto'; 
     dragElement.classList.remove('dragging');
 
     let isOverPile = false;
     let isOverVictory = false;
 
-    // Kontrolli i koordinatave
     if (pile && t) {
         const r = pile.getBoundingClientRect();
         isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
@@ -504,9 +501,7 @@ function onDragEnd(e) {
                         t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
-    // --- LOGJIKA E VENDOSJES ---
-
-    // 2. KUSHTI PËR ZION (Mbyllje)
+    // 2. KUSHTI PËR ZION (I paprekur)
     if (isOverVictory && isMyTurn && doraImeData.length === 11) {
         if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
             isMyTurn = false;
@@ -524,42 +519,34 @@ function onDragEnd(e) {
             finalizeCleanup();
             dragElement = null;
             placeholder = null;
-            return; // Ndalojmë këtu
+            return; 
         }
     }
 
     // 3. KUSHTI PËR HEDHJE NË STIVË
     if (isOverPile && isMyTurn && doraImeData.length === 11) {
-        isMyTurn = false; // Blloko radhën deri në update-in tjetër
+        // Shënim: isMyTurn = false bëhet brenda processDiscard
         if (placeholder) placeholder.remove();
         
-        // Resetojmë pozicionin para se ta dërgojmë te stiva
         dragElement.style.position = '';
         processDiscard(dragElement); 
         
     } else {
-        // 4. KTHIMI NË DORË (Nëse dështon hedhja ose thjesht po e rendisim)
+        // 4. KTHIMI NË DORË (I paprekur, me pastrim stilesh)
         if (placeholder && placeholder.parentNode) {
             placeholder.parentNode.insertBefore(dragElement, placeholder);
         } else if (dragElement.parentNode !== handContainer) {
             handContainer.appendChild(dragElement);
         }
 
-        // Pastrim total i stileve inline (Jetike për Safari & PC)
+        if (placeholder) placeholder.remove();
+
         Object.assign(dragElement.style, {
-            position: '',
-            zIndex: '',
-            pointerEvents: 'auto', 
-            width: '',
-            height: '',
-            left: '',
-            top: '',
-            margin: '',
-            transform: '',
-            transition: 'all 0.2s ease' // Pak animacion kur kthehet në vend
+            position: '', zIndex: '', pointerEvents: 'auto', 
+            width: '', height: '', left: '', top: '',
+            margin: '', transform: '', transition: 'all 0.2s ease'
         });
 
-        // Ruajtja e renditjes së re në array-n lokal
         const currentCards = [...handContainer.querySelectorAll('.card')];
         doraImeData = currentCards.map(c => ({
             v: c.dataset.v,
@@ -567,14 +554,12 @@ function onDragEnd(e) {
             id: c.dataset.id
         }));
 
-        // Render i ri për të pastruar çdo mbetje vizuale
         setTimeout(() => {
             if (dragElement) dragElement.style.transition = '';
             renderHand();
         }, 200);
     }
     
-    // RESETIMI FINAL
     dragElement = null; 
     placeholder = null;
     finalizeCleanup();
@@ -795,7 +780,7 @@ if (deckElement) {
 
 function processDiscard(cardElement) {
     if (!isMyTurn) return; 
-    isMyTurn = false; // Bllokoje radhën menjëherë
+    isMyTurn = false; 
 
     const cardId = cardElement.dataset.id; 
     const cardIndex = doraImeData.findIndex(c => c.id === cardId);
@@ -803,64 +788,48 @@ function processDiscard(cardElement) {
     if (cardIndex !== -1) {
         const letraObjekt = doraImeData[cardIndex]; 
 
-        // 1. HIQE NGA ARRAY MENJËHERË (Kjo parandalon kthimin në dorë)
+        // KORRIGJIM: E fshijmë nga array menjëherë që renderHand mos ta vizatojë prapë
         doraImeData.splice(cardIndex, 1); 
 
-        // 2. DËRGIMI NË SERVER
         socket.emit('discardCard', letraObjekt);
 
-        // --- PJESA E ANIMACIONIT ---
         const discardZone = document.getElementById('discard-pile');
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
 
-        // I japim stilet fixed për të nisur fluturimin nga pozicioni aktual
         Object.assign(cardElement.style, {
             position: 'fixed',
             left: rect.left + 'px',
             top: rect.top + 'px',
-            width: rect.width + 'px',
-            height: rect.height + 'px',
             zIndex: '2000',
             pointerEvents: 'none',
-            margin: '0',
-            transition: "all 0.4s cubic-bezier(0.25, 1, 0.5, 1)"
+            transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
         });
 
-        // Përdorim një vonesë minimale që browser-i të regjistrojë ndryshimin e stilit
-        setTimeout(() => {
-            // Llogarisim qendrën e stivës
-            const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
-            const targetY = targetRect.top + (targetRect.height / 2) - (rect.height / 2);
-
-            cardElement.style.left = targetX + 'px';
-            cardElement.style.top = targetY + 'px';
-            cardElement.style.transform = "scale(0.4) rotate(45deg)";
-            cardElement.style.opacity = "0.2";
-        }, 10);
+        requestAnimationFrame(() => {
+            cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
+            cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
+            cardElement.style.transform = "scale(0.3) rotate(30deg)";
+            cardElement.style.opacity = "0";
+        });
         
-        // 3. PASTRIMI DHE KRIJIMII I LETRËS STATIKE
         setTimeout(() => {
-            // Krijojmë kopjen që mbetet te stiva (Pika 11)
+            // KORRIGJIM: Krijojmë kopjen vizuale te stiva (Pika 11)
             const visualDiscard = document.createElement('div');
             visualDiscard.className = 'card discarded-static';
             visualDiscard.innerHTML = cardElement.innerHTML;
             visualDiscard.style.color = cardElement.style.color;
             
-            // Rrotullim random (-20 deri 20 gradë)
             const randomRot = Math.floor(Math.random() * 40) - 20; 
             visualDiscard.style.transform = `translate(-50%, -50%) rotate(${randomRot}deg)`;
             
-            // Mbajmë vetëm 3 letrat e fundit në stivë për performancë
             if (discardZone.children.length >= 3) {
                 discardZone.removeChild(discardZone.firstChild);
             }
             discardZone.appendChild(visualDiscard);
 
-            // Heqim elementin e animacionit
             if (cardElement.parentNode) cardElement.remove();
             
-            // Rivizatojmë dorën (tani me 10 letra)
             renderHand(); 
             
             if (typeof checkZionCondition === "function") {
