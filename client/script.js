@@ -15,6 +15,16 @@ socket.on('connect', () => {
     console.log("U lidha! Po dërgoj joinGame...");
     socket.emit('joinGame', testi);
 });
+// 3. SHTOJE KËTU (Zëvendësoje atë që ke pasur për marrjen e letrës)
+socket.on('marrLeitër', (data) => {
+    console.log("Mora letër të re:", data.letraERe);
+    
+    // E shtojmë te lista jonë lokale (që mban renditjen tonë)
+    doraImeData.push(data.letraERe); 
+    
+    // E rifreskojmë pamjen
+    renderHand(); 
+});
 
 const handContainer = document.getElementById('player-hand');
 const jackpotElement = document.getElementById('jackpot');
