@@ -499,68 +499,106 @@ body:has(.dragging) {
 /* --- KODI VETËM PËR TELEFON --- */
 /* --- KODI I KORRIGJUAR VETËM PËR TELEFON --- */
 @media screen and (max-width: 600px) {
-    /* 1. Kapim prindin kryesor dhe e zbresim poshtë */
+    /* 1. FUSHA KRYESORE - E mban lojën brenda ekranit */
     .center-area {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 20px !important;
-        margin-top: 0 !important;
         position: absolute !important;
-        top: 65% !important; /* Kjo e zbret te zona e kuqe */
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
+        top: 15% !important;
+        bottom: 0 !important;
+        left: 0 !important;
         width: 100% !important;
-    }
-
-    /* 2. Kapim wrapper-in e dekun (me pikë, siç e ke në HTML) */
-    .deck-wrapper {
-        position: relative !important;
-        top: auto !important;
-        left: auto !important;
-        transform: none !important;
+        margin: 0 !important;
         display: block !important;
     }
 
-    /* 3. Fusha "HEDH KËTU" */
-    #discard-pile {
-        position: relative !important;
-        top: auto !important;
-        left: auto !important;
-        width: 75px !important;
+    /* 2. DEKUN ZION (Lart Majtas) */
+    .deck-wrapper {
+        position: absolute !important;
+        top: 20px !important;
+        left: 20px !important;
+        width: 70px !important;
         height: 105px !important;
+        z-index: 10 !important;
+    }
+
+    #deck-zion {
+        width: 100% !important;
+        height: 100% !important;
         margin: 0 !important;
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 2px dashed #fff !important;
+    }
+
+    /* 3. SINJALI DHE ASISTENTI (Në Mes) */
+    #asistenti-container {
+        position: absolute !important;
+        top: 145px !important; /* Fiks poshtë dekut */
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: auto !important;
+        white-space: nowrap !important;
+        z-index: 20 !important;
+    }
+
+    /* 4. RUBRIKA "HEDH KËTU" (E MADHE DHE INTERAKTIVE) */
+    #discard-pile {
+        position: absolute !important;
+        top: 210px !important; /* Fillon pas sinjalit */
+        left: 5% !important;
+        width: 90% !important;
+        height: 160px !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 2px dashed rgba(255, 255, 255, 0.2) !important;
+        border-radius: 15px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
+        transition: all 0.3s ease !important;
     }
 
-    /* 4. Pakoja ZION */
-    #deck-zion {
-        width: 75px !important;
-        height: 105px !important;
-        margin: 0 !important;
+    /* Efekti Glow kur është radha e lojtarit (duhet ta kesh body.my-turn-glow në JS) */
+    body.my-turn-glow #discard-pile {
+        border-color: #2ecc71 !important;
+        box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.2) !important;
+        background: rgba(46, 204, 113, 0.05) !important;
     }
 
-    /* 5. Statusi i lojës sipër zonës së kuqe */
-    #asistenti-container {
-        position: absolute !important;
-        top: 35% !important;
+    /* 5. PIKËT DHE DORA E LOJTARIT (SINKRON) */
+    #display-piket {
+        position: fixed !important;
+        bottom: 125px !important; /* Rri mbi dorën */
+        left: 0 !important;
         width: 100% !important;
-        display: flex !important;
-        justify-content: center !important;
+        z-index: 1000 !important;
     }
 
-    /* 6. Dora e lojtarit fiks poshtë */
     #player-hand {
         position: fixed !important;
-        bottom: 5px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        bottom: 10px !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 110px !important;
+        background: rgba(0, 0, 0, 0.2) !important;
+        backdrop-filter: blur(5px) !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: flex-end !important;
+        padding: 0 10px !important;
         z-index: 2000 !important;
+    }
+
+    /* MADHËSIA E LETRAVE */
+    .card {
+        width: 55px !important;
+        height: 85px !important;
+        margin-left: -25px !important;
+        font-size: 14px !important;
+        border-radius: 6px !important;
+        transition: transform 0.2s ease !important;
+    }
+
+    .card:first-child { margin-left: 0 !important; }
+
+    /* Ngritja e letrës kur e prekim */
+    .card:active {
+        transform: translateY(-20px) scale(1.1) !important;
     }
 }
  #player-hand {
