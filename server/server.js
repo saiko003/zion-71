@@ -346,17 +346,12 @@ socket.on('startGame', () => {
 });
    
     
-    // TËRHEQJA E LETRËS (Pika 12)
 socket.on('drawCard', () => {
     const player = players[activePlayerIndex];
     
-    if (!player || player.id !== socket.id) {
-        console.log(`⚠️ Jo radha e ${player?.name || 'panjohur'}`);
-        return; 
-    }
-
+    // Kontrollet e sigurisë
+    if (!player || player.id !== socket.id) return;
     if (player.cards.length !== 10) {
-        console.log(`⚠️ ${player.name} ka ${player.cards.length} letra. Nuk mund të tërheqësh!`);
         broadcastState(false); 
         return;
     }
@@ -367,41 +362,39 @@ socket.on('drawCard', () => {
 
         console.log(`✅ ${player.name} tërhoqi ${drawnCard.v}${drawnCard.s}.`);
 
-        // 1. Njoftojmë lojtarin që të nisë animacionin në ekranin e tij
+        // 1. NJOFTIMI I VETËM: I dërgojmë vetëm letrën që sapo u nxorr
+        // Frontend-i do ta marrë këtë dhe do ta shtojë NË FUND të dorës sate
         socket.emit('cardDrawn', drawnCard);
         
-        // 2. I dërgojmë vetëm lojtarit dorën e re të përditësuar
-        socket.emit('yourCards', player.cards);
-        
-        // 3. Njoftojmë të tjerët që ky lojtar tani ka 11 letra (pa u dërguar letrat tona)
+        // --- HIQE KËTË RRESHT: socket.emit('yourCards', player.cards); ---
+        // Ky rresht është ai që po të prish renditjen!
+
+        // 2. Njoftojmë të tjerët që numri i letrave ndryshoi
         broadcastState(false); 
 
     } else {
-        console.log("❌ Deku është bosh! Duke rrotulluar letrat...");
+        // Logjika kur deku mbaron dhe duhet të rrotullohen letrat e hedhura
         if (discardPile.length > 1) {
             const lastCard = discardPile.pop();
             gameDeck = [...discardPile];
             discardPile = [lastCard];
-            
-            shuffle(gameDeck); // Përdorim funksionin tonë shuffle
+            shuffle(gameDeck);
             
             const drawnCard = gameDeck.pop();
             player.cards.push(drawnCard);
 
             socket.emit('cardDrawn', drawnCard);
-            socket.emit('yourCards', player.cards);
+            // Edhe këtu hiqe: socket.emit('yourCards', player.cards);
             broadcastState(false);
         } else {
-            socket.emit('errorMsg', "Nuk ka më letra në dek!");
+            socket.emit('errorMsg', "Nuk ka më letra në deku!");
         }
     }
 });
-
-  socket.on('drawJackpot', () => {
+ socket.on('drawJackpot', () => {
     const player = players[activePlayerIndex];
 
     // 1. KONTROLLI I RADHËS DHE SASISË
-    // Mund ta marrësh Jackpot-in vetëm nëse është radha jote dhe ke 10 letra
     if (!player || player.id !== socket.id || player.cards.length !== 10) {
         console.log(`Tentativë e gabuar për Jackpot nga ${player?.name}`);
         return;
@@ -416,13 +409,16 @@ socket.on('drawCard', () => {
     console.log(`${player.name} mori Jackpot-in: ${jackpotCard.v}${jackpotCard.s}`);
 
     // 3. TRANSFERIMI I LETRËS
-    player.cards.push(jackpotCard); // Lojtari bëhet me 11 letra
-    jackpotCard = null; // Jackpot-i fshihet nga tavolina
+    const drawnJackpot = jackpotCard; // E ruajmë në një variabël
+    player.cards.push(drawnJackpot); 
+    jackpotCard = null; 
 
-    // 4. NJOFTIMI
-    // Nuk e kalojmë radhën automatikisht, sepse lojtari tani duhet ose 
-    // të bëjë "ZION" (mbyllje) ose të hedhë një letër tjetër në tokë.
-    broadcastState();
+    // 4. NJOFTIMI I ZGJUAR
+    // I dërgojmë lojtarit VETËM letrën e Jackpot-it që ta shtojë lokalisht
+    socket.emit('cardDrawn', drawnJackpot); 
+
+    // Përdorim 'false' që të mos dërgojmë 'yourCards' dhe të prishim renditjen
+    broadcastState(false);
 });
     
 socket.on('discardCard', (card) => {
@@ -485,7 +481,7 @@ socket.on('discardCard', (card) => {
         console.log(`➡️ Radha kaloi te: ${players[activePlayerIndex].name}`);
 
         // 7. SINKRONIZIMI FINAL (Njoftojmë të gjithë)
-        broadcastState(true);
+        broadcastState(false);
 
     } else {
         console.log(`❌ Letra nuk u gjet te ${player.name}`);
