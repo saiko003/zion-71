@@ -224,8 +224,6 @@ socket.on('yourCards', (cards) => {
 }); 
 
 function updateScoreboard(players, activeId) {
-    // NDRYSHIMI I VETËM: Përdorim ID-në e re 'side-score-body' dhe 'side-score-table'
-    // që të mos përplaset me tabelën e modalit të rezultateve
     const scoreBody = document.getElementById('side-score-body'); 
     const scoreTable = document.getElementById('side-score-table');
     if (!scoreBody || !scoreTable) return;
@@ -233,13 +231,13 @@ function updateScoreboard(players, activeId) {
     const scoreHeader = scoreTable.querySelector('thead tr');
     if (!scoreHeader) return;
 
-    // 1. Gjejmë numrin maksimal të raundeve (Logjika jote e paprekur)
+    // 1. Gjejmë numrin maksimal të raundeve
     let maxRounds = players.reduce((max, p) => {
         const historyLen = (p.history && Array.isArray(p.history)) ? p.history.length : 0;
         return Math.max(max, historyLen);
     }, 0);
 
-    // 2. Krijojmë Header-in (Logjika jote e paprekur)
+    // 2. Krijojmë Header-in
     let headerHTML = `<th>Lojtari</th>`;
     for (let i = 1; i <= maxRounds; i++) {
         headerHTML += `<th>R${i}</th>`;
@@ -247,45 +245,47 @@ function updateScoreboard(players, activeId) {
     headerHTML += `<th>Total</th>`;
     scoreHeader.innerHTML = headerHTML;
 
-// 3. Mbushim rreshtat
-scoreBody.innerHTML = '';
-players.forEach(player => {
-    const row = document.createElement('tr');
-    
- ---
+    // 3. Mbushim rreshtat
+    scoreBody.innerHTML = '';
+    players.forEach(player => {
+        const row = document.createElement('tr');
 
-    // Klasat për stilim (nga CSS-i yt)
-    if (player.id === activeId) row.classList.add('active-row');
-    if (player.isOut || player.score >= 71) row.classList.add('eliminated'); 
+        // Klasat për stilim
+        if (player.id === activeId) row.classList.add('active-row');
+        if (player.isOut || player.score >= 71) row.classList.add('eliminated'); 
 
-    let nameCell = `<td>${player.name} ${player.id === socket.id ? '<small>(Ti)</small>' : ''}</td>`;
-    
-    let historyCells = '';
-    for (let i = 0; i < maxRounds; i++) {
-        let pikaRaundi = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
+        let nameCell = `<td>${player.name} ${player.id === (typeof socket !== 'undefined' ? socket.id : null) ? '<small>(Ti)</small>' : ''}</td>`;
         
-        // Përdorim klasat që ke në CSS ose stilin direkt siç e ke pasur
-        let cellStyle = "";
-        if (pikaRaundi === "X") {
-            cellStyle = 'class="winner-cell" style="color: #2ecc71; font-weight: bold;"';
-        } else if (typeof pikaRaundi === "string" && pikaRaundi.includes("!")) {
-            cellStyle = 'class="jackpot-cell" style="color: #e74c3c; font-weight: bold;"';
-        }
+        let historyCells = '';
+        for (let i = 0; i < maxRounds; i++) {
+            let pikaRaundi = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
+            
+            let cellStyle = "";
+            if (pikaRaundi === "X") {
+                cellStyle = 'class="winner-cell" style="color: #2ecc71; font-weight: bold;"';
+            } else if (typeof pikaRaundi === "string" && pikaRaundi.includes("!")) {
+                cellStyle = 'class="jackpot-cell" style="color: #e74c3c; font-weight: bold;"';
+            }
 
-        historyCells += `<td ${cellStyle}>${pikaRaundi}</td>`;
-    }
-    
-    let totalCell = `<td><strong>${player.score}</strong></td>`;
-    
-    row.innerHTML = nameCell + historyCells + totalCell;
-    row.style.cursor = 'pointer';
-    row.onclick = () => {
-        console.log("Klikimi u regjistrua!"); // Testo nëse del kjo në console
-        e.stopPropagation();
-        toggleScoreboard();
-    };
-    scoreBody.appendChild(row);
-});
+            historyCells += `<td ${cellStyle}>${pikaRaundi}</td>`;
+        }
+        
+        let totalCell = `<td><strong>${player.score}</strong></td>`;
+        
+        row.innerHTML = nameCell + historyCells + totalCell;
+        row.style.cursor = 'pointer';
+
+        // Eventi i klikimit i rregulluar plotësisht
+        row.onclick = (e) => { 
+            console.log("Klikimi u regjistrua për " + player.name);
+            if (e) e.stopPropagation();
+            if (typeof toggleScoreboard === "function") {
+                toggleScoreboard();
+            }
+        };
+
+        scoreBody.appendChild(row);
+    });
 }
 // KËTU dëgjojmë serverin
 socket.on('updateGameState', (data) => {
