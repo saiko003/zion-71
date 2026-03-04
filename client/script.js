@@ -136,30 +136,36 @@ function toggleScoreboard() {
         return;
     }
 
-    // Nëse është i mbyllur, e hapim
-    if (mainModal.style.display === "none" || mainModal.style.display === "") {
-        
-        // Kopjojmë të dhënat nga tabela anësore te modali
+    // Versioni më i saktë për të kontrolluar nëse modali është i fshehur
+    const isHidden = window.getComputedStyle(mainModal).display === "none";
+
+    if (isHidden) {
+        // 1. Kopjojmë të dhënat vetëm nëse tabela anësore ekziston
         if (sideTable && modalContainer) {
-            modalContainer.innerHTML = sideTable.outerHTML;
-            const newTable = modalContainer.querySelector('table');
-            if (newTable) {
-                newTable.id = "modal-table-version";
-                
-                // RREGULLIMI: Sigurohemi që të gjitha kolonat të bëhen të dukshme
-                const allTds = newTable.querySelectorAll('td, th');
-                allTds.forEach(el => {
-                    el.style.display = "table-cell"; // Forcon shfaqjen e historisë
-                    el.style.padding = "10px";       // I jep pak hapësirë në modal
-                });
-                
-                newTable.style.width = "100%"; // E bën tabelën të zërë gjithë gjerësinë e modalit
-            }
+            // Në vend të outerHTML, kopjojmë përmbajtjen e brendshme (innerHTML)
+            // Kjo shmang konfliktet e ID-ve
+            modalContainer.innerHTML = `
+                <table id="modal-table-version" style="width: 100%; border-collapse: collapse;">
+                    <thead>${sideTable.querySelector('thead').innerHTML}</thead>
+                    <tbody id="modal-table-body-version">${sideTable.querySelector('tbody').innerHTML}</tbody>
+                </table>
+            `;
+
+            // 2. I detyrojmë të gjitha qelizat (td dhe th) të jenë të dukshme
+            const allCells = modalContainer.querySelectorAll('td, th');
+            allCells.forEach(el => {
+                el.style.setProperty('display', 'table-cell', 'important');
+                el.style.padding = "10px";
+                el.style.textAlign = "center";
+                el.style.borderBottom = "1px solid #444";
+            });
         }
 
+        // 3. Shfaqim modalin
         mainModal.style.setProperty('display', 'flex', 'important');
-        console.log("Modali u hap!");
+        console.log("Modali u hap me sukses!");
     } else {
+        // Mbyllja
         mainModal.style.display = "none";
         console.log("Modali u mbyll!");
     }
@@ -298,11 +304,14 @@ function updateScoreboard(players, activeId) {
 
         scoreBody.appendChild(row);
     });
-    const modalTableBody = document.getElementById('modal-table-version')?.querySelector('tbody');
+    const modalTableBody = document.querySelector('#modal-table-version tbody');
+    const modalTableHeader = document.querySelector('#modal-table-version thead tr');
+
     if (modalTableBody) {
+        // Kopjojmë përmbajtjen e freskët direkt
         modalTableBody.innerHTML = scoreBody.innerHTML;
     }
-    const modalTableHeader = document.getElementById('modal-table-version')?.querySelector('thead tr');
+    
     if (modalTableHeader) {
         modalTableHeader.innerHTML = scoreHeader.innerHTML;
     }
