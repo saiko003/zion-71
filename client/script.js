@@ -57,28 +57,28 @@ function getVal(card, highAce = false) {
 function toggleScoreboard() {
     console.log("U klikua tabela!"); 
 
-    const mainModal = document.getElementById('score-modal'); // Historiku
-    const roundModal = document.getElementById('round-modal'); // Rezultatet 5 sekondëshe
-    const modalContainer = document.getElementById('modal-score-table-container');
+    const mainModal = document.getElementById('score-modal'); 
     const sideTable = document.getElementById('side-score-table');
+    const modalContainer = document.getElementById('modal-score-table-container');
 
-    if (!mainModal) return;
+    if (!mainModal) {
+        console.error("Gabim: Nuk u gjet #score-modal");
+        return;
+    }
 
-    // 1. Sigurohemi që modali i rezultateve (ai që shfaqet vetë) të mbyllet
-    if (roundModal) roundModal.style.display = "none";
-
-    // 2. Hapja/Mbyllja e Historikut
+    // Nëse është i mbyllur, e hapim
     if (mainModal.style.display === "none" || mainModal.style.display === "") {
+        
+        // Kopjojmë të dhënat nga tabela anësore te modali
         if (sideTable && modalContainer) {
             modalContainer.innerHTML = sideTable.outerHTML;
-            const copiedTable = modalContainer.querySelector('table');
-            if (copiedTable) copiedTable.id = "modal-table-styled";
-            
-            // Heqim klikimet nga tabela e kopjuar brenda modalit
-            modalContainer.querySelectorAll('tr').forEach(r => r.onclick = null);
+            // Sigurohemi që tabela e kopjuar nuk ka ID-në e vjetër që të mos ngatërrohet CSS
+            const newTable = modalContainer.querySelector('table');
+            if (newTable) newTable.id = "modal-table-version";
         }
-        mainModal.style.display = "flex";
-        console.log("Modali u hap me sukses!");
+
+        mainModal.style.setProperty('display', 'flex', 'important');
+        console.log("Modali u hap!");
     } else {
         mainModal.style.display = "none";
         console.log("Modali u mbyll!");
@@ -182,11 +182,7 @@ scoreBody.innerHTML = '';
 players.forEach(player => {
     const row = document.createElement('tr');
     
-    // --- PJESA E RE: E bën tabelën interaktive ---
-    row.style.cursor = 'pointer'; 
-    row.title = "Kliko për historikun e plotë";
-    row.onclick = () => toggleScoreboard(); 
-    // --------------------------------------------
+ ---
 
     // Klasat për stilim (nga CSS-i yt)
     if (player.id === activeId) row.classList.add('active-row');
@@ -215,6 +211,7 @@ players.forEach(player => {
     row.style.cursor = 'pointer';
     row.onclick = () => {
         console.log("Klikimi u regjistrua!"); // Testo nëse del kjo në console
+        e.stopPropagation();
         toggleScoreboard();
     };
     scoreBody.appendChild(row);
