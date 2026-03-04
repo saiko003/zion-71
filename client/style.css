@@ -499,90 +499,74 @@ body:has(.dragging) {
 /* --- KODI VETËM PËR TELEFON --- */
 /* --- KODI I KORRIGJUAR VETËM PËR TELEFON --- */
 @media screen and (max-width: 600px) {
-    /* 1. FUSHA KRYESORE - E mban lojën brenda ekranit */
+    /* 1. PRINDI KRYESOR - Renditja vertikale */
     .center-area {
         position: absolute !important;
-        top: 15% !important;
-        bottom: 0 !important;
+        top: 12% !important;
         left: 0 !important;
         width: 100% !important;
-        margin: 0 !important;
-        display: block !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 0 !important;
     }
 
-    /* 2. DEKUN ZION (Lart Majtas) */
+    /* 2. DEKU ZION - Tani në mes të ekranit */
     .deck-wrapper {
-        position: absolute !important;
-        top: 20px !important;
-        left: 20px !important;
-        width: 70px !important;
-        height: 105px !important;
-        z-index: 10 !important;
+        position: relative !important;
+        width: 80px !important;
+        height: 115px !important;
+        margin-bottom: 75px !important; /* Hapësirë për sinjalin poshtë */
+        display: flex !important;
+        justify-content: center !important;
     }
 
-    #deck-zion {
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important;
-    }
-
-    /* 3. SINJALI DHE ASISTENTI (Në Mes) */
+    /* 3. ASISTENTI (SINJALI) - Fiks nën dekun */
     #asistenti-container {
         position: absolute !important;
-        top: 145px !important; /* Fiks poshtë dekut */
+        top: 130px !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
-        width: auto !important;
+        z-index: 100 !important;
         white-space: nowrap !important;
-        z-index: 20 !important;
     }
 
-    /* 4. RUBRIKA "HEDH KËTU" (E MADHE DHE INTERAKTIVE) */
+    /* 4. ZONA HEDH KETU - E madhe dhe poshtë sinjalit */
     #discard-pile {
-        position: absolute !important;
-        top: 210px !important; /* Fillon pas sinjalit */
-        left: 5% !important;
-        width: 90% !important;
-        height: 160px !important;
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 2px dashed rgba(255, 255, 255, 0.2) !important;
+        position: relative !important;
+        width: 85% !important;
+        height: 170px !important;
+        border: 2px dashed rgba(255,255,255,0.3) !important;
+        background: rgba(255,255,255,0.05) !important;
         border-radius: 15px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        transition: all 0.3s ease !important;
     }
 
-    /* Efekti Glow kur është radha e lojtarit (duhet ta kesh body.my-turn-glow në JS) */
-    body.my-turn-glow #discard-pile {
-        border-color: #2ecc71 !important;
-        box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.2) !important;
-        background: rgba(46, 204, 113, 0.05) !important;
-    }
-
-    /* 5. PIKËT DHE DORA E LOJTARIT (SINKRON) */
+    /* 5. PIKET - Mbi dorën e lojtarit */
     #display-piket {
         position: fixed !important;
-        bottom: 125px !important; /* Rri mbi dorën */
+        bottom: 125px !important;
         left: 0 !important;
         width: 100% !important;
+        text-align: center !important;
         z-index: 1000 !important;
     }
 
+    /* 6. LETRAT DHE DORA (Kodi që dërgove ti) */
     #player-hand {
         position: fixed !important;
         bottom: 10px !important;
         left: 0 !important;
         width: 100vw !important;
         height: 110px !important;
-        background: rgba(0, 0, 0, 0.2) !important;
-        backdrop-filter: blur(5px) !important;
+        z-index: 2000 !important;
         display: flex !important;
         justify-content: center !important;
         align-items: flex-end !important;
-        padding: 0 10px !important;
-        z-index: 2000 !important;
     }
+
     .card {
         width: 55px !important;
         height: 85px !important;
@@ -591,22 +575,21 @@ body:has(.dragging) {
         border-radius: 6px !important;
         transition: transform 0.2s ease !important;
 
-        /* --- SHTO KËTO KËTU --- */
-        touch-action: none !important; /* Ndalon "ngjitjen" në ajër */
-        -webkit-touch-callout: none !important; /* Ndalon menunë e iPhone */
-        -webkit-user-select: none !important; /* Ndalon selektimin e tekstit */
+        /* Pjesa për TOUCH */
+        touch-action: none !important; 
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
         user-select: none !important;
-        pointer-events: auto !important; /* Siguron që mund ta prekësh */
+        pointer-events: auto !important;
     }
 
     .card:first-child { 
         margin-left: 0 !important; 
     }
 
-    /* Ngritja e letrës kur e prekim */
     .card:active {
         transform: translateY(-20px) scale(1.1) !important;
-        z-index: 5000 !important; /* E nxjerr mbi çdo gjë tjetër sa e ke në gisht */
+        z-index: 5000 !important;
     }
 }
  #player-hand {
