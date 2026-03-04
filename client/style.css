@@ -500,33 +500,52 @@ body:has(.dragging) {
 @media screen and (max-width: 600px) {
 #deck-wrapper {
         position: absolute !important;
-        top: 55% !important; /* Kjo e zbret te zona që vizatove */
+        /* Rrite këtë në 65% nëse akoma të duket lart */
+        top: 65% !important; 
         left: 50% !important;
         transform: translate(-50%, -50%) !important;
         display: flex !important;
-        flex-direction: row !important; /* I mban krah për krah */
-        gap: 20px !important;
-        width: 90% !important;
+        flex-direction: row !important;
         justify-content: center !important;
+        align-items: center !important;
+        gap: 30px !important;
+        width: 100% !important;
         z-index: 10 !important;
     }
-   #discard-pile {
-        order: 1 !important; /* E para majtas */
-        width: 70px !important;
-        height: 100px !important;
-        min-width: unset !important; /* Heqim atë 500px që kishe */
+
+    #discard-pile {
+        order: 1 !important;
+        /* KJO ËSHTË E RËNDËSISHME: Anulojmë çdo pozicionim të vjetër */
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        bottom: auto !important;
+        right: auto !important;
+        margin: 0 !important;
+        
+        width: 75px !important;
+        height: 105px !important;
+        min-width: unset !important;
         background: rgba(255, 255, 255, 0.1) !important;
         border: 2px dashed #fff !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    #deck-zion {
+        order: 2 !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        width: 75px !important;
+        height: 105px !important;
     }
    #deck-zion:active {
         /* Ruajmë qendërimin (-50%, -50%) dhe shtojmë scale */
         transform: translate(-50%, -50%) scale(0.95) !important;
     }
-#deck-zion {
-        order: 2 !important; /* E dyta pas discard-pile */
-        width: 70px !important;
-        height: 100px !important;
-    }
+
    #status-msg, .turn-indicator {
         position: absolute !important;
         top: 35% !important; /* E ngremë pak mbi letrat që të mos pengojë */
