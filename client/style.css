@@ -289,21 +289,33 @@ body {
     0% { transform: scale(1.5); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
-
+#deck-wrapper {
+    display: flex !important;
+    flex-direction: row !important; /* Letrat krah për krah */
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 20px;
+    width: 100%;
+}
 /* Rregullojmë zonën ku hidhet letra që të mos ketë tekstin "HEDH KËTU" kur ka letër sipër */
 #discard-pile {
+    order: 1; /* I thotë CSS-it: dil i pari */
     background: rgba(0, 0, 0, 0.2);
     border: 2px dashed rgba(255, 255, 255, 0.3);
-    position: relative; /* Kjo është e saktë! */
-    
-    min-width: 500px;
-    height: 300px; /* Pak më shumë hapësirë për siguri */
-    display: flex; /* Ndryshojeni në flex */
-    justify-content: center; /* I mban letrat në qendër */
+    position: relative;
+    width: 80px;  /* Madhësi fikse në vend të min-width 500px */
+    height: 120px;
+    display: flex;
+    justify-content: center;
     align-items: center;
     border-radius: 10px;
-    overflow: visible; 
-   }
+    overflow: visible;
+}
+   #discard-pile.over {
+    background-color: rgba(255, 255, 0, 0.2); /* Ngjyrë e verdhë e lehtë kur je sipër */
+    border: 2px dashed #ffcc00;
+}
+
 .led-orange {
     width: 15px;
     height: 15px;
@@ -437,10 +449,6 @@ body {
     will-change: transform; /* Optimizim për celular */
 }
 
-   #discard-pile.over {
-    background-color: rgba(255, 255, 0, 0.2); /* Ngjyrë e verdhë e lehtë kur je sipër */
-    border: 2px dashed #ffcc00;
-}
 /* Stili i zonës së mbylljes mbi dekun */
 .victory-zone {
     position: absolute;
@@ -490,7 +498,23 @@ body:has(.dragging) {
 }
 /* --- KODI VETËM PËR TELEFON --- */
 @media screen and (max-width: 600px) {
+    #deck-wrapper {
+        position: absolute !important;
+        top: 40% !important; /* E qendëron vertikalisht në mes të fushës */
+        left: 50% !important;
+        transform: translate(-50%, -50%) scale(1.1) !important;
+        gap: 15px !important;
+    }
+
+    #deck-zion, #discard-pile {
+        width: 65px !important;  /* Pak më të vogla për ekranin e telefonit */
+        height: 95px !important;
+        font-size: 14px !important;
+    }
     
+    /* Ruajmë renditjen edhe në telefon */
+    #discard-pile { order: 1 !important; }
+    #deck-zion { order: 2 !important; }
     /* 1. Zvogëlojmë përmasat e letrës */
     .card {
         width: 50px !important;     /* Nga 70px në 50px */
@@ -572,6 +596,7 @@ body.my-turn-glow {
     animation: pulse-green 2s infinite;
 }
 #deck-zion {
+    order: 2 !important;
     width: 80px;
     height: 120px;
     border-radius: 8px;
@@ -595,7 +620,10 @@ body.my-turn-glow {
     box-shadow: 6px 6px 15px rgba(0,0,0,0.6), 0 0 20px currentColor; 
     filter: brightness(1.2);
 }
-   
+#deck-zion:active {
+    transform: scale(0.95); /* Letra shtypet pak kur e prek, si buton i vërtetë */
+    filter: brightness(0.9); /* Erret pak kur shtypet */
+}   
 #status-teksti {
     font-size: 1.5rem;
     font-weight: bold;
