@@ -19,18 +19,21 @@
     
     <div id="game-table" style="display: none;">
         
-        <div id="scoreboard-container">
-            <table id="side-score-table"> 
-                <thead>
-                    <tr>
-                        <th>Lojtari</th>
-                        <th>Historia</th> 
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody id="side-score-body"></tbody>
-            </table>
-        </div>
+<div id="scoreboard-container">
+    <button id="open-score-btn" onclick="toggleScoreboard()" style="width: 100%; background: #f1c40f; color: black; font-weight: bold; border: none; padding: 5px; cursor: pointer; border-radius: 5px 5px 0 0;">
+        📊 SHIKO PIKËT
+    </button>
+    <table id="side-score-table" onclick="toggleScoreboard()" style="cursor: pointer;"> 
+        <thead>
+            <tr>
+                <th>Lojtari</th>
+                <th>Historia</th> 
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody id="side-score-body"></tbody>
+    </table>
+</div>
 
         <div class="center-area">
             <div class="deck-wrapper" style="position: relative;">
