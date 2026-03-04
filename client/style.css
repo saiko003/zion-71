@@ -499,10 +499,10 @@ body:has(.dragging) {
 /* --- KODI VETËM PËR TELEFON --- */
 /* --- KODI I KORRIGJUAR VETËM PËR TELEFON --- */
 @media screen and (max-width: 600px) {
-    /* 1. PRINDI KRYESOR - I mban të gjitha në mes */
+    /* 1. PRINDI KRYESOR - I mban të gjitha në kolonë pa u mbuluar */
     .center-area {
         position: absolute !important;
-        top: 10% !important; /* Pak më lart që të ketë vend poshtë */
+        top: 10% !important;
         left: 0 !important;
         width: 100% !important;
         display: flex !important;
@@ -511,111 +511,99 @@ body:has(.dragging) {
         gap: 0 !important;
     }
 
-    /* 2. DEKU ZION - Në mes */
+    /* 2. DEKU ZION - Tani është gjithmonë i pari dhe i dukshëm */
     .deck-wrapper {
         position: relative !important;
-        width: 80px !important;
-        height: 115px !important;
-        margin-bottom: 10px !important; /* Hapësirë e vogël deri te njoftimi */
+        width: 75px !important;
+        height: 105px !important;
+        margin-bottom: 10px !important; /* Hapësirë që njoftimi të mos e mbulojë */
         display: flex !important;
         justify-content: center !important;
+        z-index: 10 !important;
     }
 
-    /* 3. ASISTENTI DHE BUTONI (Rezervojmë hapësirën që mos të kërcejë ekrani) */
-    #asistenti-container {
-        position: relative !important;
+    #deck-zion {
         width: 100% !important;
-        min-height: 90px !important; /* Kjo e mban vendin e zënë edhe kur s'ka buton */
+        height: 100% !important;
+    }
+
+    /* 3. ASISTENTI (NJOFTIMI) - Qëndron gjithmonë POSHTË dekut */
+    #asistenti-container {
+        position: relative !important; /* Jo absolute që të mos fluturojë sipër dekut */
+        width: 100% !important;
+        min-height: 80px !important; /* Rezervon vendin për butonin MBYLL */
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        justify-content: flex-start !important;
-        z-index: 100 !important;
+        justify-content: center !important;
+        z-index: 5 !important;
         margin-bottom: 10px !important;
     }
 
-    /* Rregullimi i tekstit brenda asistentit */
     #status-teksti {
         font-size: 14px !important;
-        white-space: nowrap !important;
-        margin-bottom: 8px !important;
-    }
-
-    /* Butoni MBYLL LOJËN - Nuk i shtyn elementet e tjera */
-    #btn-mbyll {
-        position: relative !important;
-        padding: 8px 15px !important;
         font-weight: bold !important;
-        border-radius: 5px !important;
-        border: none !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+        background: rgba(0, 0, 0, 0.6) !important;
+        padding: 5px 15px !important;
+        border-radius: 20px !important;
+        white-space: nowrap !important;
     }
 
-    /* 4. ZONA HEDH KETU - E madhe dhe e qëndrueshme */
+    /* 4. ZONA HEDH KËTU - E madhe dhe në mes të fushës */
     #discard-pile {
         position: relative !important;
         width: 85% !important;
         height: 160px !important;
-        border: 2px dashed rgba(255,255,255,0.3) !important;
-        background: rgba(255,255,255,0.05) !important;
+        border: 2px dashed rgba(255, 255, 255, 0.3) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
         border-radius: 15px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        transition: all 0.3s ease !important;
     }
 
-    /* Ndriçimi kur është radha jote */
-    body.my-turn-glow #discard-pile {
-        border-color: #2ecc71 !important;
-        box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.2) !important;
-    }
-
-    /* 5. PIKET - Mbi dorën e lojtarit */
+    /* 5. PIKËT NË DORË - Rrinë fiks mbi letrat */
     #display-piket {
         position: fixed !important;
-        bottom: 125px !important;
+        bottom: 110px !important; 
         left: 0 !important;
         width: 100% !important;
         text-align: center !important;
+        font-size: 14px !important;
         z-index: 1000 !important;
-        pointer-events: none !important; /* Mos të pengojë prekjen e letrave */
+        pointer-events: none !important;
     }
 
-    /* 6. DORA E LOJTARIT */
+    /* 6. DORA E LOJTARIT (PLAYER HAND) - Fix për daljen jashtë */
     #player-hand {
         position: fixed !important;
-        bottom: 5px !important; /* Ngjitur në fund */
+        bottom: 5px !important;
         left: 0 !important;
-        width: 100vw !important; /* Gjerësia fiks sa ekrani */
+        width: 100vw !important; /* Gjerësia fiks sa telefoni */
         height: 100px !important;
         display: flex !important;
-        justify-content: center !important; /* Qendron letrat në mes */
+        justify-content: center !important; /* Qendron letrat */
         align-items: flex-end !important;
-        padding: 0 5px !important;
+        padding: 0 10px !important;
         box-sizing: border-box !important;
         z-index: 2000 !important;
-        overflow: visible !important; /* Lejon letrat të hapen pa u prerë */
+        overflow: visible !important;
     }
 
+    /* LETRAT - I mbledhim që të nxënë vend brenda ekranit */
     .card {
-        width: 55px !important;
-        height: 85px !important;
-        margin-left: -25px !important;
-        font-size: 14px !important;
-        border-radius: 6px !important;
-        transition: transform 0.2s ease !important;
-        
-        /* TOUCH FIXES */
-        touch-action: none !important; 
-        -webkit-touch-callout: none !important;
-        -webkit-user-select: none !important;
-        user-select: none !important;
+        width: 50px !important;
+        height: 75px !important;
+        margin-left: -22px !important; /* Kjo i mbledh që mos të dalin jashtë */
+        font-size: 12px !important;
+        border-radius: 5px !important;
+        box-shadow: -2px 0 5px rgba(0,0,0,0.4) !important;
+        touch-action: none !important;
         pointer-events: auto !important;
     }
 
-    .card:first-child { 
-        margin-left: 0 !important; 
+    .card:first-child {
+        margin-left: 0 !important;
     }
 
     .card:active {
