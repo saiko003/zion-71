@@ -183,21 +183,8 @@ const btnstart = document.getElementById('btn-start');
 
 if (btnstart) {
     btnstart.onclick = () => {
-        // 1. Marrim emrin nga input-i
-        const emri = playerNameInput ? playerNameInput.value.trim() : "";
-
-        // 2. Kontrollojmë nëse ka shkruar gjë
-        if (emri === "") {
-            alert("Ju lutem shkruani emrin tuaj para se të filloni!");
-            return; // Ndalon këtu, nuk e nis lojën pa emër
-        }
-
-        console.log("🚀 Po hyj në lojë si:", emri);
-        
-        // 3. Dërgojmë emrin te serveri që të regjistrohet në tabelë
-        socket.emit('joinGame', emri);
-
-        // 4. Nisim lojën
+        console.log("🚀 Po nis lojën...");
+        // Nuk kemi nevojë të dërgojmë emrin këtu sepse u dërgua te 'connect' më lart
         socket.emit('startGame');
     };
 }
