@@ -54,7 +54,31 @@ function getVal(card, highAce = false) {
     
     return parseInt(v) || 0;
 }
+// Këtë vendose në fund të script.js, jashtë çdo kllape tjetër
+function toggleScoreboard() {
+    console.log("U klikua tabela!"); // Shiko nëse del ky mesazh te F12
+    
+    const modal = document.getElementById('score-modal');
+    const modalContainer = document.getElementById('modal-score-table-container');
+    const sideTable = document.getElementById('side-score-table');
 
+    if (!modal) return;
+
+    // Kontrollojmë nëse është i mbyllur
+    if (modal.style.display === "none" || modal.style.display === "") {
+        if (sideTable && modalContainer) {
+            modalContainer.innerHTML = sideTable.outerHTML;
+            const newTable = modalContainer.querySelector('table');
+            if (newTable) newTable.id = "modal-table-version";
+            
+            // Heqim klikimet nga kopja që mos të mbyllet dritarja kur klikon brenda
+            modalContainer.querySelectorAll('tr').forEach(r => r.onclick = null);
+        }
+        modal.style.display = "flex";
+    } else {
+        modal.style.display = "none";
+    }
+}
 // 1. LIDHJA E BUTONIT START
 const btnstart = document.getElementById('btn-start');
 if (btnstart) {
@@ -123,31 +147,7 @@ socket.on('yourCards', (cards) => {
     // Kjo siguron që edhe Status Message (Hidh/Tërhiq) përditësohet menjëherë.
     updateGameFlow({ myCards: cards }); 
 }); 
-// Këtë vendose në fund të script.js, jashtë çdo kllape tjetër
-function toggleScoreboard() {
-    console.log("U klikua tabela!"); // Shiko nëse del ky mesazh te F12
-    
-    const modal = document.getElementById('score-modal');
-    const modalContainer = document.getElementById('modal-score-table-container');
-    const sideTable = document.getElementById('side-score-table');
 
-    if (!modal) return;
-
-    // Kontrollojmë nëse është i mbyllur
-    if (modal.style.display === "none" || modal.style.display === "") {
-        if (sideTable && modalContainer) {
-            modalContainer.innerHTML = sideTable.outerHTML;
-            const newTable = modalContainer.querySelector('table');
-            if (newTable) newTable.id = "modal-table-version";
-            
-            // Heqim klikimet nga kopja që mos të mbyllet dritarja kur klikon brenda
-            modalContainer.querySelectorAll('tr').forEach(r => r.onclick = null);
-        }
-        modal.style.display = "flex";
-    } else {
-        modal.style.display = "none";
-    }
-}
 function updateScoreboard(players, activeId) {
     // NDRYSHIMI I VETËM: Përdorim ID-në e re 'side-score-body' dhe 'side-score-table'
     // që të mos përplaset me tabelën e modalit të rezultateve
