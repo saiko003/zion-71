@@ -180,7 +180,6 @@ function toggleScoreboard() {
     }
 }
 const btnstart = document.getElementById('btn-start');
-const playerNameInput = document.getElementById('player-name-input'); // Kjo merr kutinë e emrit
 
 if (btnstart) {
     btnstart.onclick = () => {
