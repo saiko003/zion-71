@@ -154,13 +154,13 @@ scoreBody.innerHTML = '';
 players.forEach(player => {
     const row = document.createElement('tr');
     
-    // --- KJO ËSHTË PJESA E RE ---
-    row.style.cursor = 'pointer'; // Ndryshon miun në dorë
-    row.title = "Kliko për të parë historikun e plotë";
-    row.onclick = () => toggleScoreboard(); // Thërret funksionin që hap dritaren (Modal)
-    // ----------------------------
+    // --- PJESA E RE: E bën tabelën interaktive ---
+    row.style.cursor = 'pointer'; 
+    row.title = "Kliko për historikun e plotë";
+    row.onclick = () => toggleScoreboard(); 
+    // --------------------------------------------
 
-    // Klasat për stilim
+    // Klasat për stilim (nga CSS-i yt)
     if (player.id === activeId) row.classList.add('active-row');
     if (player.isOut || player.score >= 71) row.classList.add('eliminated'); 
 
@@ -170,10 +170,12 @@ players.forEach(player => {
     for (let i = 0; i < maxRounds; i++) {
         let pikaRaundi = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
         
+        // Përdorim klasat që ke në CSS ose stilin direkt siç e ke pasur
         let cellStyle = "";
-        if (pikaRaundi === "X") cellStyle = 'style="color: #2ecc71; font-weight: bold;"';
-        if (typeof pikaRaundi === "string" && pikaRaundi.includes("!")) {
-            cellStyle = 'style="color: #e74c3c; font-weight: bold;"';
+        if (pikaRaundi === "X") {
+            cellStyle = 'class="winner-cell" style="color: #2ecc71; font-weight: bold;"';
+        } else if (typeof pikaRaundi === "string" && pikaRaundi.includes("!")) {
+            cellStyle = 'class="jackpot-cell" style="color: #e74c3c; font-weight: bold;"';
         }
 
         historyCells += `<td ${cellStyle}>${pikaRaundi}</td>`;
