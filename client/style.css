@@ -585,15 +585,17 @@ body:has(.dragging) {
     /* 6. DORA E LOJTARIT */
     #player-hand {
         position: fixed !important;
-        bottom: 10px !important;
+        bottom: 5px !important; /* Ngjitur në fund */
         left: 0 !important;
-        width: 100vw !important;
-        height: 110px !important;
-        z-index: 2000 !important;
+        width: 100vw !important; /* Gjerësia fiks sa ekrani */
+        height: 100px !important;
         display: flex !important;
-        justify-content: center !important;
+        justify-content: center !important; /* Qendron letrat në mes */
         align-items: flex-end !important;
-        padding: 0 10px !important;
+        padding: 0 5px !important;
+        box-sizing: border-box !important;
+        z-index: 2000 !important;
+        overflow: visible !important; /* Lejon letrat të hapen pa u prerë */
     }
 
     .card {
