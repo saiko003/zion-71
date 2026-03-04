@@ -96,17 +96,19 @@ body {
     display: none; /* Fshihet fillimisht */
     justify-content: center;
     align-items: center;
-    z-index: 9999 !important
+    z-index: 9999 !important;
 }
 
 .modal-content {
-    background: #1a2a3a;
-    padding: 30px;
-    border-radius: 15px;
-    border: 3px solid #f1c40f; /* Ngjyra e artë e Zionit */
-    text-align: center;
-    min-width: 400px;
-    box-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
+    background-color: #1a1a1a; /* Ngjyrë e errët që të dallohet tabela */
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #f1c40f; /* Kornizë e verdhë si ZION */
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto; /* Lejon scroll nëse tabela është e gjatë */
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 #modal-score-table-container {
     width: 100%;
