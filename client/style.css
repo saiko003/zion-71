@@ -123,30 +123,25 @@ body {
     margin-top: 10px;
     -webkit-overflow-scrolling: touch; /* Scroll i butë për iPhone */
 }
-#modal-score-table {
-    width: 100%;
-    margin-top: 20px;
-    border-collapse: collapse;
-    background-color: #2c3e50; /* Ngjyrë e errët elegante */
-    border-radius: 8px;
-    overflow: hidden;
-}
-/* KJO ËSHTË PJESA QË DUHET TË KESH */
+/* STILI I RI DHE I PASTRUAR PËR TABELËN NË MODAL */
 #modal-score-table-container table {
-    width: 100%;
+    width: 100% !important;
     border-collapse: collapse;
     margin-top: 15px;
     background-color: #2c3e50;
     color: white;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 #modal-score-table-container th {
     background-color: #34495e;
-    color: #f1c40f;
+    color: #f1c40f; /* Ngjyra e verdhë ZION */
     padding: 12px;
     border-bottom: 2px solid #f1c40f;
     text-align: center;
     font-size: 0.9em;
+    text-transform: uppercase;
 }
 
 #modal-score-table-container td {
@@ -156,7 +151,11 @@ body {
     font-size: 0.9em;
 }
 
-
+/* Kjo detyron historinë (R1, R2...) të shfaqet në modal */
+#modal-score-table-container td, 
+#modal-score-table-container th {
+    display: table-cell !important;
+}
 /* Vetëm kjo duhet të mbetet për lojtarin aktual */
 .active-row { 
     background: rgba(241, 196, 15, 0.25) !important; 
