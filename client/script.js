@@ -234,10 +234,12 @@ socket.on('yourCards', (cards) => {
 }); 
 
 function updateScoreboard(players, activeId) {
+     window.playersData = players;
     const scoreBody = document.getElementById('side-score-body'); 
     const scoreTable = document.getElementById('side-score-table');
     if (!scoreBody || !scoreTable) return;
-    
+   
+   
     const scoreHeader = scoreTable.querySelector('thead tr');
     if (!scoreHeader) return;
 
@@ -296,6 +298,14 @@ function updateScoreboard(players, activeId) {
 
         scoreBody.appendChild(row);
     });
+    const modalTableBody = document.getElementById('modal-table-version')?.querySelector('tbody');
+    if (modalTableBody) {
+        modalTableBody.innerHTML = scoreBody.innerHTML;
+    }
+    const modalTableHeader = document.getElementById('modal-table-version')?.querySelector('thead tr');
+    if (modalTableHeader) {
+        modalTableHeader.innerHTML = scoreHeader.innerHTML;
+    }
 }
 // KËTU dëgjojmë serverin
 socket.on('updateGameState', (data) => {
