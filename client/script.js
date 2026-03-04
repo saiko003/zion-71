@@ -123,34 +123,29 @@ socket.on('yourCards', (cards) => {
     // Kjo siguron që edhe Status Message (Hidh/Tërhiq) përditësohet menjëherë.
     updateGameFlow({ myCards: cards }); 
 }); 
+// Këtë vendose në fund të script.js, jashtë çdo kllape tjetër
 function toggleScoreboard() {
+    console.log("U klikua tabela!"); // Shiko nëse del ky mesazh te F12
+    
     const modal = document.getElementById('score-modal');
     const modalContainer = document.getElementById('modal-score-table-container');
     const sideTable = document.getElementById('side-score-table');
 
     if (!modal) return;
 
-    // Kontrollojmë nëse është i fshehur (none ose bosh)
+    // Kontrollojmë nëse është i mbyllur
     if (modal.style.display === "none" || modal.style.display === "") {
-        
         if (sideTable && modalContainer) {
-            // Marrim tabelën, e pastrojmë container-in dhe e injektojmë
             modalContainer.innerHTML = sideTable.outerHTML;
-            
             const newTable = modalContainer.querySelector('table');
-            if (newTable) {
-                newTable.id = "modal-table-version";
-                // Sigurohemi që tabela në modal të jetë 100% e gjerë
-                newTable.style.width = "100%";
-            }
-
-            // Heqim klikimet nga rreshtat e kopjuar
+            if (newTable) newTable.id = "modal-table-version";
+            
+            // Heqim klikimet nga kopja që mos të mbyllet dritarja kur klikon brenda
             modalContainer.querySelectorAll('tr').forEach(r => r.onclick = null);
         }
-
-        modal.style.display = "flex"; // E SHFAQIM
+        modal.style.display = "flex";
     } else {
-        modal.style.display = "none"; // E MBYLLIM
+        modal.style.display = "none";
     }
 }
 function updateScoreboard(players, activeId) {
