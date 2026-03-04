@@ -583,8 +583,6 @@ body:has(.dragging) {
         padding: 0 10px !important;
         z-index: 2000 !important;
     }
-
-    /* MADHËSIA E LETRAVE */
     .card {
         width: 55px !important;
         height: 85px !important;
@@ -592,13 +590,23 @@ body:has(.dragging) {
         font-size: 14px !important;
         border-radius: 6px !important;
         transition: transform 0.2s ease !important;
+
+        /* --- SHTO KËTO KËTU --- */
+        touch-action: none !important; /* Ndalon "ngjitjen" në ajër */
+        -webkit-touch-callout: none !important; /* Ndalon menunë e iPhone */
+        -webkit-user-select: none !important; /* Ndalon selektimin e tekstit */
+        user-select: none !important;
+        pointer-events: auto !important; /* Siguron që mund ta prekësh */
     }
 
-    .card:first-child { margin-left: 0 !important; }
+    .card:first-child { 
+        margin-left: 0 !important; 
+    }
 
     /* Ngritja e letrës kur e prekim */
     .card:active {
         transform: translateY(-20px) scale(1.1) !important;
+        z-index: 5000 !important; /* E nxjerr mbi çdo gjë tjetër sa e ke në gisht */
     }
 }
  #player-hand {
