@@ -499,10 +499,10 @@ body:has(.dragging) {
 /* --- KODI VETËM PËR TELEFON --- */
 /* --- KODI I KORRIGJUAR VETËM PËR TELEFON --- */
 @media screen and (max-width: 600px) {
-    /* 1. PRINDI KRYESOR - Renditja vertikale */
+    /* 1. PRINDI KRYESOR - I mban të gjitha në mes */
     .center-area {
         position: absolute !important;
-        top: 12% !important;
+        top: 10% !important; /* Pak më lart që të ketë vend poshtë */
         left: 0 !important;
         width: 100% !important;
         display: flex !important;
@@ -511,37 +511,64 @@ body:has(.dragging) {
         gap: 0 !important;
     }
 
-    /* 2. DEKU ZION - Tani në mes të ekranit */
+    /* 2. DEKU ZION - Në mes */
     .deck-wrapper {
         position: relative !important;
         width: 80px !important;
         height: 115px !important;
-        margin-bottom: 75px !important; /* Hapësirë për sinjalin poshtë */
+        margin-bottom: 10px !important; /* Hapësirë e vogël deri te njoftimi */
         display: flex !important;
         justify-content: center !important;
     }
 
-    /* 3. ASISTENTI (SINJALI) - Fiks nën dekun */
+    /* 3. ASISTENTI DHE BUTONI (Rezervojmë hapësirën që mos të kërcejë ekrani) */
     #asistenti-container {
-        position: absolute !important;
-        top: 130px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        position: relative !important;
+        width: 100% !important;
+        min-height: 90px !important; /* Kjo e mban vendin e zënë edhe kur s'ka buton */
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
         z-index: 100 !important;
-        white-space: nowrap !important;
+        margin-bottom: 10px !important;
     }
 
-    /* 4. ZONA HEDH KETU - E madhe dhe poshtë sinjalit */
+    /* Rregullimi i tekstit brenda asistentit */
+    #status-teksti {
+        font-size: 14px !important;
+        white-space: nowrap !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Butoni MBYLL LOJËN - Nuk i shtyn elementet e tjera */
+    #btn-mbyll {
+        position: relative !important;
+        padding: 8px 15px !important;
+        font-weight: bold !important;
+        border-radius: 5px !important;
+        border: none !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    }
+
+    /* 4. ZONA HEDH KETU - E madhe dhe e qëndrueshme */
     #discard-pile {
         position: relative !important;
         width: 85% !important;
-        height: 170px !important;
+        height: 160px !important;
         border: 2px dashed rgba(255,255,255,0.3) !important;
         background: rgba(255,255,255,0.05) !important;
         border-radius: 15px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
+        transition: all 0.3s ease !important;
+    }
+
+    /* Ndriçimi kur është radha jote */
+    body.my-turn-glow #discard-pile {
+        border-color: #2ecc71 !important;
+        box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.2) !important;
     }
 
     /* 5. PIKET - Mbi dorën e lojtarit */
@@ -552,9 +579,10 @@ body:has(.dragging) {
         width: 100% !important;
         text-align: center !important;
         z-index: 1000 !important;
+        pointer-events: none !important; /* Mos të pengojë prekjen e letrave */
     }
 
-    /* 6. LETRAT DHE DORA (Kodi që dërgove ti) */
+    /* 6. DORA E LOJTARIT */
     #player-hand {
         position: fixed !important;
         bottom: 10px !important;
@@ -565,6 +593,7 @@ body:has(.dragging) {
         display: flex !important;
         justify-content: center !important;
         align-items: flex-end !important;
+        padding: 0 10px !important;
     }
 
     .card {
@@ -574,8 +603,8 @@ body:has(.dragging) {
         font-size: 14px !important;
         border-radius: 6px !important;
         transition: transform 0.2s ease !important;
-
-        /* Pjesa për TOUCH */
+        
+        /* TOUCH FIXES */
         touch-action: none !important; 
         -webkit-touch-callout: none !important;
         -webkit-user-select: none !important;
