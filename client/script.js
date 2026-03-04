@@ -104,7 +104,18 @@ socket.on('yourCards', (cards) => {
     // Kjo siguron që edhe Status Message (Hidh/Tërhiq) përditësohet menjëherë.
     updateGameFlow({ myCards: cards }); 
 }); 
-
+// 1. Funksioni për hapje/mbyllje
+function toggleScoreboard() {
+    const modal = document.getElementById('score-modal');
+    if (modal.style.display === "block") {
+        modal.style.display = "none";
+    } else {
+        // Kopjojmë tabelën anësore te modali
+        const sideTable = document.getElementById('side-score-table').outerHTML;
+        document.getElementById('modal-score-table-container').innerHTML = sideTable;
+        modal.style.display = "block";
+    }
+}
 function updateScoreboard(players, activeId) {
     // NDRYSHIMI I VETËM: Përdorim ID-në e re 'side-score-body' dhe 'side-score-table'
     // që të mos përplaset me tabelën e modalit të rezultateve
@@ -129,11 +140,17 @@ function updateScoreboard(players, activeId) {
     headerHTML += `<th>Total</th>`;
     scoreHeader.innerHTML = headerHTML;
 
-// 3. Mbushim rreshtat (Versioni i përmirësuar vizualisht)
+// 3. Mbushim rreshtat
 scoreBody.innerHTML = '';
 players.forEach(player => {
     const row = document.createElement('tr');
     
+    // --- KJO ËSHTË PJESA E RE ---
+    row.style.cursor = 'pointer'; // Ndryshon miun në dorë
+    row.title = "Kliko për të parë historikun e plotë";
+    row.onclick = () => toggleScoreboard(); // Thërret funksionin që hap dritaren (Modal)
+    // ----------------------------
+
     // Klasat për stilim
     if (player.id === activeId) row.classList.add('active-row');
     if (player.isOut || player.score >= 71) row.classList.add('eliminated'); 
@@ -144,7 +161,6 @@ players.forEach(player => {
     for (let i = 0; i < maxRounds; i++) {
         let pikaRaundi = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
         
-        // Stilim special për "X" (fitoren) dhe "!" (Jackpot)
         let cellStyle = "";
         if (pikaRaundi === "X") cellStyle = 'style="color: #2ecc71; font-weight: bold;"';
         if (typeof pikaRaundi === "string" && pikaRaundi.includes("!")) {
