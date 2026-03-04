@@ -203,10 +203,15 @@ players.forEach(player => {
 
         historyCells += `<td ${cellStyle}>${pikaRaundi}</td>`;
     }
-
+    
     let totalCell = `<td><strong>${player.score}</strong></td>`;
     
     row.innerHTML = nameCell + historyCells + totalCell;
+    row.style.cursor = 'pointer';
+    row.onclick = () => {
+        console.log("Klikimi u regjistrua!"); // Testo nëse del kjo në console
+        toggleScoreboard();
+    };
     scoreBody.appendChild(row);
 });
 }
