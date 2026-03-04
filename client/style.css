@@ -498,21 +498,40 @@ body:has(.dragging) {
 }
 /* --- KODI VETËM PËR TELEFON --- */
 @media screen and (max-width: 600px) {
-    #deck-wrapper {
+#deck-wrapper {
         position: absolute !important;
-        top: 40% !important; /* E qendëron vertikalisht në mes të fushës */
+        top: 55% !important; /* Kjo e zbret te zona që vizatove */
         left: 50% !important;
-        transform: translate(-50%, -50%) scale(1.1) !important;
-        gap: 15px !important;
+        transform: translate(-50%, -50%) !important;
+        display: flex !important;
+        flex-direction: row !important; /* I mban krah për krah */
+        gap: 20px !important;
+        width: 90% !important;
+        justify-content: center !important;
+        z-index: 10 !important;
+    }
+   #discard-pile {
+        order: 1 !important; /* E para majtas */
+        width: 70px !important;
+        height: 100px !important;
+        min-width: unset !important; /* Heqim atë 500px që kishe */
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 2px dashed #fff !important;
     }
    #deck-zion:active {
         /* Ruajmë qendërimin (-50%, -50%) dhe shtojmë scale */
         transform: translate(-50%, -50%) scale(0.95) !important;
     }
-    #deck-zion, #discard-pile {
-        width: 65px !important;  /* Pak më të vogla për ekranin e telefonit */
-        height: 95px !important;
-        font-size: 14px !important;
+#deck-zion {
+        order: 2 !important; /* E dyta pas discard-pile */
+        width: 70px !important;
+        height: 100px !important;
+    }
+   #status-msg, .turn-indicator {
+        position: absolute !important;
+        top: 35% !important; /* E ngremë pak mbi letrat që të mos pengojë */
+        width: 100% !important;
+        text-align: center !important;
     }
     
     /* Ruajmë renditjen edhe në telefon */
@@ -624,9 +643,8 @@ body.my-turn-glow {
     filter: brightness(1.2);
 }
 #deck-zion:active {
-    transform: scale(0.95); /* Letra shtypet pak kur e prek, si buton i vërtetë */
-    filter: brightness(0.9); /* Erret pak kur shtypet */
-}   
+    transform: scale(0.95) !important; /* Mjafton kjo për efektin e shtypjes */
+}
 #status-teksti {
     font-size: 1.5rem;
     font-weight: bold;
