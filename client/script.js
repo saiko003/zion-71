@@ -62,7 +62,7 @@ function calculateScore(cards) {
     let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker', 'joker'].includes(c.v));
 
     // Renditim letrat normale për vargjet
-    normalCards.sort((a, b) => getValForOrder(a) - getValForOrder(b));
+    normalCards.sort((a, b) => getVal(a) - getVal(b));
 
     function solve(remaining, jks) {
         if (remaining.length === 0) return 0;
@@ -94,14 +94,14 @@ function calculateScore(cards) {
         // --- OPSIONI 3: Provo VARG (3, 4 ose 5 letra në rend) ---
         for (let size of [3, 4, 5]) {
             let currentJks = jks;
-            let firstValReal = getValForOrder(first);
+            let firstValReal = getVal(first);
             let suit = first.s;
             let tempRemaining = remaining.slice(1);
             let possible = true;
 
             for (let i = 1; i < size; i++) {
                 let target = firstValReal + i;
-                let idx = tempRemaining.findIndex(c => getValForOrder(c) === target && c.s === suit);
+                let idx = tempRemaining.findIndex(c => getVal(c) === target && c.s === suit);
                 if (idx !== -1) {
                     tempRemaining.splice(idx, 1);
                 } else if (currentJks > 0) {
