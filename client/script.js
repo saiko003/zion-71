@@ -485,35 +485,35 @@ function checkZionCondition() {
             }
         }
 
-        // 3. SHFAQJA E BUTONIT DHE STATUSIT
-        if (mundTeMbyllet) {
-            btnMbyll.style.display = 'block';
-            btnMbyll.style.background = "#2ecc71"; // Jeshile
-            btnMbyll.innerHTML = "MBYLL LOJËN (ZION)";
-            
-            if (statusDrita) statusDrita.className = 'led-green';
-            if (statusTeksti) {
-                statusTeksti.innerText = (typeof tookJackpotThisTurn !== 'undefined' && tookJackpotThisTurn) 
-                    ? "ZION (X2)! Mbyllu." 
-                    : "ZION! Mund të mbyllesh.";
-            }
-        } else {
-            // Radha jote, ke 11 letra, por NUK janë të rregulluara mirë
-            btnMbyll.style.display = 'none';
-            if (statusDrita) statusDrita.className = 'led-orange'; 
-            if (statusTeksti) statusTeksti.innerText = "Rregullo grupet (3 ose 4 letra)...";
-        }
-
-    } else {
-        // Kur nuk është radha ose nuk ke 11 letra
-        btnMbyll.style.display = 'none';
-        if (statusDrita) {
-            statusDrita.className = isMyTurn ? 'led-yellow' : 'led-red';
-        }
+       if (isMyTurn) {
+    document.body.classList.add('my-turn-glow'); // Aktivizon ndriçimin te Zona e Hedhjes
+    
+    if (mundTeMbyllet) {
+        btnMbyll.style.display = 'inline-block'; // Ose 'block'
+        btnMbyll.style.background = "#2ecc71";
+        btnMbyll.innerHTML = "MBYLL LOJËN (ZION)";
+        
+        if (statusDrita) statusDrita.className = 'led-green';
         if (statusTeksti) {
-            statusTeksti.innerText = isMyTurn ? "Tërhiq një letër..." : "Prit radhën...";
+            statusTeksti.innerText = (typeof tookJackpotThisTurn !== 'undefined' && tookJackpotThisTurn) 
+                ? "ZION (X2)! Mbyllu." 
+                : "ZION! Mund të mbyllesh.";
         }
+    } else {
+        btnMbyll.style.display = 'none';
+        if (statusDrita) statusDrita.className = 'led-orange'; 
+        if (statusTeksti) statusTeksti.innerText = "Rregullo grupet (3 ose 4 letra)...";
     }
+} else {
+    document.body.classList.remove('my-turn-glow'); // Heq ndriçimin kur s'është radha jote
+    btnMbyll.style.display = 'none';
+    if (statusDrita) {
+        statusDrita.className = 'led-red';
+    }
+    if (statusTeksti) {
+        statusTeksti.innerText = "Prit radhën...";
+    }
+}
 }
 
 // ==========================================
