@@ -111,21 +111,27 @@ function toggleScoreboard() {
 
     if (!modal) return;
 
-    if (modal.style.display === "flex") {
-        modal.style.display = "none";
-    } else {
+    // Kontrollojmë nëse është i fshehur (none ose bosh)
+    if (modal.style.display === "none" || modal.style.display === "") {
+        
         if (sideTable && modalContainer) {
-            // 1. Kopjojmë tabelën origjinale
+            // Marrim tabelën, e pastrojmë container-in dhe e injektojmë
             modalContainer.innerHTML = sideTable.outerHTML;
             
-            // 2. Ndryshojmë ID-në e kopjes që mos të ketë konflikte
-            const copiedTable = modalContainer.querySelector('table');
-            if (copiedTable) copiedTable.id = "modal-table-styled";
+            const newTable = modalContainer.querySelector('table');
+            if (newTable) {
+                newTable.id = "modal-table-version";
+                // Sigurohemi që tabela në modal të jetë 100% e gjerë
+                newTable.style.width = "100%";
+            }
 
-            // 3. Heqim onclick nga rreshtat e kopjuar (që mos të mbyllet dritarja kur klikon brenda saj)
-            modalContainer.querySelectorAll('tr').forEach(row => row.onclick = null);
+            // Heqim klikimet nga rreshtat e kopjuar
+            modalContainer.querySelectorAll('tr').forEach(r => r.onclick = null);
         }
-        modal.style.display = "flex";
+
+        modal.style.display = "flex"; // E SHFAQIM
+    } else {
+        modal.style.display = "none"; // E MBYLLIM
     }
 }
 function updateScoreboard(players, activeId) {
