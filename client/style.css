@@ -488,14 +488,57 @@ body:has(.dragging) {
     z-index: 1100;
     box-shadow: 0 10px 20px rgba(0,0,0,0.6);
 }
+/* --- KODI VETËM PËR TELEFON --- */
+@media screen and (max-width: 600px) {
+    
+    /* 1. Zvogëlojmë përmasat e letrës */
+    .card {
+        width: 50px !important;     /* Nga 70px në 50px */
+        height: 85px !important;    /* Nga 110px në 85px */
+        margin-left: -28px !important; /* I mbledhim më shumë që të nxënë vend */
+        padding: 4px !important;     /* Më pak hapësirë brenda letrës */
+        font-size: 13px !important;  /* Shkrimi më i vogël që të mos dalë jashtë */
+        border-radius: 6px !important;
+    }
+
+    /* Letra e parë nuk duhet të ketë margin majtas */
+    .card:first-child {
+        margin-left: 0 !important;
+    }
+
+    /* 2. Rregullojmë kontejnerin e dorës */
+    #player-hand {
+        bottom: 5px !important;      /* E ulim sa më poshtë */
+        width: 100vw !important;     /* Sa gjerësia e telefonit */
+        padding: 0 10px !important;
+        min-height: 90px !important;
+        justify-content: center !important;
+    }
+
+    /* 3. Zvogëlojmë elementet e tjera që të shohësh fushën */
+    .table-center {
+        transform: scale(0.8);      /* Zvogëlojmë zonën e mesit me 20% */
+        margin-top: -20px !important;
+    }
+
+    #jackpot {
+        width: 50px !important;
+        height: 75px !important;
+    }
+
+    /* 4. Butoni ZION (Mbyll) */
+    #btn-mbyll {
+        bottom: 110px !important;    /* E ngremë pak mbi dorën e lojtarit */
+        font-size: 14px !important;
+        padding: 10px !important;
+    }
+}
  #player-hand {
     display: flex;
     justify-content: center;
     align-items: flex-end;
     transition: all 0.2s ease; /* Kjo i bën letrat të rrëshqasin butë */
     z-index: 1001 !important;
-    
-    /* SHTO KËTO QË TË JETË I DUKSHËM POSHTË */
     position: fixed;
     bottom: 20px;
     left: 50%;
