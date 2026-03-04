@@ -505,7 +505,10 @@ body:has(.dragging) {
         transform: translate(-50%, -50%) scale(1.1) !important;
         gap: 15px !important;
     }
-
+   #deck-zion:active {
+        /* Ruajmë qendërimin (-50%, -50%) dhe shtojmë scale */
+        transform: translate(-50%, -50%) scale(0.95) !important;
+    }
     #deck-zion, #discard-pile {
         width: 65px !important;  /* Pak më të vogla për ekranin e telefonit */
         height: 95px !important;
