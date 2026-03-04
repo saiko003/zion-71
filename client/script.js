@@ -2,18 +2,27 @@ const socket = io('https://zion-71.onrender.com', {
     transports: ['websocket', 'polling']
 });
 
+// 1. Kontrollojmë nëse kemi një emër të ruajtur
+// 1. Kontrollojmë nëse kemi një emër të ruajtur
 let myName = sessionStorage.getItem('zion_player_name');
 
-// Nëse nuk ka emër në storage, krijo një të përkohshëm
+// 2. Nëse nuk ka, e kërkojmë me një Prompt (ose mund të përdorësh Input-in në HTML)
 if (!myName) {
-    myName = "Lojtar-" + Math.floor(Math.random() * 1000);
+    let person = prompt("Ju lutem shkruani emrin tuaj:", "");
+    
+    if (person == null || person == "") {
+        // Nëse nuk shkruan asgjë, i japim emrin rastësor
+        myName = "Lojtar-" + Math.floor(Math.random() * 1000);
+    } else {
+        myName = person.substring(0, 12); // Maksimumi 12 shkronja
+    }
     sessionStorage.setItem('zion_player_name', myName);
-} // Këtu duhet vetëm kllapa gjarpëruese
+}
 
 socket.on('connect', () => {
-    const testi = "Lojtari_1"; // Emër fiks
-    console.log("U lidha! Po dërgoj joinGame...");
-    socket.emit('joinGame', testi);
+    // Në vend të "Lojtari_1", dërgojmë emrin real të ruajtur në browser
+    console.log("U lidha si:", myName);
+    socket.emit('joinGame', myName);
 });
 
 const handContainer = document.getElementById('player-hand');
@@ -170,12 +179,26 @@ function toggleScoreboard() {
         console.log("Modali u mbyll!");
     }
 }
-// 1. LIDHJA E BUTONIT START
 const btnstart = document.getElementById('btn-start');
+const playerNameInput = document.getElementById('player-name-input'); // Kjo merr kutinë e emrit
+
 if (btnstart) {
-    // Përdorim onclick që të jemi 100% sigurt që ka vetëm 1 funksion lidhës
     btnstart.onclick = () => {
-        console.log("🚀 Po dërgoj startGame te serveri...");
+        // 1. Marrim emrin nga input-i
+        const emri = playerNameInput ? playerNameInput.value.trim() : "";
+
+        // 2. Kontrollojmë nëse ka shkruar gjë
+        if (emri === "") {
+            alert("Ju lutem shkruani emrin tuaj para se të filloni!");
+            return; // Ndalon këtu, nuk e nis lojën pa emër
+        }
+
+        console.log("🚀 Po hyj në lojë si:", emri);
+        
+        // 3. Dërgojmë emrin te serveri që të regjistrohet në tabelë
+        socket.emit('joinGame', emri);
+
+        // 4. Nisim lojën
         socket.emit('startGame');
     };
 }
