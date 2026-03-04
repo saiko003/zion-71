@@ -107,12 +107,21 @@ socket.on('yourCards', (cards) => {
 // 1. Funksioni për hapje/mbyllje
 function toggleScoreboard() {
     const modal = document.getElementById('score-modal');
+    if (!modal) return;
+
     if (modal.style.display === "block") {
         modal.style.display = "none";
     } else {
-        // Kopjojmë tabelën anësore te modali
-        const sideTable = document.getElementById('side-score-table').outerHTML;
-        document.getElementById('modal-score-table-container').innerHTML = sideTable;
+        // Marrim gjithë tabelën anësore dhe e kopjojmë brenda modalit
+        const sideTable = document.getElementById('side-score-table');
+        const modalContainer = document.getElementById('modal-score-table-container');
+        
+        if (sideTable && modalContainer) {
+            modalContainer.innerHTML = sideTable.outerHTML;
+            // Heqim id-në e kopjuar që të mos kemi dy elemente me të njëjtën ID
+            modalContainer.querySelector('table').id = "modal-table-styled";
+        }
+        
         modal.style.display = "block";
     }
 }
