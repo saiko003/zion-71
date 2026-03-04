@@ -320,8 +320,13 @@ function updateScoreboard(players, activeId) {
 socket.on('updateGameState', (data) => {
     console.log("Mora gjendjen e re të lojës:", data);
     
-    // THIRRJA E FUNKSIONIT TËND
+    // Përditëson letrat dhe elementet vizuale
     updateGameFlow(data);
+    
+    // KËTU: Përditëson tabelën anësore dhe modalin (nëse është hapur)
+    if (data.players) {
+        updateScoreboard(data.players, data.activePlayerId);
+    }
 });
 function updateGameFlow(data) {
     // 1. Sigurohemi që 'data' nuk është null
