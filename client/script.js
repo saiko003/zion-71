@@ -54,29 +54,34 @@ function getVal(card, highAce = false) {
     
     return parseInt(v) || 0;
 }
-// Këtë vendose në fund të script.js, jashtë çdo kllape tjetër
 function toggleScoreboard() {
-    console.log("U klikua tabela!"); // Shiko nëse del ky mesazh te F12
-    
-    const modal = document.getElementById('score-modal');
+    console.log("U klikua tabela!"); 
+
+    const mainModal = document.getElementById('score-modal'); // Historiku
+    const roundModal = document.getElementById('round-modal'); // Rezultatet 5 sekondëshe
     const modalContainer = document.getElementById('modal-score-table-container');
     const sideTable = document.getElementById('side-score-table');
 
-    if (!modal) return;
+    if (!mainModal) return;
 
-    // Kontrollojmë nëse është i mbyllur
-    if (modal.style.display === "none" || modal.style.display === "") {
+    // 1. Sigurohemi që modali i rezultateve (ai që shfaqet vetë) të mbyllet
+    if (roundModal) roundModal.style.display = "none";
+
+    // 2. Hapja/Mbyllja e Historikut
+    if (mainModal.style.display === "none" || mainModal.style.display === "") {
         if (sideTable && modalContainer) {
             modalContainer.innerHTML = sideTable.outerHTML;
-            const newTable = modalContainer.querySelector('table');
-            if (newTable) newTable.id = "modal-table-version";
+            const copiedTable = modalContainer.querySelector('table');
+            if (copiedTable) copiedTable.id = "modal-table-styled";
             
-            // Heqim klikimet nga kopja që mos të mbyllet dritarja kur klikon brenda
+            // Heqim klikimet nga tabela e kopjuar brenda modalit
             modalContainer.querySelectorAll('tr').forEach(r => r.onclick = null);
         }
-        modal.style.display = "flex";
+        mainModal.style.display = "flex";
+        console.log("Modali u hap me sukses!");
     } else {
-        modal.style.display = "none";
+        mainModal.style.display = "none";
+        console.log("Modali u mbyll!");
     }
 }
 // 1. LIDHJA E BUTONIT START
