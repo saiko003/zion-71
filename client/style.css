@@ -12,6 +12,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+   -webkit-user-select: none; /* Safari */
+    user-select: none; 
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* 2. LOBBY (Pika 14) */
@@ -52,18 +55,22 @@ body {
     100% { transform: scale(1); opacity: 0.8; }
 }
 
-
-/* 3. SCOREBOARD (Pika 17) */
+#score-modal {
+    z-index: 9000; 
+}
 #scoreboard-container {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 8px;
     border-radius: 8px;
-    font-size: 12px;
-    max-height: 150px;
+    font-size: 11px;
+    max-height: 180px;
     overflow-y: auto;
+    cursor: pointer; /* E bën me dorë që lojtari ta dijë që klikohet */
+    border: 1px solid rgba(241, 196, 15, 0.3);
+    z-index: 500; /* Mbi tavolinën, por nën dorën e lojtarit */
 }
 .modal-overlay {
     position: fixed;
@@ -85,7 +92,14 @@ body {
     min-width: 400px;
     box-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
 }
-
+#modal-score-table-container {
+    width: 100%;
+    max-height: 60vh; 
+    table-layout: auto;/* Mos lejo që tabela të dalë jashtë ekranit */
+    overflow-y: auto; /* Shto scroll vetëm brenda tabelës */
+    margin-top: 10px;
+    -webkit-overflow-scrolling: touch; /* Scroll i butë për iPhone */
+}
 #modal-score-table {
     width: 100%;
     margin-top: 20px;
@@ -157,6 +171,24 @@ body {
     font-weight: bold;
 }
 
+.winner-cell {
+    color: #2ecc71 !important;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(46, 204, 113, 0.3);
+}
+
+/* Humbësi me Jackpot ! */
+.jackpot-cell {
+    color: #e74c3c !important;
+    font-weight: bold;
+    animation: flash-red 1s infinite;
+}
+
+@keyframes flash-red {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
 /* ==========================================
    4. ELEMENTET E LOJËS (Deck, Jackpot, Discard)
    ========================================== */
@@ -330,9 +362,10 @@ body {
     z-index: 1000;
     backdrop-filter: blur(8px);
     box-shadow: 0 -5px 25px rgba(0,0,0,0.5);
-    /* E bëjmë flex-wrap që nëse shtohen shumë letra, të mos dalin jashtë */
     flex-wrap: nowrap; 
     pointer-events: auto; /* Sigurohu që është AUTO këtu */
+    gap: 5px; /* Shto pak hapësirë mes letrave nëse margin-left nuk mjafton */
+    padding-left: 30px
 }
 
 /* Lejon klikimin vetëm te letrat, jo te hapësira boshe e container-it */
@@ -442,7 +475,9 @@ body:has(.dragging) {
     pointer-events: auto; /* Sigurohu që mund t'i prekësh letrat */
 }
    
-.card:first-child { margin-left: 0; }
+.card:first-child {
+    margin-left: 0 !important;
+}
 .card:active { cursor: grabbing; }
 
   
