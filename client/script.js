@@ -465,18 +465,17 @@ function checkZionCondition() {
 
     if (!btnMbyll) return;
 
-    // 1. KUSHTI I RADHËS DHE NUMRIT TË LETRAVE
+    // 1. KUSHTI KRYESOR: A është radha jote dhe a ke 11 letra?
     if (isMyTurn && doraImeData.length === 11) {
+        document.body.classList.add('my-turn-glow'); 
         
         let mundTeMbyllet = false;
 
-        // 2. PROVOJMË SECILËN LETËR SI LETËR MBYLLËSE
-        // Kjo bën që isDoraValid të marrë 10 letra saktësisht
+        // 2. Kontrollojmë nëse dora është valide duke provuar secilën letër si mbyllëse
         for (let i = 0; i < doraImeData.length; i++) {
             let testHand = [...doraImeData];
             let removedCard = testHand.splice(i, 1)[0];
 
-            // Xhokeri nuk mund të përdoret si letër mbyllëse
             if (['★', 'Jokeri', 'Xhoker'].includes(removedCard.v)) continue;
 
             if (isDoraValid(testHand)) {
@@ -485,36 +484,39 @@ function checkZionCondition() {
             }
         }
 
-       if (isMyTurn) {
-    document.body.classList.add('my-turn-glow'); // Aktivizon ndriçimin te Zona e Hedhjes
-    
-    if (mundTeMbyllet) {
-        btnMbyll.style.display = 'inline-block'; // Ose 'block'
-        btnMbyll.style.background = "#2ecc71";
-        btnMbyll.innerHTML = "MBYLL LOJËN (ZION)";
-        
-        if (statusDrita) statusDrita.className = 'led-green';
-        if (statusTeksti) {
-            statusTeksti.innerText = (typeof tookJackpotThisTurn !== 'undefined' && tookJackpotThisTurn) 
-                ? "ZION (X2)! Mbyllu." 
-                : "ZION! Mund të mbyllesh.";
+        // 3. Shfaqja e butonit dhe dritave sipas rezultatit
+        if (mundTeMbyllet) {
+            btnMbyll.style.display = 'inline-block';
+            btnMbyll.style.background = "#2ecc71";
+            btnMbyll.innerHTML = "MBYLL LOJËN (ZION)";
+            
+            if (statusDrita) statusDrita.className = 'led-green';
+            if (statusTeksti) {
+                statusTeksti.innerText = (typeof tookJackpotThisTurn !== 'undefined' && tookJackpotThisTurn) 
+                    ? "ZION (X2)! Mbyllu." 
+                    : "ZION! Mund të mbyllesh.";
+            }
+        } else {
+            btnMbyll.style.display = 'none';
+            if (statusDrita) statusDrita.className = 'led-orange'; 
+            if (statusTeksti) statusTeksti.innerText = "Rregullo grupet (3 ose 4 letra)...";
         }
+
     } else {
+        // KJO PJESË EKZEKUTOHET KUR: Nuk është radha jote OSE nuk ke 11 letra
+        document.body.classList.remove('my-turn-glow'); 
         btnMbyll.style.display = 'none';
-        if (statusDrita) statusDrita.className = 'led-orange'; 
-        if (statusTeksti) statusTeksti.innerText = "Rregullo grupet (3 ose 4 letra)...";
+
+        if (statusDrita) {
+            // Nëse është radha jote por s'ke 11 letra (psh. s'ke tërhequr ende)
+            statusDrita.className = isMyTurn ? 'led-yellow' : 'led-red';
+        }
+        
+        if (statusTeksti) {
+            statusTeksti.innerText = isMyTurn ? "Tërhiq një letër..." : "Prit radhën...";
+        }
     }
-} else {
-    document.body.classList.remove('my-turn-glow'); // Heq ndriçimin kur s'është radha jote
-    btnMbyll.style.display = 'none';
-    if (statusDrita) {
-        statusDrita.className = 'led-red';
-    }
-    if (statusTeksti) {
-        statusTeksti.innerText = "Prit radhën...";
-    }
-}
-}
+} 
 
 // ==========================================
 // 3. RENDER HAND (Pika 18 - Renditja Interaktive)
