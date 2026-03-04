@@ -86,7 +86,7 @@ body {
     overflow-y: auto;
     cursor: pointer; /* E bën me dorë që lojtari ta dijë që klikohet */
     border: 1px solid rgba(241, 196, 15, 0.3);
-    z-index: 500; /* Mbi tavolinën, por nën dorën e lojtarit */
+    z-index: 1000; /* Kjo e nxjerr sipër çdo gjëje tjetër */
 }
 .modal-overlay {
     position: fixed;
@@ -109,6 +109,11 @@ body {
     overflow-y: auto; /* Lejon scroll nëse tabela është e gjatë */
     position: relative;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+#side-score-table {
+    width: 100%;
+    color: white;
+    font-size: 12px;
 }
 #modal-score-table-container {
     width: 100%;
