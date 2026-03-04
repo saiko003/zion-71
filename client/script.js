@@ -173,34 +173,35 @@ function updateGameFlow(data) {
 
 
 
-// 2. RREGULLIMI I DORËS
+// 2. RREGULLIMI I DORËS (Versioni i blinduar)
 if (data.myCards && Array.isArray(data.myCards)) {
     
-    // 1. Mbrojtja gjatë lëvizjes (Drag & Drop)
-    if (typeof isDraggingCard !== 'undefined' && isDraggingCard) return; 
+    if (isDraggingCard) return; 
 
-    // 2. Nëse numri i letrave është i NJËJTË, mos e prek renditjen lokalisht
-    if (doraImeData.length === data.myCards.length) {
-        return; 
+    // Nëse numri është i njëjtë, mos e prek asgjë (mbron renditjen pas drag&drop)
+    if (doraImeData.length === data.myCards.length) return;
+
+    // Nëse kemi marrë një letër të re (nga 10 në 11)
+    if (data.myCards.length > doraImeData.length && doraImeData.length > 0) {
+        
+        // Gjejmë cilat letra i ka serveri që ne nuk i kemi në memorien lokale
+        const letraTeReja = data.myCards.filter(serverCard => 
+            !doraImeData.some(localCard => localCard.id === serverCard.id)
+        );
+
+        if (letraTeReja.length > 0) {
+            console.log("Letra e re u gjet dhe po shtohet në fund:", letraTeReja);
+            // Kjo është pjesa kritike: I shtojmë vetëm letrat e reja NË FUND
+            doraImeData.push(...letraTeReja);
+            renderHand();
+            return; // Dalim këtu që të mos ekzekutohet asgjë poshtë
+        }
     }
 
-    // 3. Nëse dora është bosh (fillimi i lojës)
-    if (doraImeData.length === 0) {
+    // Vetëm në raste drastike (psh. sapo futesh në lojë ose gabim i madh) 
+    // e pranojmë renditjen e serverit
+    if (doraImeData.length === 0 || Math.abs(doraImeData.length - data.myCards.length) > 1) {
         doraImeData = data.myCards;
-        renderHand();
-    } 
-    // 4. Nëse ke marrë letër të re (Serveri > Lokale)
-    else if (data.myCards.length > doraImeData.length) {
-        const letraTeReja = data.myCards.filter(sc => !doraImeData.some(lc => lc.id === sc.id));
-        if (letraTeReja.length > 0) {
-            doraImeData.push(...letraTeReja); // Shtohet vetëm në fund
-            renderHand();
-        }
-    } 
-    // 5. Nëse ke hedhur letër (Serveri < Lokale)
-    else if (data.myCards.length < doraImeData.length) {
-        // Mbajmë vetëm letrat që serveri konfirmon se i kemi ende
-        doraImeData = doraImeData.filter(lc => data.myCards.some(sc => sc.id === lc.id));
         renderHand();
     }
 }
