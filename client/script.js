@@ -104,25 +104,28 @@ socket.on('yourCards', (cards) => {
     // Kjo siguron që edhe Status Message (Hidh/Tërhiq) përditësohet menjëherë.
     updateGameFlow({ myCards: cards }); 
 }); 
-// 1. Funksioni për hapje/mbyllje
 function toggleScoreboard() {
     const modal = document.getElementById('score-modal');
+    const modalContainer = document.getElementById('modal-score-table-container');
+    const sideTable = document.getElementById('side-score-table');
+
     if (!modal) return;
 
-    if (modal.style.display === "block") {
+    if (modal.style.display === "flex") {
         modal.style.display = "none";
     } else {
-        // Marrim gjithë tabelën anësore dhe e kopjojmë brenda modalit
-        const sideTable = document.getElementById('side-score-table');
-        const modalContainer = document.getElementById('modal-score-table-container');
-        
         if (sideTable && modalContainer) {
+            // 1. Kopjojmë tabelën origjinale
             modalContainer.innerHTML = sideTable.outerHTML;
-            // Heqim id-në e kopjuar që të mos kemi dy elemente me të njëjtën ID
-            modalContainer.querySelector('table').id = "modal-table-styled";
+            
+            // 2. Ndryshojmë ID-në e kopjes që mos të ketë konflikte
+            const copiedTable = modalContainer.querySelector('table');
+            if (copiedTable) copiedTable.id = "modal-table-styled";
+
+            // 3. Heqim onclick nga rreshtat e kopjuar (që mos të mbyllet dritarja kur klikon brenda saj)
+            modalContainer.querySelectorAll('tr').forEach(row => row.onclick = null);
         }
-        
-        modal.style.display = "block";
+        modal.style.display = "flex";
     }
 }
 function updateScoreboard(players, activeId) {
