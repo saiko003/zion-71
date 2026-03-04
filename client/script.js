@@ -54,6 +54,76 @@ function getVal(card, highAce = false) {
     
     return parseInt(v) || 0;
 }
+function calculateScore(cards) {
+    if (!cards || cards.length === 0) return 0;
+
+    // 1. Ndajmë Xhokerat dhe letrat normale
+    let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker', 'joker'].includes(c.v)).length;
+    let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker', 'joker'].includes(c.v));
+
+    // Renditim letrat normale për vargjet
+    normalCards.sort((a, b) => getValForOrder(a) - getValForOrder(b));
+
+    function solve(remaining, jks) {
+        if (remaining.length === 0) return 0;
+
+        let first = remaining[0];
+        
+        // Vlera e letrës nëse mbetet "jetime" (A=10, Figurat=10)
+        let firstVal = (['A', 'K', 'Q', 'J', '10'].includes(first.v)) ? 10 : (parseInt(first.v) || 0);
+
+        // --- OPSIONI 1: Letra e parë mbetet "jetime" ---
+        let best = firstVal + solve(remaining.slice(1), jks);
+
+        // --- OPSIONI 2: Provo GRUP (3 ose 4 letra të njëjta) ---
+        let sameValue = remaining.filter(c => c.v === first.v);
+        for (let size of [3, 4]) {
+            for (let n = 1; n <= Math.min(sameValue.length, size); n++) {
+                let jNeeded = size - n;
+                if (jNeeded <= jks) {
+                    let count = 0;
+                    let filtered = remaining.filter(c => {
+                        if (count < n && c.v === first.v) { count++; return false; }
+                        return true;
+                    });
+                    best = Math.min(best, solve(filtered, jks - jNeeded));
+                }
+            }
+        }
+
+        // --- OPSIONI 3: Provo VARG (3, 4 ose 5 letra në rend) ---
+        for (let size of [3, 4, 5]) {
+            let currentJks = jks;
+            let firstValReal = getValForOrder(first);
+            let suit = first.s;
+            let tempRemaining = remaining.slice(1);
+            let possible = true;
+
+            for (let i = 1; i < size; i++) {
+                let target = firstValReal + i;
+                let idx = tempRemaining.findIndex(c => getValForOrder(c) === target && c.s === suit);
+                if (idx !== -1) {
+                    tempRemaining.splice(idx, 1);
+                } else if (currentJks > 0) {
+                    currentJks--;
+                } else {
+                    possible = false;
+                    break;
+                }
+            }
+            if (possible) {
+                best = Math.min(best, solve(tempRemaining, currentJks));
+            }
+        }
+
+        return best;
+    }
+
+    // Rezultati nga letrat normale + xhokerat që mund të kenë mbetur
+    // (Pasi funksioni solve mbaron, çdo Xhoker i mbetur është 0 pikë automatikisht 
+    // sepse ne nuk i shtojmë vlerë 'jks' në fund)
+    return solve(normalCards, jokers);
+}
 function toggleScoreboard() {
     console.log("U klikua tabela!"); 
 
@@ -468,6 +538,21 @@ function renderHand() {
     });
 
     console.log("--- DEBUG: renderHand përfundoi ---");
+    // 1. SHTO KËTË PJESË KËTU:
+    if (typeof calculateScore === "function") {
+        let piketAktuale = calculateScore(doraImeData);
+        const elPiket = document.getElementById('display-piket');
+        if (elPiket) {
+            elPiket.innerText = "Pikët në dorë: " + piketAktuale;
+            
+            // Opsionale: Ndrysho ngjyrën nëse po i afrohet 71-shit
+            if (piketAktuale > 50) {
+                elPiket.style.color = "orange";
+            } else {
+                elPiket.style.color = "white";
+            }
+        }
+    }
     
     if (typeof checkZionCondition === "function") {
         checkZionCondition();
