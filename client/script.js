@@ -89,6 +89,25 @@ if (deckZion) {
         }
     };
 }
+function tregoNjoftiminRaundit(sekonda) {
+    const roundModal = document.getElementById('round-modal');
+    const timerText = document.getElementById('next-round-timer');
+    
+    if (!roundModal || !timerText) return;
+
+    roundModal.style.display = 'flex'; // Shfaqim kornizën
+    let koha = sekonda;
+
+    const interval = setInterval(() => {
+        koha--;
+        timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
+        
+        if (koha <= 0) {
+            clearInterval(interval);
+            roundModal.style.display = 'none'; // Mbyllet automatikisht kur nis loja
+        }
+    }, 1000);
+}
 // 1. Dëgjuesi për përditësimin e përgjithshëm të lojës
 socket.on('updateGameState', (data) => {
     console.log("Mora statusin e ri:", data);
@@ -1157,7 +1176,20 @@ socket.on('roundOver', (data) => {
             tableBody.appendChild(row);
         });
 
-        modal.style.display = 'flex'; // Shfaqim modalin (overlay-in)
+        if (timerText) {
+            let koha = 5; // Fillojmë nga 5 sekonda
+            timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
+            
+            const interval = setInterval(() => {
+                koha--;
+                timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
+                if (koha <= 0) clearInterval(interval);
+            }, 1000);
+        }
+        
+          modal.style.display = 'flex'; // Shfaqim modalin (overlay-in)
+    }
+      
     }
 
     // Pastrojmë dorën dhe tavolinën vizualisht
