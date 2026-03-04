@@ -1148,24 +1148,27 @@ function checkRecursive(cards, jokers) {
 }
 
 // Kur një lojtar mbyll lojën (ZION!)
+// Kur një lojtar mbyll lojën (ZION!)
 socket.on('roundOver', (data) => {
-    // Referencat sipas HTML-së tënde
+    // 1. Referencat
     const modal = document.getElementById('round-modal');
     const tableBody = document.getElementById('score-body');
+    const timerText = document.getElementById('next-round-timer'); 
     
+    // 2. Plotësimi i tabelës
     if (modal && tableBody) {
-        tableBody.innerHTML = ''; // Pastrojmë rreshtat e vjetër
+        tableBody.innerHTML = ''; 
 
         data.updatedPlayers.forEach(p => {
-            const lastScore = p.history[p.history.length - 1]; // "X", "15", ose "30!"
-            const isEliminated = p.isOut; // Përdorim variablin nga serveri
+            const lastScore = p.history[p.history.length - 1]; 
+            const isEliminated = p.isOut; 
             
             let scoreClass = "";
             if (lastScore === 'X') scoreClass = "winner-x";
             else if (typeof lastScore === 'string' && lastScore.includes('!')) scoreClass = "jackpot-points";
 
             const row = document.createElement('tr');
-            if (p.id === socket.id) row.className = 'active-row'; // Rreshti yt
+            if (p.id === socket.id) row.className = 'active-row'; 
 
             row.innerHTML = `
                 <td class="${isEliminated ? 'eliminated' : ''}">${p.name}</td>
@@ -1176,33 +1179,34 @@ socket.on('roundOver', (data) => {
             tableBody.appendChild(row);
         });
 
+        // 3. Aktivizimi i Timer-it vizual
         if (timerText) {
-            let koha = 5; // Fillojmë nga 5 sekonda
+            let koha = 5; 
             timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
             
             const interval = setInterval(() => {
                 koha--;
-                timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
+                if (koha >= 0) {
+                    timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
+                }
                 if (koha <= 0) clearInterval(interval);
             }, 1000);
         }
-        
-          modal.style.display = 'flex'; // Shfaqim modalin (overlay-in)
-    }
-      
+
+        // 4. SHFAQJA E MODALIT
+        modal.style.display = 'flex'; 
     }
 
-    // Pastrojmë dorën dhe tavolinën vizualisht
+    // 5. Pastrimet vizuale
     doraImeData = [];
-    renderHand();
+    if (typeof renderHand === "function") renderHand();
     
-    // Pastrojmë discard pile (stivën e hedhjes)
     const discardPileElement = document.getElementById('discard-pile');
     if (discardPileElement) {
         discardPileElement.innerHTML = '<span class="label">ZION 71</span>';
     }
 
-    // Mbyllim tabelën automatikisht pas 4.5 sekondave (pak para se të vijë raundi i ri)
+    // 6. Mbyllja automatike
     setTimeout(() => {
         if (modal) modal.style.display = 'none';
     }, 4500);
