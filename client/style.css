@@ -151,17 +151,16 @@ body {
     font-size: 0.9em;
 }
 
-/* Rreshti i lojtarit aktual brenda modalit */
-#modal-score-table-container .active-row {
-    background: rgba(241, 196, 15, 0.2);
+
+/* Vetëm kjo duhet të mbetet për lojtarin aktual */
+.active-row { 
+    background: rgba(241, 196, 15, 0.25) !important; 
+    border-left: 4px solid #f1c40f !important;
+    font-weight: bold;
 }
 
-
-
-/* Rreshti i lojtarit aktual (veta e parë) */
-.active-row { 
-    background: rgba(255, 255, 0, 0.15); 
-    border-left: 4px solid #f1c40f; 
+.active-row td {
+    color: #f1c40f !important;
 }
 
 .temp-animating {
@@ -581,6 +580,7 @@ body.my-turn-glow {
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    z-index: 10000;
 }
 
 /* Animacion për fituesin */
