@@ -142,9 +142,19 @@ function toggleScoreboard() {
         // Kopjojmë të dhënat nga tabela anësore te modali
         if (sideTable && modalContainer) {
             modalContainer.innerHTML = sideTable.outerHTML;
-            // Sigurohemi që tabela e kopjuar nuk ka ID-në e vjetër që të mos ngatërrohet CSS
             const newTable = modalContainer.querySelector('table');
-            if (newTable) newTable.id = "modal-table-version";
+            if (newTable) {
+                newTable.id = "modal-table-version";
+                
+                // RREGULLIMI: Sigurohemi që të gjitha kolonat të bëhen të dukshme
+                const allTds = newTable.querySelectorAll('td, th');
+                allTds.forEach(el => {
+                    el.style.display = "table-cell"; // Forcon shfaqjen e historisë
+                    el.style.padding = "10px";       // I jep pak hapësirë në modal
+                });
+                
+                newTable.style.width = "100%"; // E bën tabelën të zërë gjithë gjerësinë e modalit
+            }
         }
 
         mainModal.style.setProperty('display', 'flex', 'important');
