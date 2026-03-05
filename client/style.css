@@ -517,7 +517,6 @@ body:has(.dragging) {
         width: 75px !important;
         height: 105px !important;
         margin-bottom: 10px !important; /* Hapësirë që njoftimi të mos e mbulojë */
-        margin-top: 60px
         display: flex !important;
         justify-content: center !important;
         z-index: 10 !important;
@@ -553,8 +552,8 @@ body:has(.dragging) {
     /* 4. ZONA HEDH KËTU - E madhe dhe në mes të fushës */
     #discard-pile {
         position: relative !important;
-        width: 90% !important;
-        height: 350px !important;
+        width: 85% !important;
+        height: 160px !important;
         border: 2px dashed rgba(255, 255, 255, 0.3) !important;
         background: rgba(255, 255, 255, 0.05) !important;
         border-radius: 15px !important;
@@ -566,7 +565,7 @@ body:has(.dragging) {
     /* 5. PIKËT NË DORË - Rrinë fiks mbi letrat */
     #display-piket {
         position: fixed !important;
-        top: 700px; 
+        bottom: 110px !important; 
         left: 0 !important;
         width: 100% !important;
         text-align: center !important;
@@ -579,6 +578,7 @@ body:has(.dragging) {
     #player-hand {
         position: fixed !important;
         bottom: 5px !important;
+        left: 0 !important;
         width: 100vw !important; /* Gjerësia fiks sa telefoni */
         height: 100px !important;
         display: flex !important;
