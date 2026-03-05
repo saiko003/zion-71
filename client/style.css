@@ -299,7 +299,7 @@ body {
 }
 /* Rregullojmë zonën ku hidhet letra që të mos ketë tekstin "HEDH KËTU" kur ka letër sipër */
 #discard-pile {
-    order: 1; /* I thotë CSS-it: dil i pari */
+   
     background: rgba(0, 0, 0, 0.2);
     border: 2px dashed rgba(255, 255, 255, 0.3);
     position: relative;
@@ -531,7 +531,7 @@ body:has(.dragging) {
         display: flex !important;
         flex-direction: column !important; /* I rreshton elementet vertikalisht */
         align-items: center !important;
-        gap: 12px !important; /* Hapësirë e barabartë mes çdo div-i */
+        gap: 20px !important; /* Hapësirë e barabartë mes çdo div-i */
         height: auto !important;
     }
 
@@ -554,14 +554,13 @@ body:has(.dragging) {
         justify-content: center !important;
         align-items: center !important;
         gap: 10px !important;
-        margin: 0 !important;
     }
 
     /* Zona ku hidhen letrat */
     #discard-pile {
         position: relative !important;
-        width: 140px !important;
-        height: 180px !important;
+        width: 300px !important;
+        height: 300px !important;
         margin: 0 !important;
         display: flex !important;
         justify-content: center !important;
@@ -571,7 +570,6 @@ body:has(.dragging) {
     /* Pikët */
     #display-piket {
         position: relative !important;
-        width: 100% !important;
         margin: 0 !important;
         font-size: 16px !important;
         color: #f1c40f !important;
