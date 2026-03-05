@@ -1369,6 +1369,7 @@ socket.on('initGame', () => {
     
     // RREGULLIMI 1: Ndryshojmë ID-në që të përputhet me HTML-në tënde
     const lobby = document.getElementById('lobby-controls'); 
+    const lobbyText = document.getElementById('lobby-text'); // SHTO KËT
     const table = document.getElementById('game-table');
 
     if (lobby) {
@@ -1400,6 +1401,7 @@ socket.on('yourCards', (cards) => {
         // 1. NDRYSHIMI I PAMJES (Nga Lobby te Tavolina)
         const gameTable = document.getElementById('game-table');
         const lobby = document.getElementById('lobby-controls');
+        const lobbyText = document.getElementById('lobby-text');
         
         // Sigurohemi që tabela është e dukshme para se të vizatojmë
         if (gameTable) {
