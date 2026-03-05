@@ -196,10 +196,10 @@ body {
 }
 
 /* Stili për pikët me Jackpot (!) */
-.jackpot-points {
-    color: #e67e22;
-    font-weight: bold;
-}
+#.jackpot-points {
+  #  color: #e67e22;
+    font-weight:# bold;
+#}
 
 .winner-cell {
     color: #2ecc71 !important;
@@ -208,10 +208,10 @@ body {
 }
 
 /* Humbësi me Jackpot ! */
-.jackpot-cell {
-    color: #e74c3c !important;
-    font-weight: bold;
-    animation: flash-red 1s infinite;
+#.jackpot-cell {
+  #  color: #e74c3c !important;
+ #   font-weight: #bold;
+    animation: #flash-red 1s infinite;
 }
 
 @keyframes flash-red {
