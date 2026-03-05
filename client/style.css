@@ -560,7 +560,7 @@ body:has(.dragging) {
     #discard-pile {
         position: relative !important;
         width: 300px !important;
-        height: 300px !important;
+        height: 200px !important;
         margin: 0 !important;
         display: flex !important;
         justify-content: center !important;
