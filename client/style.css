@@ -583,6 +583,28 @@ body:has(.dragging) {
         background: transparent !important;
         z-index: 2000 !important;
     }
+   #player-hand .card {
+        position: relative !important; 
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important; /* Kjo heq "mbetjet" e lëvizjes */
+        margin: 0 -15px !important; /* Për t'i mbledhur pak letrat që të nxënë vend */
+        display: inline-block !important;
+        transition: transform 0.2s ease !important;
+    }
+
+    /* Lejo lëvizjen vetëm kur letra po tërhiqet realisht */
+    #player-hand .card.sortable-drag {
+        position: fixed !important; 
+        transform: scale(1.1) translateY(-20px) !important; /* Efekti i ngritjes */
+        z-index: 9999 !important;
+    }
+
+    /* Shmang hapësirën boshe që mund të krijohet gabimisht */
+    .sortable-ghost {
+        opacity: 0.3 !important;
+        transform: scale(0.9) !important;
+    }
 }
  #player-hand {
     display: flex;
