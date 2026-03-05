@@ -496,73 +496,70 @@ body:has(.dragging) {
     z-index: 1100;
     box-shadow: 0 10px 20px rgba(0,0,0,0.6);
 }
-/* --- KODI VETËM PËR TELEFON --- */
-/* --- KODI I KORRIGJUAR VETËM PËR TELEFON --- */
-/* --- KODI FINAL I KORRIGJUAR PËR TELEFON --- */
 @media screen and (max-width: 600px) {
-    /* 1. RREGULLIMI I TRUPIT */
+    /* 1. KONTROLLI I TRUPIT DHE FUSHËS */
     body {
         overflow: hidden !important;
-        position: fixed;
-        width: 100%;
-        height: 100%;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
     }
 
-    /* 2. FUSHA QENDRORE (Shtyllë Vertikale) */
+    /* 2. ZONA QENDRORE (Shtylla kryesore) */
     .center-area {
-        position: absolute !important;
-        top: 60px !important; /* Hapësirë nga titulli lart */
-        left: 0 !important;
-        width: 100% !important;
+        position: relative !important;
         display: flex !important;
-        flex-direction: column !important; 
+        flex-direction: column !important; /* Rreshtim vertikal: top -> bottom */
         align-items: center !important;
-        gap: 8px !important; /* Hapësirë mes elementeve */
+        width: 100% !important;
+        top: 60px !important; /* Hapësirë nga titulli lart */
+        gap: 10px !important; /* Hapësirë e barabartë mes elementeve */
         margin: 0 !important;
+        height: auto !important;
     }
 
     /* 3. DEKU ZION (I PARI) */
     .deck-wrapper, #deck-zion {
         position: relative !important;
+        order: 1 !important; /* I thotë browserit: dil i pari */
         width: 70px !important;
         height: 100px !important;
-        order: 1 !important;
         margin: 0 !important;
         z-index: 10 !important;
     }
 
-    /* 4. ASISTENTI/NJOFTIMI (I DYTI) */
+    /* 4. ASISTENTI / NJOFTIMI (I DYTI) */
     #asistenti-container {
         position: relative !important;
-        order: 2 !important;
+        order: 2 !important; /* Dil pas dekut */
         width: 100% !important;
-        min-height: 50px !important;
-        margin: 0 !important;
-        padding: 5px 0 !important;
-        background: transparent !important; /* Heqim sfondin e zi të madh */
+        min-height: 40px !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
+        background: transparent !important;
+        margin: 0 !important;
         z-index: 5 !important;
     }
 
     #status-teksti {
         font-size: 14px !important;
         background: rgba(0,0,0,0.6) !important;
-        padding: 4px 12px !important;
-        border-radius: 15px !important;
+        padding: 5px 15px !important;
+        border-radius: 20px !important;
         white-space: nowrap !important;
     }
 
     /* 5. ZONA HEDH KËTU (E TRETA) */
     #discard-pile {
         position: relative !important;
-        order: 3 !important;
-        width: 130px !important; /* Pak më e gjerë se deku */
-        height: 160px !important;
-        margin: 5px 0 !important;
+        order: 3 !important; /* Dil pas asistenti */
+        width: 85% !important;
+        height: 140px !important;
+        margin: 0 !important;
         background: rgba(255, 255, 255, 0.05) !important;
         border: 2px dashed rgba(255, 255, 255, 0.3) !important;
+        border-radius: 12px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
@@ -571,24 +568,24 @@ body:has(.dragging) {
     /* 6. PIKËT NË DORË (E KATËRTA) */
     #display-piket {
         position: relative !important;
-        order: 4 !important;
+        order: 4 !important; /* Dil pas zonës së hedhjes */
         width: 100% !important;
         margin: 5px 0 !important;
         text-align: center !important;
         font-size: 16px !important;
         color: #f1c40f !important;
+        font-weight: bold !important;
         z-index: 100 !important;
     }
 
-    /* 7. DORA E LOJTARIT (PLAYER HAND) */
+    /* 7. DORA E LOJTARIT (Në fund të ekranit) */
     #player-hand, .hand-area {
         position: fixed !important;
         bottom: 10px !important;
         left: 0 !important;
-        transform: none !important;
         width: 100vw !important;
         height: 110px !important;
-        background: rgba(0,0,0,0.2) !important; /* Sfond më i lehtë */
+        background: rgba(0,0,0,0.1) !important;
         display: flex !important;
         justify-content: center !important;
         align-items: flex-end !important;
@@ -596,26 +593,17 @@ body:has(.dragging) {
         margin: 0 !important;
         box-sizing: border-box !important;
         z-index: 2000 !important;
-        overflow: visible !important;
+        transform: none !important;
     }
 
-    /* LETRAT INDIVIDUALE */
+    /* LETRAT */
     .card {
         width: 55px !important;
         height: 85px !important;
-        margin-left: -20px !important; /* I mbledh që të nxënë vend */
-        font-size: 12px !important;
-        border-radius: 6px !important;
-        box-shadow: -2px 0 5px rgba(0,0,0,0.5) !important;
+        margin-left: -20px !important; /* I mbledh letrat që të nxënë vend */
     }
 
     .card:first-child { margin-left: 0 !important; }
-
-    /* Rritja e letrës kur preket */
-    .card:active {
-        transform: translateY(-30px) scale(1.2) !important;
-        z-index: 5000 !important;
-    }
 }
  #player-hand {
     display: flex;
