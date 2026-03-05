@@ -616,14 +616,14 @@ body:has(.dragging) {
     #scoreboard-container {
         transform: scale(0.7) !important;
         top: 5px !important;
-        left: 5px !important;
+        
         z-index: 3000 !important;
     }
 
     /* 2. Rregullojmë zonën qendrore si RRESHT (Horizontal) */
     .center-area {
         position: absolute !important;
-        top: 20% !important; /* E ngrejmë pak lart që të mos e mbulojë dora */
+        top: 5% !important; /* E ngrejmë pak lart që të mos e mbulojë dora */
         left: 0 !important;
         width: 100% !important;
         display: flex !important;
