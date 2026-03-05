@@ -496,7 +496,32 @@ body:has(.dragging) {
     z-index: 1100;
     box-shadow: 0 10px 20px rgba(0,0,0,0.6);
 }
+#jackpot {
+    width: 80px;
+    height: 120px;
+    background: linear-gradient(135deg, #f1c40f, #f39c12); /* Ngjyrë ari */
+    border: 3px solid #fff;
+    border-radius: 10px;
+    display: none; /* Fshehur fillimisht, JS e shfaq kur duhet */
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(241, 196, 15, 0.6);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    z-index: 100;
+}
+
+#jackpot::after {
+    content: "💰"; /* Një simbol që ta dallojë lojtari */
+    font-size: 2rem;
+}
 @media screen and (max-width: 600px) {
+  #jackpot {
+        width: 60px !important;  /* Pak më i vogël për telefon */
+        height: 90px !important;
+        position: relative !important; /* Që të qëndrojë në rresht me Dekun dhe Asistentin */
+        margin: 5px auto !important;
+    }
     /* Prindi kryesor që i mban të gjitha në rresht */
     .center-area {
         position: absolute !important;
