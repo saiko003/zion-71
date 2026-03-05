@@ -610,105 +610,90 @@ body:has(.dragging) {
    MODALITETI LANDSCAPE (TELEFONI ANASH)
    ============================================================ */
 @media screen and (max-width: 950px) and (orientation: landscape) {
+    /* 1. Zvogëlojmë titullin dhe scoreboard që të lirojmë hapësirë lart */
+    h1 { display: none !important; }
     
-    /* 1. Rregullimi i fushës kryesore */
-    .center-area {
-        position: absolute !important;
-        top: 40px !important; /* Më lart që të mos e zërë dora e lojtarit */
-        left: 0 !important;
-        width: 100% !important;
-        height: auto !important;
-        display: flex !important;
-        flex-direction: row !important; /* Elementet rreshtohen horizontalisht */
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 30px !important; /* Hapësirë mes Dekut, Asistentit dhe Discard Pile */
-        padding: 0 20px !important;
-    }
-
-    /* 2. Deku (ZION) - e bëjmë pak më të vogël */
-    .deck-wrapper {
-        position: relative !important;
-        width: 60px !important;
-        height: 85px !important;
-        margin: 0 !important;
-        order: 1 !important; /* I pari në të majtë */
-    }
-
-    #deck-zion {
-        width: 100% !important;
-        height: 100% !important;
-        font-size: 12px !important;
-    }
-
-    /* 3. Asistenti (Drita dhe Teksti) - në mes */
-    #asistenti-container {
-        position: relative !important;
-        width: auto !important;
-        min-width: 180px !important;
-        height: 40px !important;
-        padding: 5px 15px !important;
-        background: rgba(0, 0, 0, 0.5) !important;
-        border-radius: 10px !important;
-        display: flex !important;
-        flex-direction: row !important; /* Drita dhe teksti anash njëri-tjetrit */
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 10px !important;
-        order: 2 !important;
-    }
-
-    #status-teksti {
-        font-size: 13px !important;
-        white-space: nowrap !important;
-    }
-
-    /* 4. Zona ku hidhen letrat (HEDH KËTU) - në të djathtë */
-    #discard-pile {
-        position: relative !important;
-        width: 130px !important;
-        height: 170px !important; /* E mbajmë pak të lartë që të duken letrat e grumbulluara */
-        margin: 0 !important;
-        order: 3 !important;
-        border-width: 2px !important;
-    }
-
-    /* 5. Pikët - i zhvendosim lart djathtas që mos të pengojnë */
-    #display-piket {
-        position: fixed !important;
-        top: 10px !important;
-        right: 20px !important;
-        font-size: 14px !important;
-        background: rgba(0, 0, 0, 0.4) !important;
-        padding: 2px 10px !important;
-        border-radius: 5px !important;
+    #scoreboard-container {
+        transform: scale(0.7) !important;
+        top: 5px !important;
+        left: 5px !important;
         z-index: 3000 !important;
     }
 
-    /* 6. Dora e lojtarit (Më e ulët në landscape) */
+    /* 2. Rregullojmë zonën qendrore si RRESHT (Horizontal) */
+    .center-area {
+        position: absolute !important;
+        top: 20% !important; /* E ngrejmë pak lart që të mos e mbulojë dora */
+        left: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important; /* Elementet dalin anash njëri-tjetrit */
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 40px !important; /* Hapësirë mes Dekut, Asistentit dhe Discard */
+    }
+
+    /* 3. Zvogëlojmë Dekun dhe Zonën e Hedhjes */
+    .deck-wrapper, #deck-zion {
+        width: 50px !important;
+        height: 75px !important;
+        margin: 0 !important;
+    }
+
+    #discard-pile {
+        width: 110px !important;
+        height: 150px !important;
+        margin: 0 !important;
+    }
+
+    /* 4. Asistenti (Rregullo grupet...) - e bëjmë më të hollë */
+    #asistenti-container {
+        width: auto !important;
+        min-width: 160px !important;
+        padding: 5px 12px !important;
+        background: rgba(0, 0, 0, 0.6) !important;
+        border-radius: 15px !important;
+        height: 35px !important;
+    }
+
+    #status-teksti {
+        font-size: 12px !important;
+        white-space: nowrap !important;
+    }
+
+    /* 5. Pikët në dorë - i zhvendosim në qoshe lart djathtas */
+    #display-piket {
+        position: fixed !important;
+        top: 10px !important;
+        right: 10px !important;
+        font-size: 13px !important;
+        margin: 0 !important;
+        z-index: 2500 !important;
+    }
+
+    /* 6. DORA E LOJTARIT (Kritike për Landscape) */
     #player-hand {
-        height: 85px !important; /* Zbritet që të fitojmë fushë */
-        bottom: 2px !important;
-        background: rgba(0, 0, 0, 0.1) !important;
+        position: fixed !important;
+        bottom: 0 !important; /* E ngjisim fiks në fund */
+        height: 80px !important; /* E ulim lartësinë që të mos mbulojë fushën */
+        width: 100% !important;
+        background: linear-gradient(transparent, rgba(0,0,0,0.4)) !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: flex-end !important;
+        padding-bottom: 5px !important;
     }
 
     #player-hand .card {
-        width: 48px !important;
-        height: 75px !important;
-        margin: 0 -12px !important; /* Letrat mblidhen më shumë */
+        width: 45px !important; /* Letra më të vogla në landscape */
+        height: 70px !important;
+        margin: 0 -10px !important; /* I mbledhim që të nxënë vend */
+        font-size: 10px !important;
     }
 
-    /* 7. Fshehim elementet që nuk duhen për të kursyer hapësirë */
-    h1, #lobby-text {
-        display: none !important;
-    }
-
-    /* Rregullimi i Scoreboard-it (tabelës anash) */
-    #scoreboard-container {
-        transform: scale(0.8) !important; /* E zvogëlojmë pak */
-        top: 10px !important;
-        left: 10px !important;
-        width: 120px !important;
+    /* 7. Heqim hije apo elemente që zënë vend vizualisht */
+    .hand-area {
+        box-shadow: none !important;
     }
 }
  #player-hand {
