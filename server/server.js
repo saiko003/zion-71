@@ -265,28 +265,27 @@ function startNewRound() {
         dealerIndex = (dealerIndex + 1) % players.length;
     }
 
-    // Shpërndaj letrat
     players.forEach((player, index) => {
-        if (player.isOut) {
-            player.cards = [];
-            return;
-        }
-
+    if (player.isOut) {
         player.cards = [];
+        return;
+    }
 
-        // 🃏 XHOKER FIKS PËR ÇDO LOJTAR
-        const joker = { 
-            v: '★', 
-            s: 'Joker', 
-            id: `joker-${player.id}-${Date.now()}`
-        };
+    player.cards = [];
+
+    // 🃏 XHOKER FIKS PËR ÇDO LOJTAR
+    const joker = { 
+        v: '★', 
+        s: 'Joker', 
+        id: `joker-${player.id}-${Date.now()}`
+    };
 
         // Dealer merr 10 letra, të tjerët 9
         let cardsFromDeck = (index === dealerIndex) ? 10 : 9;
         let drawnCards = gameDeck.splice(0, cardsFromDeck);
         
         player.cards = [joker, ...drawnCards];
-        console.log(`📦 ${player.name} mori ${player.cards.length} letra (1 Xhoker + ${cardsFromDeck} nga deku)`);
+        console.log(`📦 ${player.name} mori ${player.cards.length} letra`);
     });
 
     // Jackpot (letra e parë e stivës)
