@@ -1391,5 +1391,18 @@ socket.on('showWinnerCards', (winnerCards) => {
         winnerDisplay.style.display = 'none';
     }, 5000);
 });
-
+// Kontrollo kur ngarkohet faqja
+window.addEventListener('load', () => {
+    const gameTable = document.getElementById('game-table');
+    console.log("Game table elementi:", gameTable);
+    
+    if (gameTable) {
+        console.log("Background i game-table:", getComputedStyle(gameTable).background);
+        
+        // FORCO BACKGROUND-IN
+        gameTable.style.background = "transparent";
+    } else {
+        console.error("❌ NUK U GJET #game-table!");
+    }
+});
 console.log("Lidhja HTML -> Script: OK ✅");
