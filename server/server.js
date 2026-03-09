@@ -714,4 +714,3 @@ server.listen(PORT, () => {
     console.log(`📡 Porta: ${PORT}`);
     console.log(`🎮 Lojtarët: ${players.length}`);
     console.log(`===========================\n`);
-});
