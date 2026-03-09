@@ -1,23 +1,85 @@
 /* ==========================================
-   VETËM LANDSCAPE - BLLOKIMI I PORTRAIT
+   ZION 71 - STILI I PLOTĒ
    ========================================== */
 
-/* 1. BLLOKO PORTRAIT - Shfaq mesazh për të rrotulluar */
-@media screen and (orientation: portrait) {
-    body {
-        overflow: hidden;
-        position: fixed;
-        width: 100vw;
-        height: 100vh;
-        margin: 0;
-        padding: 0;
-    }
+/* 1. BAZA DHE RESET */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    margin: 0;
+    padding: 0;
+}
 
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%) !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+}
+
+/* 2. LOBBY */
+#lobby-controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+}
+
+#lobby-controls h1 {
+    font-size: 3rem;
+    color: #f1c40f;
+    text-shadow: 0 0 20px gold;
+}
+
+#btn-start {
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    background: #e67e22;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* 3. GAME TABLE - FILLIMISHT I FSHEHUR */
+#game-table {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: transparent !important;
+}
+
+/* ==========================================
+   VETĒM LANDSCAPE - BLLOKIMI I PORTRAIT
+   ========================================== */
+@media screen and (orientation: portrait) {
     #lobby-controls,
     #game-table,
     .landscape-container,
     .hand-section,
-    .action-area {
+    .action-area,
+    .center-area,
+    #player-hand,
+    #scoreboard-container,
+    #asistenti-container,
+    #discard-pile,
+    #deck-zion,
+    #jackpot {
         display: none !important;
     }
 
@@ -29,12 +91,11 @@
         width: 100%;
         height: 100%;
         background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
-        z-index: 999999;
         justify-content: center;
         align-items: center;
         flex-direction: column;
         text-align: center;
-        color: white;
+        z-index: 999999;
     }
 
     .rotate-message .icon {
@@ -47,14 +108,12 @@
         font-size: 28px;
         color: #f1c40f;
         margin-bottom: 10px;
-        text-shadow: 0 0 20px gold;
     }
 
     .rotate-message p {
         font-size: 18px;
         color: white;
         max-width: 80%;
-        line-height: 1.5;
     }
 
     @keyframes rotatePhone {
@@ -64,41 +123,29 @@
     }
 }
 
-/* 2. MESAZHI I ROTULLIMIT - FILLIMISHT I FSHEHUR */
 .rotate-message {
     display: none;
 }
 
 /* ==========================================
-   LANDSCAPE - VETËM KUR ËSHTË ANASH
+   LANDSCAPE LAYOUT
    ========================================== */
 @media screen and (orientation: landscape) {
-    /* Rregullime bazë */
-    body {
-        overflow: hidden;
-        position: fixed;
-        width: 100vw;
-        height: 100vh;
-        margin: 0;
-        padding: 0;
-        background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
-    }
-
-    /* Fsheh mesazhin e rotullimit */
+    /* FSHIH ROTATE MESSAGE */
     .rotate-message {
         display: none !important;
     }
 
+    /* GAME TABLE KRYESORE */
     #game-table {
         display: block;
         width: 100%;
         height: 100%;
+        background: transparent !important;
         position: relative;
     }
 
-    /* ==========================================
-       HEADER I SIPËRM (Points & Round)
-       ========================================== */
+    /* HEADER ME POINTS DHE ROUND */
     .game-header {
         position: absolute;
         top: 5px;
@@ -111,59 +158,51 @@
         pointer-events: none;
     }
 
-    .points-box {
+    .points-box, .round-box {
         background: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(5px);
         padding: 4px 12px;
         border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .points-box {
         border: 1px solid #f1c40f;
         color: #f1c40f;
-        font-weight: bold;
-        font-size: 14px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
 
     .round-box {
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(5px);
-        padding: 4px 12px;
-        border-radius: 20px;
         border: 1px solid #2ecc71;
         color: #2ecc71;
-        font-weight: bold;
-        font-size: 14px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
 
-    /* ==========================================
-       LAYOUT KRYESOR - 3 KOLONA
-       ========================================== */
+    /* LAYOUT 3 KOLONA */
     .landscape-container {
         display: flex;
         width: 100%;
         height: 100%;
         padding: 40px 5px 80px 5px;
         gap: 8px;
+        background: transparent !important;
     }
 
-    /* KOLONA 1 - Lojtarët (majtas) - 4 LOJTARË */
+    /* KOLONA 1 - LOJTARĒT */
     .players-column {
-        flex: 0 0 150px;
+        flex: 0 0 140px;
         display: flex;
         flex-direction: column;
         gap: 5px;
-        background: transparent;
         overflow-y: auto;
-        max-height: 100%;
+        background: transparent !important;
     }
 
     .player-card {
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(5px);
         border-radius: 8px;
         padding: 6px 10px;
         border-left: 3px solid #f1c40f;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         position: relative;
     }
 
@@ -172,16 +211,10 @@
         background: rgba(46, 204, 113, 0.15);
     }
 
-    .player-card.eliminated {
-        opacity: 0.5;
-        border-left: 3px solid #ff4d4d;
-    }
-
     .player-name {
         font-size: 13px;
         font-weight: bold;
         color: #f1c40f;
-        white-space: nowrap;
     }
 
     .player-card.you .player-name {
@@ -206,10 +239,7 @@
         font-weight: bold;
         padding: 2px 8px;
         border-radius: 10px;
-        text-transform: uppercase;
         animation: turnPulse 1s infinite;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        z-index: 10;
     }
 
     .player-waiting-indicator {
@@ -222,9 +252,6 @@
         font-weight: bold;
         padding: 2px 8px;
         border-radius: 10px;
-        text-transform: uppercase;
-        opacity: 0.8;
-        z-index: 10;
     }
 
     @keyframes turnPulse {
@@ -233,15 +260,14 @@
         100% { transform: scale(1); background: #2ecc71; }
     }
 
-    /* KOLONA 2 - Qendra (tavolina) */
+    /* KOLONA 2 - QENDRA */
     .center-column {
         flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
         gap: 10px;
-        min-width: 200px;
+        background: transparent !important;
     }
 
     .table-area {
@@ -257,7 +283,6 @@
     }
 
     .deck-wrapper {
-        position: relative;
         width: 60px;
         height: 85px;
     }
@@ -272,7 +297,6 @@
         justify-content: center;
         align-items: center;
         color: white;
-        font-weight: bold;
         font-size: 12px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.5);
     }
@@ -287,9 +311,9 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 10px;
         color: black;
         font-weight: bold;
+        font-size: 10px;
     }
 
     #discard-pile {
@@ -302,11 +326,44 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 10px;
         color: #aaa;
+        font-size: 10px;
     }
 
-    /* Tabela e rezultatit - SHUMË E VOGËL */
+    .discard-cards {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .discard-cards .card-mini {
+        position: absolute;
+        width: 85%;
+        height: 85%;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #555;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 10px;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .discard-cards .card-mini:nth-child(1) { transform: rotate(-5deg) translate(-2px, -2px); z-index: 3; }
+    .discard-cards .card-mini:nth-child(2) { transform: rotate(3deg) translate(3px, 1px); z-index: 2; opacity: 0.9; }
+    .discard-cards .card-mini:nth-child(3) { transform: rotate(-2deg) translate(1px, 3px); z-index: 1; opacity: 0.8; }
+    .discard-cards .card-mini:nth-child(4) { transform: rotate(4deg) translate(-1px, -1px); z-index: 0; opacity: 0.7; }
+    .discard-cards .card-mini:nth-child(5) { transform: rotate(-3deg) translate(2px, 2px); z-index: -1; opacity: 0.6; }
+
+    .discard-cards .card-mini.red { color: #e74c3c; }
+    .discard-cards .card-mini.joker { background: linear-gradient(135deg, #2c3e50, #000); color: #f1c40f; }
+
+    /* TABELA E REZULTATIT */
     .results-table {
         width: 100%;
         max-width: 220px;
@@ -314,17 +371,14 @@
         backdrop-filter: blur(5px);
         border-radius: 8px;
         padding: 5px;
-        margin-top: 5px;
         border: 1px solid #f1c40f;
-        font-size: 9px;
     }
 
     .results-table h3 {
         color: #f1c40f;
-        margin: 0 0 3px 0;
         font-size: 10px;
         text-align: center;
-        font-weight: bold;
+        margin-bottom: 3px;
     }
 
     .results-table table {
@@ -338,7 +392,6 @@
         color: #f1c40f;
         padding: 2px;
         font-size: 7px;
-        font-weight: bold;
     }
 
     .results-table td {
@@ -348,27 +401,26 @@
         font-size: 8px;
     }
 
-    /* KOLONA 3 - Chat (djathtas) */
+    /* KOLONA 3 - CHAT */
     .chat-column {
         flex: 0 0 130px;
         background: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(5px);
         border-radius: 8px;
         padding: 6px;
+        border: 1px solid #f1c40f;
         display: flex;
         flex-direction: column;
-        border: 1px solid #f1c40f;
-        max-height: 100%;
     }
 
     .chat-header {
         color: #f1c40f;
         font-size: 11px;
         font-weight: bold;
+        text-align: center;
         padding-bottom: 3px;
         border-bottom: 1px solid #f1c40f;
         margin-bottom: 5px;
-        text-align: center;
     }
 
     .chat-messages {
@@ -386,7 +438,6 @@
         padding: 3px 5px;
         background: rgba(255, 255, 255, 0.1);
         border-radius: 10px;
-        word-break: break-word;
     }
 
     .chat-username {
@@ -417,11 +468,6 @@
         height: 22px;
     }
 
-    .chat-input::placeholder {
-        color: rgba(255,255,255,0.5);
-        font-size: 7px;
-    }
-
     .chat-send {
         background: #f1c40f;
         border: none;
@@ -434,9 +480,7 @@
         height: 22px;
     }
 
-    /* ==========================================
-       BUTONI I MBYLLJES DHE ASISTENTI
-       ========================================== */
+    /* ACTION AREA - ASISTENTI DHE BUTONI */
     .action-area {
         position: fixed;
         bottom: 80px;
@@ -460,7 +504,6 @@
         gap: 10px;
         border: 2px solid #f1c40f;
         pointer-events: auto;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
 
     .led-red, .led-green, .led-yellow, .led-orange {
@@ -497,14 +540,8 @@
         font-size: 13px;
         cursor: pointer;
         animation: bounce 1s infinite;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         border: 2px solid #f1c40f;
         pointer-events: auto;
-        letter-spacing: 1px;
-    }
-
-    #btn-mbyll:active {
-        transform: scale(0.95);
     }
 
     @keyframes bounce {
@@ -512,9 +549,7 @@
         50% { transform: scale(1.05); }
     }
 
-    /* ==========================================
-       DORA E LOJTARIT (POSHTË)
-       ========================================== */
+    /* DORA E LOJTARIT */
     .hand-section {
         position: fixed;
         bottom: 0;
@@ -554,26 +589,58 @@
         box-shadow: -2px 0 5px rgba(0,0,0,0.3);
         color: black;
         cursor: pointer;
-        transition: transform 0.1s;
     }
 
-    #player-hand .card:first-child {
-        margin-left: 0;
-    }
+    #player-hand .card:first-child { margin-left: 0; }
+    #player-hand .card:active { transform: translateY(-15px) scale(1.1); z-index: 100; }
+    #player-hand .card.joker { background: linear-gradient(135deg, #2c3e50, #000); color: #f1c40f !important; border: 2px solid #f1c40f; }
 
-    #player-hand .card:active {
-        transform: translateY(-15px) scale(1.1);
-        z-index: 100;
+    /* FSHEH ELEMENTET E VJETĒR */
+    #display-piket,
+    .center-area {
+        display: none !important;
     }
+}
 
-    #player-hand .card.joker {
-        background: linear-gradient(135deg, #2c3e50, #000);
-        color: #f1c40f !important;
-        border: 2px solid #f1c40f;
-    }
+/* ==========================================
+   MODALET (PĒR TĒ DYJA ORIENTIMET)
+   ========================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
 
-    /* Fshihet display-piket i vjetër */
-    #display-piket {
-        display: none;
-    }
+.modal-content {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 15px;
+    border: 3px solid #f1c40f;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: white;
+}
+
+.winner-cards-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.winner-cards-content h2 {
+    color: gold;
+    font-size: 2rem;
+    text-align: center;
 }
