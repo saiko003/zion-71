@@ -234,6 +234,9 @@ function isDoraValid(cards) {
 // 4. FUNKSIONI PËR TË FILLUAR RAUNDIN E RI
 // ==========================================
 
+// ==========================================
+// 4. FUNKSIONI PËR TË FILLUAR RAUNDIN E RI
+// ==========================================
 function startNewRound() {
     console.log(`\n🎮 ===== RAUNDI ${currentRound} FILLOI =====`);
 
@@ -271,7 +274,7 @@ function startNewRound() {
 
         player.cards = [];
 
-        // Xhokeri për secilin lojtar
+        // 🃏 XHOKER FIKS PËR ÇDO LOJTAR
         const joker = { 
             v: '★', 
             s: 'Joker', 
@@ -283,7 +286,7 @@ function startNewRound() {
         let drawnCards = gameDeck.splice(0, cardsFromDeck);
         
         player.cards = [joker, ...drawnCards];
-        console.log(`📦 ${player.name} mori ${player.cards.length} letra`);
+        console.log(`📦 ${player.name} mori ${player.cards.length} letra (1 Xhoker + ${cardsFromDeck} nga deku)`);
     });
 
     // Jackpot (letra e parë e stivës)
@@ -301,7 +304,7 @@ function startNewRound() {
 
     // Dërgo letrat private
     players.forEach(p => {
-        if (!p.isOut) {
+        if (!p.isOut && p.cards) {
             io.to(p.id).emit('yourCards', p.cards);
         }
     });
