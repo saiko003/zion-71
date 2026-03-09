@@ -1,6 +1,28 @@
 /* ==========================================
    1. BAZA DHE TAVOLINA
    ========================================== */
+/* ==========================================
+   1. BAZA DHE TAVOLINA (FIX)
+   ========================================== */
+#game-table {
+    display: none; /* Fillimisht i fshehur */
+    width: 100%;
+    height: 100%;
+    background: transparent !important; /* I detyrojmë transparent */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Sigurohu që asnjë element tjetër nuk ka background të bardhë */
+.center-area,
+.deck-wrapper,
+#asistenti-container,
+#discard-pile,
+#player-hand,
+.hand-area {
+    background: transparent !important;
+}
+
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
