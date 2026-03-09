@@ -16,60 +16,84 @@
     <p id="lobby-text">Prit lojtarët e tjerë të futen...</p>
 </div>
 
-<!-- GAME TABLE - Shfaqet kur fillon loja -->
+<!-- GAME TABLE - LAYOUT I RI LANDSCAPE -->
 <div id="game-table" style="display: none;">
     
-    <!-- Scoreboard i vogël (gjithmonë i dukshëm) -->
-    <div id="scoreboard-container">
-        <button id="open-score-btn" onclick="toggleScoreboard()" style="width: 100%; background: #f1c40f; color: black; font-weight: bold; border: none; padding: 5px; cursor: pointer; border-radius: 5px 5px 0 0;">
-            📊 SHIKO PIKËT
-        </button>
-        <table id="side-score-table" onclick="toggleScoreboard()" style="cursor: pointer;"> 
-            <thead>
-                <tr>
-                    <th>Lojtari</th>
-                    <th>Historia</th> 
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody id="side-score-body"></tbody>
-        </table>
+    <!-- Header me Points dhe Round -->
+    <div class="game-header">
+        <div class="points-box" id="display-piket-header">Pikët: <span id="piket-vlera-header">0</span></div>
+        <div class="round-box" id="round-display">Raundi: <span id="current-round">1</span>/<span id="max-rounds">10</span></div>
     </div>
 
-    <!-- Zona qendrore e lojës (Deck, Jackpot, Asistenti, Discard) -->
-    <div class="center-area">
-        <div class="deck-wrapper">
-            <div id="deck-zion" class="card-stack">ZION</div>
+    <!-- LAYOUT KRYESOR 3 KOLONA -->
+    <div class="landscape-container">
+        
+        <!-- KOLONA 1 - LOJTARËT (MAJTAS) -->
+        <div class="players-column" id="players-column">
+            <!-- Lojtarët do të shtohen nga JavaScript -->
         </div>
-        
-        <!-- JACKPOT - Letra speciale -->
-        <div id="jackpot" class="card jackpot-card" style="display: none;"></div>
-        
-        <!-- Asistenti me LED dhe buton -->
+
+        <!-- KOLONA 2 - QENDRA (TAVOLINA) -->
+        <div class="center-column">
+            <div class="table-area">
+                <div class="deck-wrapper">
+                    <div id="deck-zion" class="card-stack">ZION</div>
+                </div>
+                
+                <div id="jackpot" class="card-stack jackpot-card" style="display: none;">JACKPOT</div>
+                
+                <div id="discard-pile" class="drop-zone">
+                    <span class="label">HEDH</span>
+                    <div id="discard-cards-container" class="discard-cards"></div>
+                </div>
+            </div>
+
+            <!-- Tabela e rezultatit (shumë e vogël) -->
+            <div class="results-table">
+                <h3>TABELA E REZULTATIT</h3>
+                <table id="landscape-score-table">
+                    <thead>
+                        <tr>
+                            <th>Lojtari</th>
+                            <th>Pikët</th>
+                        </tr>
+                    </thead>
+                    <tbody id="landscape-score-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- KOLONA 3 - CHAT (DJATHTAS) -->
+        <div class="chat-column">
+            <div class="chat-header">CHAT</div>
+            <div class="chat-messages" id="chat-messages">
+                <!-- Mesazhet do të shtohen nga JS -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Shkruaj...">
+                <button class="chat-send" id="chat-send">Dërgo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZONA E ASISTENTIT DHE BUTONIT -->
+    <div class="action-area">
         <div id="asistenti-container">
             <div id="status-drita" class="led-red"></div>
-            <div id="asistenti-info">
-                <span id="status-teksti">Duke pritur...</span>
-            </div>
-            <button id="btn-mbyll" class="zion-button" style="display: none;">MBYLL LOJËN (ZION)</button>
+            <span id="status-teksti">Duke pritur...</span>
         </div>
-
-        <!-- Zona e hedhjes së letrave -->
-        <div id="discard-pile" class="drop-zone">
-            <span class="label">HEDH KËTU</span>
-            <div id="discard-cards-container" class="discard-cards"></div>
-        </div>
-
-        <!-- Pikët e dorës (për landscape do të fshihet nga CSS) -->
-        <div id="display-piket">
-            Pikët në dorë: <span id="piket-vlera">0</span>
-        </div>
+        <button id="btn-mbyll" style="display: none;">MBYLL LOJËN</button>
     </div>
 
-    <!-- Dora e lojtarit -->
-    <div id="player-hand" class="hand-area"></div>
+    <!-- DORA E LOJTARIT (POSHTË) -->
+    <div class="hand-section">
+        <div id="player-hand" class="hand-area"></div>
+    </div>
 
-    <!-- Overlay për shfaqjen e letrave fituese (5 sekonda) -->
+    <!-- Display i vjetër i pikëve (e fshehim) -->
+    <div id="display-piket" style="display: none;"></div>
+
+    <!-- Overlay për shfaqjen e letrave fituese -->
     <div id="winner-cards-display" class="winner-cards-overlay" style="display: none;">
         <div class="winner-cards-content">
             <h2>🏆 LETRAT FITUESE 🏆</h2>
@@ -112,14 +136,13 @@
     </div>
 </div>
 
-<!-- 🟢 MESAZHI PËR RROTULLIM - VETËM PËR PORTRAIT -->
+<!-- Mesazhi për rotullim në Portrait -->
 <div class="rotate-message">
     <div class="icon">📱</div>
     <h2>Rrotullo telefonin!</h2>
     <p>Kjo lojë luhet vetëm në pozicion horizontal (landscape)</p>
 </div>
 
-<!-- Skriptet -->
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="script.js"></script>
