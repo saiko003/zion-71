@@ -1,7 +1,14 @@
+// ==========================================
+// ZION 71 - SCRIPT I PLOTË I PASTRUAR
+// ==========================================
+
 const socket = io('https://zion-71.onrender.com', {
     transports: ['websocket', 'polling']
 });
 
+// ==========================================
+// 1. EMRI I LOJTARIT
+// ==========================================
 let myName = sessionStorage.getItem('zion_player_name');
 
 if (!myName) {
@@ -16,10 +23,13 @@ if (!myName) {
 }
 
 socket.on('connect', () => {
-    console.log("U lidha si:", myName);
+    console.log("✅ U lidha si:", myName);
     socket.emit('joinGame', myName);
 });
 
+// ==========================================
+// 2. VARIABLA GLOBALE
+// ==========================================
 const handContainer = document.getElementById('player-hand');
 const jackpotElement = document.getElementById('jackpot');
 const discardPile = document.getElementById('discard-pile');
@@ -29,101 +39,184 @@ const statusTeksti = document.getElementById('status-teksti');
 const lobbyControls = document.getElementById('lobby-controls');
 const gameTable = document.getElementById('game-table');
 const deckElement = document.getElementById('deck-zion') || document.getElementById('deck');
+const playersColumn = document.getElementById('players-column');
+const chatMessages = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const chatSend = document.getElementById('chat-send');
+const landscapeScoreBody = document.getElementById('landscape-score-body');
+
 let gameStarted = false;
 let isMyTurn = false;
 let doraImeData = [];
 let isDraggingCard = false; 
 let tookJackpotThisTurn = false;
 let placeholder = null;
+let allPlayers = [];
+let currentRound = 1;
+const maxRounds = 10;
 
+// ==========================================
+// 3. KONSTANTE DHE FUNKSIONE NDIHMËSE
+// ==========================================
+const cardOrder = {
+    'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 
+    '10': 10, 'J': 11, 'Q': 12, 'K': 13
+};
+
+function getVal(card, highAce = false) {
+    const v = card.v;
+    if (['★', 'Jokeri', 'Xhoker'].includes(v)) return 0;
+    if (v === 'A') return highAce ? 14 : 1; 
+    if (v === 'J') return 11;
+    if (v === 'Q') return 12;
+    if (v === 'K') return 13;
+    return parseInt(v) || 0;
+}
+
+// ==========================================
+// 4. LOBBY MESSAGES
+// ==========================================
 socket.on('lobbyMessage', (msg) => {
     const lobbyText = document.getElementById('lobby-text');
     if (lobbyText) lobbyText.innerText = msg;
 });
 
-const cardOrder = {
-    'A': 1,
-    '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
-    'J': 11, 'Q': 12, 'K': 13
-};
-
-function getVal(card, highAce = false) {
-    const v = card.v;
-    
-    if (['★', 'Jokeri', 'Xhoker'].includes(v)) return 0;
-
-    if (v === 'A') return highAce ? 14 : 1; 
-    if (v === 'J') return 11;
-    if (v === 'Q') return 12;
-    if (v === 'K') return 13;
-    
-    return parseInt(v) || 0;
+// ==========================================
+// 5. FILLIMI I LOJËS
+// ==========================================
+const btnstart = document.getElementById('btn-start');
+if (btnstart) {
+    btnstart.onclick = () => {
+        console.log("🚀 Po nis lojën...");
+        socket.emit('startGame');
+    };
 }
 
-function calculateScore(cards) {
-    if (!cards || cards.length === 0) return 0;
+socket.on('initGame', () => {
+    console.log("🎮 Loja nisi! Po fsheh Lobby-n...");
+    
+    document.body.style.background = "radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%)";
+    
+    const lobby = document.getElementById('lobby-controls'); 
+    const table = document.getElementById('game-table');
 
-    let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker', 'joker'].includes(c.v)).length;
-    let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker', 'joker'].includes(c.v));
-
-    normalCards.sort((a, b) => getVal(a) - getVal(b));
-
-    function solve(remaining, jks) {
-        if (remaining.length === 0) return 0;
-
-        let first = remaining[0];
-        
-        let firstVal = (['A', 'K', 'Q', 'J', '10'].includes(first.v)) ? 10 : (parseInt(first.v) || 0);
-
-        let best = firstVal + solve(remaining.slice(1), jks);
-
-        let sameValue = remaining.filter(c => c.v === first.v);
-        for (let size of [3, 4]) {
-            for (let n = 1; n <= Math.min(sameValue.length, size); n++) {
-                let jNeeded = size - n;
-                if (jNeeded <= jks) {
-                    let count = 0;
-                    let filtered = remaining.filter(c => {
-                        if (count < n && c.v === first.v) { count++; return false; }
-                        return true;
-                    });
-                    best = Math.min(best, solve(filtered, jks - jNeeded));
-                }
-            }
-        }
-
-        for (let size of [3, 4, 5]) {
-            let currentJks = jks;
-            let firstValReal = getVal(first);
-            let suit = first.s;
-            let tempRemaining = remaining.slice(1);
-            let possible = true;
-
-            for (let i = 1; i < size; i++) {
-                let target = firstValReal + i;
-                let idx = tempRemaining.findIndex(c => getVal(c) === target && c.s === suit);
-                if (idx !== -1) {
-                    tempRemaining.splice(idx, 1);
-                } else if (currentJks > 0) {
-                    currentJks--;
-                } else {
-                    possible = false;
-                    break;
-                }
-            }
-            if (possible) {
-                best = Math.min(best, solve(tempRemaining, currentJks));
-            }
-        }
-
-        return best;
+    if (lobby) {
+        lobby.style.display = 'none'; 
+        lobby.classList.add('hidden');
+        console.log("✅ Lobby u fsheh");
     }
 
-    return solve(normalCards, jokers);
+    if (table) {
+        table.style.display = 'block';
+        table.classList.remove('hidden');
+        console.log("✅ Table u shfaq");
+    }
+    
+    // Përditëso round-in
+    document.getElementById('current-round').innerText = currentRound;
+    document.getElementById('max-rounds').innerText = maxRounds;
+});
+
+// ==========================================
+// 6. PËRDITËSIMI I LOJËS NGA SERVERI
+// ==========================================
+socket.on('updateGameState', (data) => {
+    console.log("📦 Mora statusin e ri:", data);
+    
+    if (data.players) {
+        allPlayers = data.players;
+        updatePlayersColumn(data.players, data.activePlayerId);
+        updateLandscapeScoreboard(data.players);
+        updateScoreboard(data.players, data.activePlayerId);
+    }
+    
+    updateGameFlow(data);
+});
+
+// ==========================================
+// 7. KOLONA E LOJTARËVE (MAJTAS)
+// ==========================================
+function updatePlayersColumn(players, activeId) {
+    if (!playersColumn) return;
+    
+    playersColumn.innerHTML = '';
+    
+    // Filtro vetëm lojtarët aktivë (jo të eliminuar)
+    const activePlayers = players.filter(p => !p.isOut);
+    
+    activePlayers.forEach(player => {
+        const playerCard = document.createElement('div');
+        playerCard.className = 'player-card';
+        
+        if (player.id === socket.id) {
+            playerCard.classList.add('you');
+        }
+        
+        if (player.isOut) {
+            playerCard.classList.add('eliminated');
+        }
+        
+        const isYourTurn = (player.id === activeId);
+        
+        let turnIndicator = '';
+        if (isYourTurn) {
+            turnIndicator = '<div class="player-turn-indicator">RADHA JOTE</div>';
+        } else if (!player.isOut) {
+            turnIndicator = '<div class="player-waiting-indicator">PRIT RADHËN</div>';
+        }
+        
+        playerCard.innerHTML = `
+            ${turnIndicator}
+            <div class="player-name">${player.name} ${player.id === socket.id ? '(Ti)' : ''}</div>
+            <div class="player-stats">
+                <span>🏆 ${player.score}</span>
+            </div>
+        `;
+        
+        playersColumn.appendChild(playerCard);
+    });
 }
 
+// ==========================================
+// 8. TABELA E REZULTATIT (NË QENDËR)
+// ==========================================
+function updateLandscapeScoreboard(players) {
+    if (!landscapeScoreBody) return;
+    
+    landscapeScoreBody.innerHTML = '';
+    
+    // Filtro lojtarët aktivë
+    const activePlayers = players.filter(p => !p.isOut);
+    
+    activePlayers.forEach(player => {
+        const row = document.createElement('tr');
+        
+        let lastScore = '-';
+        if (player.history && player.history.length > 0) {
+            const last = player.history[player.history.length - 1];
+            if (last === 'X') {
+                lastScore = '🏆';
+            } else if (typeof last === 'number') {
+                lastScore = last > 0 ? `+${last}` : last;
+            } else {
+                lastScore = last;
+            }
+        }
+        
+        row.innerHTML = `
+            <td>${player.name}</td>
+            <td>${lastScore}</td>
+        `;
+        
+        landscapeScoreBody.appendChild(row);
+    });
+}
+
+// ==========================================
+// 9. TOGGLE SCOREBOARD (MODAL I MADH)
+// ==========================================
 function toggleScoreboard() {
-    console.log("U klikua tabela!"); 
+    console.log("📊 Klikua tabela e rezultatit!"); 
 
     const mainModal = document.getElementById('score-modal'); 
     const sideTable = document.getElementById('side-score-table');
@@ -155,75 +248,16 @@ function toggleScoreboard() {
         }
 
         mainModal.style.setProperty('display', 'flex', 'important');
-        console.log("Modali u hap me sukses!");
+        console.log("✅ Modali u hap!");
     } else {
         mainModal.style.display = "none";
-        console.log("Modali u mbyll!");
+        console.log("✅ Modali u mbyll!");
     }
 }
 
-const btnstart = document.getElementById('btn-start');
-
-if (btnstart) {
-    btnstart.onclick = () => {
-        console.log("🚀 Po nis lojën...");
-        socket.emit('startGame');
-    };
-}
-
-const deckZion = document.getElementById('deck-zion') || document.getElementById('deck-pile');
-
-if (deckZion) {
-    deckZion.onclick = () => {
-        console.log("Klikuar mbi dekun...");
-
-        if (isMyTurn && doraImeData.length === 10) {
-            socket.emit('drawCard');
-            console.log("✅ Kërkesa u dërgua: drawCard");
-            
-            deckZion.classList.remove('active-deck');
-        } 
-        else if (isMyTurn && doraImeData.length === 11) {
-            alert("Ti e ke marrë letrën! Tani duhet të hedhësh një në tokë.");
-        }
-        else if (!isMyTurn) {
-            console.warn("Prit radhën tënde!");
-        }
-    };
-}
-
-function tregoNjoftiminRaundit(sekonda) {
-    const roundModal = document.getElementById('round-modal');
-    const timerText = document.getElementById('next-round-timer');
-    
-    if (!roundModal || !timerText) return;
-
-    roundModal.style.display = 'flex';
-    let koha = sekonda;
-
-    const interval = setInterval(() => {
-        koha--;
-        timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
-        
-        if (koha <= 0) {
-            clearInterval(interval);
-            roundModal.style.display = 'none';
-        }
-    }, 1000);
-}
-
-socket.on('updateGameState', (data) => {
-    console.log("Mora statusin e ri:", data);
-    updateGameFlow(data);
-});
-
-socket.on('yourCards', (cards) => {
-    console.log("Letrat erdhën:", cards);
-    doraImeData = cards;
-    
-    updateGameFlow({ myCards: cards }); 
-}); 
-
+// ==========================================
+// 10. SCOREBOARD I VOGËL (ANASH)
+// ==========================================
 function updateScoreboard(players, activeId) {
     window.playersData = players;
     const scoreBody = document.getElementById('side-score-body'); 
@@ -252,7 +286,7 @@ function updateScoreboard(players, activeId) {
         if (player.id === activeId) row.classList.add('active-row');
         if (player.isOut || player.score >= 71) row.classList.add('eliminated'); 
 
-        let nameCell = `<td>${player.name} ${player.id === (typeof socket !== 'undefined' ? socket.id : null) ? '<small>(Ti)</small>' : ''}</td>`;
+        let nameCell = `<td>${player.name} ${player.id === socket.id ? '<small>(Ti)</small>' : ''}</td>`;
         
         let historyCells = '';
         for (let i = 0; i < maxRounds; i++) {
@@ -276,9 +310,7 @@ function updateScoreboard(players, activeId) {
         row.onclick = (e) => { 
             console.log("Klikimi u regjistrua për " + player.name);
             if (e) e.stopPropagation();
-            if (typeof toggleScoreboard === "function") {
-                toggleScoreboard();
-            }
+            toggleScoreboard();
         };
 
         scoreBody.appendChild(row);
@@ -296,46 +328,55 @@ function updateScoreboard(players, activeId) {
     }
 }
 
-socket.on('updateGameState', (data) => {
-    console.log("Mora gjendjen e re të lojës:", data);
-    
-    updateGameFlow(data);
-    
-    if (data.players) {
-        updateScoreboard(data.players, data.activePlayerId);
+// ==========================================
+// 11. KLIKIMI I TABELËS SË VOGËL
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const resultsTable = document.getElementById('results-table-clickable');
+    if (resultsTable) {
+        resultsTable.addEventListener('click', toggleScoreboard);
     }
 });
 
+// ==========================================
+// 12. LETRAT E MIA (yourCards)
+// ==========================================
+socket.on('yourCards', (cards) => {
+    console.log("🃏 Letrat e mia:", cards);
+    
+    if (cards && Array.isArray(cards)) {
+        doraImeData = cards.map((c, i) => ({
+            ...c, 
+            id: c.id || `${c.v}-${c.s}-${i}-${Date.now()}-${Math.random()}`
+        }));
+        
+        renderHand();
+        
+        setTimeout(() => {
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
+        }, 100);
+    }
+});
+
+// ==========================================
+// 13. Rrjedha e lojës (updateGameFlow)
+// ==========================================
 function updateGameFlow(data) {
     if (!data) data = {};
 
-    // 🟢 KONTROLLI I VICTORY ZONE - SHTO KËTË PJESË NË FILLIM
-    const victoryZone = document.getElementById('victory-drop-zone');
-    if (victoryZone) {
-        // Shfaqet vetëm kur: është radha jote, ke 11 letra, dhe loja ka filluar
-        if (isMyTurn && doraImeData.length === 11 && gameStarted) {
-            victoryZone.style.display = 'flex';
-            victoryZone.style.pointerEvents = 'auto';
-        } else {
-            victoryZone.style.display = 'none';
-            victoryZone.style.pointerEvents = 'none';
-        }
-    }
-
     if (data.myCards && Array.isArray(data.myCards)) {
-        
         if (isDraggingCard) return; 
-
         if (doraImeData.length === data.myCards.length) return;
 
         if (data.myCards.length > doraImeData.length && doraImeData.length > 0) {
-            
             const letraTeReja = data.myCards.filter(serverCard => 
                 !doraImeData.some(localCard => localCard.id === serverCard.id)
             );
 
             if (letraTeReja.length > 0) {
-                console.log("Letra e re u gjet dhe po shtohet në fund:", letraTeReja);
+                console.log("➕ Letra e re u shtua:", letraTeReja);
                 doraImeData.push(...letraTeReja);
                 renderHand();
                 return;
@@ -358,7 +399,13 @@ function updateGameFlow(data) {
     
     document.body.classList.toggle('my-turn-glow', isMyTurn);
     
-    const deck = document.getElementById('deck-zion') || document.getElementById('deck');
+    // Përditëso kolonën e lojtarëve kur ndryshon radha
+    if (data.players) {
+        updatePlayersColumn(data.players, data.activePlayerId);
+    }
+    
+    // Përditëso deck-un
+    const deck = document.getElementById('deck-zion');
     if (deck) {
         const duhetTeTerheq = isMyTurn && doraImeData.length === 10;
         
@@ -373,6 +420,7 @@ function updateGameFlow(data) {
         }
     }
 
+    // Përditëso Jackpot-in
     const jackpot = document.getElementById('jackpot');
     if (jackpot && data.jackpotCard) {
         const isRed = ['♥', '♦'].includes(data.jackpotCard.s);
@@ -383,11 +431,11 @@ function updateGameFlow(data) {
         jackpot.style.color = isRed ? '#e74c3c' : '#2c3e50';
         jackpot.style.display = 'flex';
     } else if (jackpot) {
-        // Nëse nuk ka jackpot, fshihet
         jackpot.style.display = 'none';
     }
 
-    const statusMsg = document.getElementById('status-message') || document.getElementById('status-teksti');
+    // Përditëso status message
+    const statusMsg = document.getElementById('status-teksti');
     if (statusMsg) {
         if (isMyTurn) {
             statusMsg.innerText = (doraImeData.length === 10) ? "Tërhiq një letër!" : "Hidh një letër!";
@@ -403,16 +451,37 @@ function updateGameFlow(data) {
     }
 }
 
+// ==========================================
+// 14. Klikimi në deck (ZION)
+// ==========================================
+if (deckElement) {
+    deckElement.onclick = () => {
+        console.log("🃏 Klikuar mbi dekun...");
+
+        if (isMyTurn && doraImeData.length === 10) {
+            socket.emit('drawCard');
+            console.log("✅ Kërkesa u dërgua: drawCard");
+            deckElement.classList.remove('active-deck');
+        } 
+        else if (isMyTurn && doraImeData.length === 11) {
+            alert("Ti e ke marrë letrën! Tani duhet të hedhësh një në tokë.");
+        }
+        else if (!isMyTurn) {
+            console.warn("⏳ Prit radhën tënde!");
+        }
+    };
+}
+
+// ==========================================
+// 15. Marrja e letrës (cardDrawn)
+// ==========================================
 socket.on('cardDrawn', (newCard) => {
-    console.log("=== EVENT: cardDrawn ===");
+    console.log("🎴 Letra e re:", newCard);
     
     const exists = doraImeData.some(c => c.id === newCard.id);
     
     if (!exists) {
         pickCardFromDeck(newCard); 
-        console.log("Letra e re u dërgua te animacioni.");
-    } else {
-        console.warn("Kujdes: Kjo letër ekziston një herë në dorë!");
     }
 
     setTimeout(() => {
@@ -422,6 +491,74 @@ socket.on('cardDrawn', (newCard) => {
     }, 700);
 });
 
+// ==========================================
+// 16. Animacioni i marrjes së letrës
+// ==========================================
+function pickCardFromDeck(newCardData) {
+    const deckElement = document.getElementById('deck-zion'); 
+    const handContainer = document.getElementById('player-hand');
+    
+    if (!deckElement || !handContainer) {
+        doraImeData.push(newCardData);
+        renderHand();
+        return;
+    }
+
+    const tempCard = document.createElement('div');
+    tempCard.className = 'temp-animating'; 
+    
+    const deckRect = deckElement.getBoundingClientRect();
+    
+    Object.assign(tempCard.style, {
+        position: 'fixed',
+        left: deckRect.left + 'px',
+        top: deckRect.top + 'px',
+        width: '60px',
+        height: '90px',
+        zIndex: '5000',
+        backgroundColor: 'white',
+        borderRadius: '5px',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+        transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+    });
+
+    document.body.appendChild(tempCard);
+
+    const handRect = handContainer.getBoundingClientRect();
+    const targetLeft = handRect.right - 40; 
+    const targetTop = handRect.top;
+
+    requestAnimationFrame(() => {
+        tempCard.style.left = targetLeft + 'px';
+        tempCard.style.top = targetTop + 'px';
+        tempCard.style.transform = 'rotate(15deg) scale(0.8)';
+        tempCard.style.opacity = '0.5';
+    });
+
+    setTimeout(() => {
+        if (tempCard.parentNode) tempCard.remove();
+        
+        const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
+        
+        if (!alreadyExists) {
+            doraImeData.push(newCardData);
+            renderHand();
+            
+            if (deckElement) {
+                deckElement.classList.remove('deck-glow');
+                deckElement.classList.remove('active-deck');
+            }
+
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
+        }
+    }, 600);
+}
+
+// ==========================================
+// 17. CHECK ZION CONDITION (Butoni)
+// ==========================================
 function checkZionCondition() {
     const btnMbyll = document.getElementById('btn-mbyll');
     const statusDrita = document.getElementById('status-drita');
@@ -453,9 +590,7 @@ function checkZionCondition() {
             
             if (statusDrita) statusDrita.className = 'led-green';
             if (statusTeksti) {
-                statusTeksti.innerText = (typeof tookJackpotThisTurn !== 'undefined' && tookJackpotThisTurn) 
-                    ? "ZION (X2)! Mbyllu." 
-                    : "ZION! Mund të mbyllesh.";
+                statusTeksti.innerText = tookJackpotThisTurn ? "ZION (X2)! Mbyllu." : "ZION! Mund të mbyllesh.";
             }
         } else {
             btnMbyll.style.display = 'none';
@@ -475,28 +610,214 @@ function checkZionCondition() {
             statusTeksti.innerText = isMyTurn ? "Tërhiq një letër..." : "Prit radhën...";
         }
     }
-} 
+}
 
+// ==========================================
+// 18. BUTONI MBYLL
+// ==========================================
+document.getElementById('btn-mbyll').addEventListener('click', () => {
+    if (!isMyTurn || doraImeData.length !== 11) {
+        alert("Nuk mund të mbyllësh! Duhet të kesh 11 letra dhe të jetë radha jote.");
+        return;
+    }
+
+    if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
+        socket.emit('declareZion', { 
+            isJackpotClosing: tookJackpotThisTurn || false 
+        });
+
+        document.getElementById('btn-mbyll').style.display = 'none';
+        isMyTurn = false; 
+    }
+});
+
+// ==========================================
+// 19. JACKPOT
+// ==========================================
+if (jackpotElement) {
+    jackpotElement.addEventListener('click', () => {
+        if (isMyTurn && doraImeData.length === 10) {
+            tookJackpotThisTurn = true; 
+            socket.emit('drawJackpot');
+            
+            jackpotElement.style.transform = "translateY(-50px) scale(1.2)";
+            jackpotElement.style.opacity = "0";
+            
+            setTimeout(() => {
+                jackpotElement.style.display = "none";
+            }, 300);
+        } else {
+            alert("Jackpot merret vetëm si letra e fundit për mbyllje!");
+        }
+    });
+}
+
+// ==========================================
+// 20. FUNKSIONET E VALIDIMIT
+// ==========================================
+function isDoraValid(cards) {
+    if (!cards || cards.length === 0) return true;
+
+    let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker'].includes(c.v)).length;
+    let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker'].includes(c.v));
+
+    normalCards.sort((a, b) => {
+        if (a.s !== b.s) return a.s.localeCompare(b.s);
+        return getVal(a, false) - getVal(b, false);
+    });
+
+    function solve(remaining, jks) {
+        if (remaining.length === 0) return true;
+
+        let first = remaining[0];
+
+        let sameValue = remaining.filter(c => c.v === first.v);
+        for (let size of [4, 3]) {
+            let maxNormal = Math.min(sameValue.length, size);
+            for (let n = maxNormal; n >= 1; n--) {
+                let jNeeded = size - n;
+                if (jNeeded <= jks) {
+                    let nextCards = [...remaining];
+                    let removed = 0;
+                    let filtered = [];
+                    for (let c of nextCards) {
+                        if (removed < n && c.v === first.v) {
+                            removed++;
+                        } else {
+                            filtered.push(c);
+                        }
+                    }
+                    if (solve(filtered, jks - jNeeded)) return true;
+                }
+            }
+        }
+
+        for (let size = 3; size <= 5; size++) {
+            let currentJks = jks;
+            let tempRemaining = [...remaining];
+            let firstVal = getVal(first, false);
+            let suit = first.s;
+            
+            let possible = true;
+            tempRemaining.shift();
+
+            for (let i = 1; i < size; i++) {
+                let targetVal = firstVal + i;
+                
+                let idx = tempRemaining.findIndex(c => {
+                    let v = getVal(c, targetVal === 14); 
+                    return v === targetVal && c.s === suit;
+                });
+
+                if (idx !== -1) {
+                    tempRemaining.splice(idx, 1);
+                } else if (currentJks > 0) {
+                    currentJks--;
+                } else {
+                    possible = false;
+                    break;
+                }
+            }
+
+            if (possible && solve(tempRemaining, currentJks)) return true;
+        }
+
+        return false;
+    }
+
+    return solve(normalCards, jokers);
+}
+
+// ==========================================
+// 21. HEDHJA E LETRËS (Discard)
+// ==========================================
+function processDiscard(cardElement) {
+    if (!isMyTurn) return; 
+    isMyTurn = false; 
+
+    const cardId = cardElement.dataset.id; 
+    const cardIndex = doraImeData.findIndex(c => c.id === cardId);
+    
+    if (cardIndex !== -1) {
+        const letraObjekt = doraImeData[cardIndex]; 
+
+        doraImeData.splice(cardIndex, 1); 
+
+        socket.emit('discardCard', letraObjekt);
+
+        const discardZone = document.getElementById('discard-pile');
+        const discardContainer = document.getElementById('discard-cards-container');
+        const rect = cardElement.getBoundingClientRect();
+        const targetRect = discardZone.getBoundingClientRect();
+
+        Object.assign(cardElement.style, {
+            position: 'fixed',
+            left: rect.left + 'px',
+            top: rect.top + 'px',
+            zIndex: '2000',
+            pointerEvents: 'none',
+            transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
+        });
+
+        requestAnimationFrame(() => {
+            cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
+            cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
+            cardElement.style.transform = "scale(0.5) rotate(10deg)";
+            cardElement.style.opacity = "0";
+        });
+        
+        setTimeout(() => {
+            const miniCard = document.createElement('div');
+            miniCard.className = 'card-mini';
+            
+            if (letraObjekt.v === '★' || letraObjekt.v === 'Xhoker') {
+                miniCard.classList.add('joker');
+                miniCard.innerHTML = '★';
+            } else {
+                miniCard.innerHTML = `${letraObjekt.v}${letraObjekt.s}`;
+                if (['♥', '♦'].includes(letraObjekt.s)) {
+                    miniCard.classList.add('red');
+                }
+            }
+            
+            if (discardContainer) {
+                discardContainer.appendChild(miniCard);
+                while (discardContainer.children.length > 5) {
+                    discardContainer.removeChild(discardContainer.firstChild);
+                }
+            }
+
+            if (cardElement.parentNode) cardElement.remove();
+            
+            renderHand(); 
+            
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
+        }, 400);
+
+    } else {
+        console.error("❌ Letra nuk u gjet! ID:", cardId);
+        isMyTurn = true; 
+        renderHand(); 
+    }
+}
+
+// ==========================================
+// 22. RENDER HAND (Vizatimi i letrave)
+// ==========================================
 let dragElement = null;
 
 function renderHand() {
-    if (typeof isDraggingCard !== 'undefined' && isDraggingCard) return;
+    if (isDraggingCard) return;
 
-    console.log("--- DEBUG: renderHand nisi ---");
     const handContainer = document.getElementById('player-hand');
-    
-    if (!handContainer) {
-        console.error("GABIM: Nuk u gjet elementi me ID 'player-hand' në HTML!");
-        return;
-    }
+    if (!handContainer) return;
 
     if (!doraImeData || doraImeData.length === 0) {
-        console.warn("KUJDES: doraImeData është bosh. Nuk kam çfarë të vizatoj.");
         handContainer.innerHTML = ""; 
         return;
     }
-
-    console.log("Duke vizatuar", doraImeData.length, "letra...");
 
     const ghostCards = document.querySelectorAll('body > .card.dragging');
     ghostCards.forEach(card => card.remove());
@@ -510,7 +831,7 @@ function renderHand() {
         div.dataset.index = index;
         div.dataset.v = card.v;
         div.dataset.s = card.s;
-        div.dataset.id = card.id || `card-${card.v}-${card.s}-${index}`;
+        div.dataset.id = card.id;
 
         if (card.v === '★' || card.v === 'Xhoker') {
             div.classList.add('joker');
@@ -522,29 +843,18 @@ function renderHand() {
             }
         }
         
-        Object.assign(div.style, {
-            position: '', left: '', top: '', zIndex: ''
-        });
-         
         div.onmousedown = onDragStart;
         div.ontouchstart = (e) => onDragStart(e);
 
         handContainer.appendChild(div);
     });
-
-    console.log("--- DEBUG: renderHand përfundoi ---");
     
+    // Përditëso pikët
     if (typeof calculateScore === "function") {
         let piketAktuale = calculateScore(doraImeData);
-        const elPiket = document.getElementById('display-piket');
+        const elPiket = document.getElementById('display-piket-header');
         if (elPiket) {
-            elPiket.innerText = "Pikët në dorë: " + piketAktuale;
-            
-            if (piketAktuale > 50) {
-                elPiket.style.color = "orange";
-            } else {
-                elPiket.style.color = "white";
-            }
+            elPiket.innerText = `Pikët: ${piketAktuale}`;
         }
     }
     
@@ -553,6 +863,9 @@ function renderHand() {
     }
 }
 
+// ==========================================
+// 23. FUNKSIONET E DRAG & DROP
+// ==========================================
 function onDragStart(e) {
     if (dragElement) return;
     
@@ -613,7 +926,6 @@ function onDragMove(e) {
     if (isJoker) {
         const handContainer = document.getElementById('player-hand');
         const handRect = handContainer.getBoundingClientRect();
-        
         const limitTop = handRect.top - 70; 
         if (y < limitTop) y = limitTop;
     }
@@ -637,26 +949,11 @@ function onDragMove(e) {
 
 function updateZonesFeedback(x, y) {
     const pile = document.getElementById('discard-pile');
-    const victoryZone = document.getElementById('victory-drop-zone');
 
     if (pile) {
         const r = pile.getBoundingClientRect();
         const over = x > r.left && x < r.right && y > r.top && y < r.bottom;
         pile.classList.toggle('over', over);
-    }
-
-    if (victoryZone) {
-        // 🟢 NDRYSHO KËTË PJESË:
-        if (typeof isMyTurn !== 'undefined' && isMyTurn && doraImeData.length === 11 && gameStarted) {
-            victoryZone.style.display = 'flex';
-            victoryZone.style.pointerEvents = 'auto';
-            const r = victoryZone.getBoundingClientRect();
-            const overV = x > r.left && x < r.right && y > r.top && y < r.bottom;
-            victoryZone.classList.toggle('over', overV);
-        } else {
-            victoryZone.style.display = 'none';
-            victoryZone.style.pointerEvents = 'none';
-        }
     }
 }
 
@@ -668,9 +965,6 @@ function onDragEnd(e) {
               e;
 
     const pile = document.getElementById('discard-pile');
-    if (pile) pile.classList.remove('drag-over');
-
-    const victoryZone = document.getElementById('victory-drop-zone');
     const handContainer = document.getElementById('player-hand');
     const tolerance = 60; 
 
@@ -683,7 +977,6 @@ function onDragEnd(e) {
     dragElement.classList.remove('dragging');
 
     let isOverPile = false;
-    let isOverVictory = false;
 
     if (pile && t) {
         const r = pile.getBoundingClientRect();
@@ -691,47 +984,10 @@ function onDragEnd(e) {
                      t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
     }
 
-    if (victoryZone && victoryZone.style.display !== 'none' && t) {
-        const r = victoryZone.getBoundingClientRect();
-        isOverVictory = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
-                        t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
-    }
-
-    if (isOverVictory && isMyTurn && doraImeData.length === 11) {
-    if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
-        
-        socket.emit('declareZion', { 
-            isJackpotClosing: tookJackpotThisTurn || false
-        });
-
-        isMyTurn = false;
-        if (placeholder) placeholder.remove();
-        
-        if (dragElement && dragElement.parentNode) {
-            dragElement.parentNode.removeChild(dragElement);
-        }
-        
-        // 🟢 SHTO KËTË PJESË:
-        const victoryZone = document.getElementById('victory-drop-zone');
-        if (victoryZone) {
-            victoryZone.style.display = 'none';
-            victoryZone.classList.remove('over');
-            victoryZone.style.pointerEvents = 'none';
-        }
-        
-        finalizeCleanup();
-        dragElement = null;
-        placeholder = null;
-        return; 
-    }
-}
-
     if (isOverPile && isMyTurn && doraImeData.length === 11) {
         if (placeholder) placeholder.remove();
-        
         dragElement.style.position = '';
         processDiscard(dragElement); 
-        
     } else {
         if (placeholder && placeholder.parentNode) {
             placeholder.parentNode.insertBefore(dragElement, placeholder);
@@ -748,27 +1004,17 @@ function onDragEnd(e) {
         });
 
         const currentCards = [...handContainer.querySelectorAll('.card')];
-        
         doraImeData = currentCards.map(c => ({
             v: c.dataset.v,
             s: c.dataset.s,
             id: c.dataset.id
         }));
-
-        console.log("Renditja e re u ruajt lokalisht:", doraImeData.map(c => c.v));
-        if (typeof checkZionCondition === "function") checkZionCondition();
-        
-        const tempElement = dragElement; 
-        setTimeout(() => {
-            if (tempElement) tempElement.style.transition = '';
-        }, 200);
     }
     
     isDraggingCard = false;
-    
     dragElement = null; 
     placeholder = null;
-    if (typeof finalizeCleanup === "function") finalizeCleanup();
+    finalizeCleanup();
 }
 
 function finalizeCleanup() {
@@ -776,72 +1022,54 @@ function finalizeCleanup() {
     dragElement = null;
     
     const pile = document.getElementById('discard-pile');
-    const victoryZone = document.getElementById('victory-drop-zone');
-    
     if (pile) pile.classList.remove('over');
-    if (victoryZone) {
-        victoryZone.classList.remove('over');
-        victoryZone.style.display = 'none';
-        // 🟢 SHTO KËTË:
-        victoryZone.style.pointerEvents = 'none';
-    }
 }
 
-function isDoraValid(cards) {
-    if (!cards || cards.length === 0) return true;
+// ==========================================
+// 24. CALCULATE SCORE
+// ==========================================
+function calculateScore(cards) {
+    if (!cards || cards.length === 0) return 0;
 
     let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker'].includes(c.v)).length;
     let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker'].includes(c.v));
 
-    normalCards.sort((a, b) => {
-        if (a.s !== b.s) return a.s.localeCompare(b.s);
-        return getVal(a, false) - getVal(b, false);
-    });
+    normalCards.sort((a, b) => getVal(a) - getVal(b));
 
     function solve(remaining, jks) {
-        if (remaining.length === 0) return true;
+        if (remaining.length === 0) return 0;
 
         let first = remaining[0];
-        console.log("Duke provuar grupin për:", first.v, first.s, "Xhokera mbetur:", jks);
+        
+        let firstVal = (['A', 'K', 'Q', 'J', '10'].includes(first.v)) ? 10 : (parseInt(first.v) || 0);
+
+        let best = firstVal + solve(remaining.slice(1), jks);
 
         let sameValue = remaining.filter(c => c.v === first.v);
-        for (let size of [4, 3]) {
-            let maxNormal = Math.min(sameValue.length, size);
-            for (let n = maxNormal; n >= 1; n--) {
+        for (let size of [3, 4]) {
+            for (let n = 1; n <= Math.min(sameValue.length, size); n++) {
                 let jNeeded = size - n;
                 if (jNeeded <= jks) {
-                    let nextCards = [...remaining];
-                    let removed = 0;
-                    let filtered = [];
-                    for (let c of nextCards) {
-                        if (removed < n && c.v === first.v) {
-                            removed++;
-                        } else {
-                            filtered.push(c);
-                        }
-                    }
-                    if (solve(filtered, jks - jNeeded)) return true;
+                    let count = 0;
+                    let filtered = remaining.filter(c => {
+                        if (count < n && c.v === first.v) { count++; return false; }
+                        return true;
+                    });
+                    best = Math.min(best, solve(filtered, jks - jNeeded));
                 }
             }
         }
 
-        for (let size = 3; size <= 5; size++) {
+        for (let size of [3, 4, 5]) {
             let currentJks = jks;
-            let tempRemaining = [...remaining];
-            let firstVal = getVal(first, false);
+            let firstValReal = getVal(first);
             let suit = first.s;
-            
+            let tempRemaining = remaining.slice(1);
             let possible = true;
-            tempRemaining.shift();
 
             for (let i = 1; i < size; i++) {
-                let targetVal = firstVal + i;
-                
-                let idx = tempRemaining.findIndex(c => {
-                    let v = getVal(c, targetVal === 14); 
-                    return v === targetVal && c.s === suit;
-                });
-
+                let target = firstValReal + i;
+                let idx = tempRemaining.findIndex(c => getVal(c) === target && c.s === suit);
                 if (idx !== -1) {
                     tempRemaining.splice(idx, 1);
                 } else if (currentJks > 0) {
@@ -851,515 +1079,42 @@ function isDoraValid(cards) {
                     break;
                 }
             }
-
-            if (possible && solve(tempRemaining, currentJks)) return true;
+            if (possible) {
+                best = Math.min(best, solve(tempRemaining, currentJks));
+            }
         }
 
-        return false;
+        return best;
     }
 
     return solve(normalCards, jokers);
 }
 
-function pickCardFromDeck(newCardData) {
-    const deckElement = document.getElementById('deck-zion') || document.getElementById('deck-pile') || document.getElementById('deck'); 
-    const handContainer = document.getElementById('player-hand');
-    
-    if (deckElement) {
-        const myTurn = typeof isMyTurn !== 'undefined' ? isMyTurn : false;
-        if (myTurn && doraImeData.length === 10) {
-            deckElement.classList.add('deck-glow');
-        } else {
-            deckElement.classList.remove('deck-glow');
-        }
-    }
-
-    if (!deckElement || !handContainer) {
-        const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
-        if (!alreadyExists) {
-            doraImeData.push(newCardData);
-            renderHand();
-        }
-        return;
-    }
-
-    const tempCard = document.createElement('div');
-    tempCard.className = 'temp-animating'; 
-    
-    const deckRect = deckElement.getBoundingClientRect();
-    
-    Object.assign(tempCard.style, {
-        position: 'fixed',
-        left: deckRect.left + 'px',
-        top: deckRect.top + 'px',
-        width: '60px',
-        height: '90px',
-        zIndex: '5000',
-        backgroundColor: 'white',
-        borderRadius: '5px',
-        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-        transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-    });
-
-    document.body.appendChild(tempCard);
-
-    const handRect = handContainer.getBoundingClientRect();
-    const targetLeft = handRect.right - 40; 
-    const targetTop = handRect.top;
-
-    requestAnimationFrame(() => {
-        tempCard.style.left = targetLeft + 'px';
-        tempCard.style.top = targetTop + 'px';
-        tempCard.style.transform = 'rotate(15deg) scale(0.8)';
-        tempCard.style.opacity = '0.5';
-    });
-
-    setTimeout(() => {
-        if (tempCard.parentNode) tempCard.remove();
-        
-        const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
-        
-        if (!alreadyExists) {
-            doraImeData.push(newCardData);
-            
-            renderHand();
-            
-            if (deckElement) {
-                deckElement.classList.remove('deck-glow');
-                deckElement.classList.remove('active-deck');
-            }
-
-            if (typeof checkZionCondition === "function") {
-                checkZionCondition();
-            }
-        }
-    }, 600);
-}
-
-if (deckElement) {
-    deckElement.addEventListener('click', () => {
-        if (!isMyTurn) return;
-
-        if (doraImeData.length === 10) {
-            tookJackpotThisTurn = false;
-            socket.emit('drawCard');
-        } else {
-            alert("Ti i ke 11 letra, duhet të hedhësh një në tokë!");
-        }
-    });
-}
-
-function processDiscard(cardElement) {
-    if (!isMyTurn) return; 
-    isMyTurn = false; 
-
-    const cardId = cardElement.dataset.id; 
-    const cardIndex = doraImeData.findIndex(c => c.id === cardId);
-    
-    if (cardIndex !== -1) {
-        const letraObjekt = doraImeData[cardIndex]; 
-
-        doraImeData.splice(cardIndex, 1); 
-
-        socket.emit('discardCard', letraObjekt);
-
-        const discardZone = document.getElementById('discard-pile');
-        const discardContainer = document.getElementById('discard-cards-container');
-        const rect = cardElement.getBoundingClientRect();
-        const targetRect = discardZone.getBoundingClientRect();
-
-        Object.assign(cardElement.style, {
-            position: 'fixed',
-            left: rect.left + 'px',
-            top: rect.top + 'px',
-            zIndex: '2000',
-            pointerEvents: 'none',
-            transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
-        });
-
-        requestAnimationFrame(() => {
-            cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
-            cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
-            cardElement.style.transform = "scale(0.5) rotate(10deg)";
-            cardElement.style.opacity = "0";
-        });
-        
-        setTimeout(() => {
-            // 🟢 KRIJOJMË NJË KARTELË TË VOGËL PËR T'U PARË NGA TË GJITHË
-            const miniCard = document.createElement('div');
-            miniCard.className = 'card-mini';
-            
-            if (letraObjekt.v === '★' || letraObjekt.v === 'Xhoker') {
-                miniCard.classList.add('joker');
-                miniCard.innerHTML = '★';
-            } else {
-                miniCard.innerHTML = `${letraObjekt.v}${letraObjekt.s}`;
-                if (['♥', '♦'].includes(letraObjekt.s)) {
-                    miniCard.classList.add('red');
-                }
-            }
-            
-            // Shtojmë në container
-            if (discardContainer) {
-                discardContainer.appendChild(miniCard);
-                
-                // Mbajmë vetëm 4-5 letrat e fundit
-                while (discardContainer.children.length > 5) {
-                    discardContainer.removeChild(discardContainer.firstChild);
-                }
-            }
-
-            if (cardElement.parentNode) cardElement.remove();
-            
-            renderHand(); 
-            
-            if (typeof checkZionCondition === "function") {
-                checkZionCondition();
-            }
-        }, 400);
-
-    } else {
-        console.error("GABIM: Letra nuk u gjet lokalisht! ID:", cardId);
-        isMyTurn = true; 
-        renderHand(); 
-    }
-}
-
-function verifyZionRules(cards) {
-    if (!cards || cards.length !== 11) return false;
-
-    for (let i = 0; i < cards.length; i++) {
-        const testHand = cards.filter((_, idx) => idx !== i);
-        const closingCard = cards[i];
-
-        if (closingCard.v === '★' || closingCard.v === 'Xhoker') continue;
-
-        const suits = ['♠', '♣', '♥', '♦'];
-        const jokersCount = testHand.filter(c => c.v === '★' || c.v === 'Xhoker').length;
-
-        let isFlush = false;
-        for (let s of suits) {
-            const sameSuitNormal = testHand.filter(c => c.s === s && c.v !== '★' && c.v !== 'Xhoker').length;
-            if (sameSuitNormal + jokersCount >= 10) {
-                console.log("ZION FLUSH gati me:", closingCard.v + closingCard.s);
-                isFlush = true;
-                break; 
-            }
-        }
-        
-        if (isFlush) return true;
-
-        if (typeof isDoraValid === "function") {
-            if (isDoraValid(testHand)) {
-                console.log("ZION NORMAL gati me:", closingCard.v + closingCard.s);
-                return true;
-            }
-        }
-    }
-    
-    return false;
-}
-
-function findAndRemoveSequence(suitCards, len, jokers) {
-    const sorted = [...suitCards].sort((a, b) => cardOrder[a.v] - cardOrder[b.v]);
-
-    const acePositions = [1, 14]; 
-
-    for (let aceVal of acePositions) {
-        let values = sorted.map(c => (c.v === 'A' ? aceVal : cardOrder[c.v]));
-        values = [...new Set(values)].sort((a, b) => a - b);
-
-        for (let i = 0; i < values.length; i++) {
-            let currentSeq = [];
-            let tempJokers = jokers;
-            let targetVal = values[i];
-
-            for (let k = 0; k < len; k++) {
-                let valToFind = targetVal + k;
-                
-                if (valToFind > 14) break; 
-
-                let cardFound = sorted.find(c => (c.v === 'A' ? aceVal : cardOrder[c.v]) === valToFind);
-
-                if (cardFound) {
-                    currentSeq.push(cardFound);
-                } else if (tempJokers > 0) {
-                    tempJokers--;
-                } else {
-                    break;
-                }
-            }
-
-            if (currentSeq.length + (jokers - tempJokers) === len) {
-                return {
-                    usedCards: currentSeq,
-                    jokersUsed: jokers - tempJokers
-                };
-            }
-        }
-    }
-    return null;
-}
-
-document.getElementById('btn-mbyll').addEventListener('click', () => {
-    if (!isMyTurn || doraImeData.length !== 11) {
-        alert("Nuk mund të mbyllësh! Duhet të kesh 11 letra dhe të jetë radha jote.");
-        return;
-    }
-
-    if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
-        socket.emit('declareZion', { 
-            isJackpotClosing: (typeof tookJackpotThisTurn !== 'undefined') ? tookJackpotThisTurn : false 
-        });
-
-        document.getElementById('btn-mbyll').style.display = 'none';
-        isMyTurn = false; 
-    }
-});
-
-if (jackpotElement) {
-    jackpotElement.addEventListener('click', () => {
-        if (isMyTurn && doraImeData.length === 10) {
-            
-            tookJackpotThisTurn = true; 
-            
-            socket.emit('drawJackpot');
-            
-            jackpotElement.style.transform = "translateY(-50px) scale(1.2)";
-            jackpotElement.style.opacity = "0";
-            
-            setTimeout(() => {
-                jackpotElement.style.display = "none";
-            }, 300);
-        } else {
-            alert("Jackpot merret vetëm si letra e fundit për mbyllje!");
-        }
-    });
-}
-
-function checkRecursive(cards, jokers) {
-    if (cards.length === 0) return true;
-
-    cards.sort((a, b) => getValForSequence(a) - getValForSequence(b));
-
-    const first = cards[0];
-
-    const sameValue = cards.filter(c => c.v === first.v);
-    for (let size = 3; size <= 4; size++) {
-        for (let jUsed = 0; jUsed <= jokers; jUsed++) {
-            let normalNeeded = size - jUsed;
-            if (normalNeeded > 0 && normalNeeded <= sameValue.length) {
-                const used = sameValue.slice(0, normalNeeded);
-                const remaining = cards.filter(c => !used.includes(c));
-                if (checkRecursive(remaining, jokers - jUsed)) return true;
-            }
-        }
-    }
-
-    const sameSuit = cards.filter(c => c.s === first.s);
-    if (sameSuit.length + jokers >= 3) {
-        for (let len = 3; len <= 10; len++) {
-            const res = findAndRemoveSequence(sameSuit, len, jokers);
-            if (res) {
-                const remaining = cards.filter(c => !res.usedCards.includes(c));
-                if (checkRecursive(remaining, jokers - res.jokersUsed)) return true;
-            }
-        }
-    }
-
-    return false;
-}
-
+// ==========================================
+// 25. ROUND OVER
+// ==========================================
 socket.on('roundOver', (data) => {
-    const modal = document.getElementById('round-modal');
-    const tableBody = document.getElementById('score-body');
-    const timerText = document.getElementById('next-round-timer'); 
+    console.log("🏁 Raundi përfundoi!", data);
     
-    if (modal && tableBody) {
-        tableBody.innerHTML = ''; 
-
-        data.updatedPlayers.forEach(p => {
-            const lastScore = p.history[p.history.length - 1]; 
-            const isEliminated = p.isOut; 
-            
-            let scoreClass = "";
-            if (lastScore === 'X') scoreClass = "winner-x";
-            else if (typeof lastScore === 'string' && lastScore.includes('!')) scoreClass = "jackpot-points";
-
-            const row = document.createElement('tr');
-            if (p.id === socket.id) row.className = 'active-row'; 
-
-            row.innerHTML = `
-                <td class="${isEliminated ? 'eliminated' : ''}">${p.name}</td>
-                <td class="${scoreClass}">${lastScore}</td>
-                <td style="font-weight: bold;">${p.score} / 71</td>
-                <td>${isEliminated ? '💀 I ELIMINUAR' : '✅ Në Lojë'}</td>
-            `;
-            tableBody.appendChild(row);
-        });
-
-        if (timerText) {
-            let koha = 5; 
-            timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
-            
-            const interval = setInterval(() => {
-                koha--;
-                if (koha >= 0) {
-                    timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
-                }
-                if (koha <= 0) clearInterval(interval);
-            }, 1000);
-        }
-
-        modal.style.display = 'flex'; 
+    if (data.updatedPlayers) {
+        currentRound++;
+        document.getElementById('current-round').innerText = currentRound;
     }
-
+    
+    // Fshi letrat
     doraImeData = [];
-    if (typeof renderHand === "function") renderHand();
+    renderHand();
     
-    const discardPileElement = document.getElementById('discard-pile');
-    if (discardPileElement) {
-        discardPileElement.innerHTML = '<span class="label">ZION 71</span>';
-    }
-
-    setTimeout(() => {
-        if (modal) modal.style.display = 'none';
-    }, 4500);
-});
-
-socket.on('playerEliminated', (playerName) => {
-    console.log(`${playerName} u eliminua sepse kaloi 71 pikë! 💀`);
-});
-
-function getHandOrder() {
-    const cards = [...handContainer.querySelectorAll('.card')];
-    return cards.map(c => ({
-        v: c.dataset.v,
-        s: c.dataset.s
-    }));
-}
-
-socket.on('initGame', () => {
-    console.log("Loja nisi! Po fsheh Lobby-n...");
-    
-    // 🟢 FORCEO background të gjelbër
-    document.body.style.background = "radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%)";
-    
-    const lobby = document.getElementById('lobby-controls'); 
-    const lobbyText = document.getElementById('lobby-text');
-    const table = document.getElementById('game-table');
-
-    console.log("Lobby elementi:", lobby);
-    console.log("Table elementi:", table);
-
-    if (lobby) {
-        lobby.style.display = 'none'; 
-        lobby.classList.add('hidden');
-        console.log("✅ Lobby u fsheh");
-    } else {
-        console.warn("❌ Elementi 'lobby-controls' nuk u gjet!");
-    }
-
-    // 🟢 VETËM NJË HERE!
-    if (table) {
-        table.style.display = 'block';
-        table.classList.remove('hidden');
-        console.log("✅ Table u shfaq");
-    } else {
-        console.warn("❌ Elementi 'game-table' nuk u gjet!");
+    // Fshi discard
+    const discardContainer = document.getElementById('discard-cards-container');
+    if (discardContainer) {
+        discardContainer.innerHTML = '';
     }
 });
 
-socket.on('yourCards', (cards) => {
-    console.log("DEBUG: Eventi yourCards u thirr. Letrat e marra:", cards);
-    
-    if (cards && Array.isArray(cards) && cards.length > 0) {
-        
-        const gameTable = document.getElementById('game-table');
-        const lobby = document.getElementById('lobby-controls');
-        const lobbyText = document.getElementById('lobby-text');
-        
-        if (gameTable) {
-            gameTable.style.display = 'block';
-            document.body.classList.add('game-active');
-        }
-        
-        if (lobby) {
-            lobby.style.display = 'none';
-        }
-        
-        doraImeData = cards.map((c, i) => ({
-            ...c, 
-            id: c.id || `${c.v}-${c.s}-${i}-${Math.random().toString(36).substring(2, 6)}`
-        }));
-        
-        console.log("DEBUG: doraImeData u mbush me sukses. Numri i letrave:", doraImeData.length);
-        
-        setTimeout(() => {
-            if (typeof renderHand === "function") {
-                renderHand();
-            } else {
-                console.error("GABIM: Funksioni renderHand() nuk u gjet!");
-            }
-            
-            if (typeof checkZionCondition === "function") {
-                checkZionCondition();
-            }
-        }, 100);
-
-    } else {
-        console.error("GABIM KRITIK: Serveri dërgoi 'yourCards' por data ishte e zbrazët ose korruptuar!");
-        
-        doraImeData = [];
-        if (typeof renderHand === "function") renderHand();
-    }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    const handContainer = document.getElementById('player-hand');
-    const discardPile = document.getElementById('discard-pile');
-
-    new Sortable(handContainer, {
-        group: {
-            name: 'zion-game',
-            pull: true,
-            put: false
-        },
-        animation: 150,
-        ghostClass: 'sortable-ghost',
-        onEnd: function (evt) {
-            const cardElements = Array.from(document.querySelectorAll('#player-hand .card'));
-            
-            doraImeData = cardElements.map(el => ({
-                v: el.dataset.v,
-                s: el.dataset.s,
-                id: el.dataset.id
-            }));
-
-            console.log("Renditja u 'gozhdua' në memorie:", doraImeData.map(c => c.v));
-            
-            socket.emit('update_my_hand_order', doraImeData);
-        }    
-    });
-
-    new Sortable(discardPile, {
-        group: 'zion-game',
-        onAdd: function (evt) {
-            const cardEl = evt.item;
-            const v = cardEl.dataset.v;
-            const s = cardEl.dataset.s;
-
-            cardEl.remove();
-
-            if (typeof hedhLetren === "function") {
-                hedhLetren(v, s); 
-            }
-            
-            console.log(`U hodh letra: ${v} ${s}`);
-        }
-    });
-});
-
+// ==========================================
+// 26. SHFAQJA E LETRAVE FITUESE
+// ==========================================
 socket.on('showWinnerCards', (winnerCards) => {
     const winnerDisplay = document.getElementById('winner-cards-display');
     const winnerContainer = document.getElementById('winner-cards-container');
@@ -1391,18 +1146,105 @@ socket.on('showWinnerCards', (winnerCards) => {
         winnerDisplay.style.display = 'none';
     }, 5000);
 });
-// Kontrollo kur ngarkohet faqja
-window.addEventListener('load', () => {
-    const gameTable = document.getElementById('game-table');
-    console.log("Game table elementi:", gameTable);
+
+// ==========================================
+// 27. CHAT FUNKSIONALITETI
+// ==========================================
+if (chatSend && chatInput) {
+    chatSend.addEventListener('click', () => {
+        const message = chatInput.value.trim();
+        if (message) {
+            socket.emit('chatMessage', {
+                name: myName,
+                message: message
+            });
+            chatInput.value = '';
+        }
+    });
     
-    if (gameTable) {
-        console.log("Background i game-table:", getComputedStyle(gameTable).background);
-        
-        // FORCO BACKGROUND-IN
-        gameTable.style.background = "transparent";
-    } else {
-        console.error("❌ NUK U GJET #game-table!");
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            chatSend.click();
+        }
+    });
+}
+
+socket.on('chatMessage', (data) => {
+    if (!chatMessages) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message';
+    messageDiv.innerHTML = `<span class="chat-username">${data.name}:</span> <span class="chat-text">${data.message}</span>`;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Mbaj vetëm 20 mesazhet e fundit
+    while (chatMessages.children.length > 20) {
+        chatMessages.removeChild(chatMessages.firstChild);
     }
 });
-console.log("Lidhja HTML -> Script: OK ✅");
+
+// ==========================================
+// 28. SORTABLE JS (Drag & Drop)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const handContainer = document.getElementById('player-hand');
+    const discardPile = document.getElementById('discard-pile');
+
+    if (handContainer) {
+        new Sortable(handContainer, {
+            group: {
+                name: 'zion-game',
+                pull: true,
+                put: false
+            },
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function (evt) {
+                const cardElements = Array.from(document.querySelectorAll('#player-hand .card'));
+                doraImeData = cardElements.map(el => ({
+                    v: el.dataset.v,
+                    s: el.dataset.s,
+                    id: el.dataset.id
+                }));
+                socket.emit('update_my_hand_order', doraImeData);
+            }    
+        });
+    }
+
+    if (discardPile) {
+        new Sortable(discardPile, {
+            group: {
+                name: 'zion-game',
+                pull: false,
+                put: true
+            },
+            onAdd: function (evt) {
+                const cardEl = evt.item;
+                const cardId = cardEl.dataset.id;
+                
+                // Gjej letrën në dorë
+                const cardIndex = doraImeData.findIndex(c => c.id === cardId);
+                if (cardIndex !== -1 && isMyTurn && doraImeData.length === 11) {
+                    processDiscard(cardEl);
+                } else {
+                    // Anulo hedhjen
+                    evt.preventDefault();
+                }
+            }
+        });
+    }
+});
+
+// ==========================================
+// 29. KONTROLLO BACKGROUND NË LOAD
+// ==========================================
+window.addEventListener('load', () => {
+    const gameTable = document.getElementById('game-table');
+    if (gameTable) {
+        gameTable.style.background = "transparent";
+    }
+});
+
+console.log("✅ ZION 71 - Script u ngarkua me sukses!");
