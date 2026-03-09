@@ -713,20 +713,3 @@ server.listen(PORT, () => {
     console.log(`🎮 Lojtarët: ${players.length}`);
     console.log(`===========================\n`);
 });
-```
-
-✅ KJO SERVER.JS PËRFSHIN:
-
-Feature Statusi
-Krijimi i dekut me 104 letra + 2 Xhokerë ✅
-Shpërndarja e letrave (dealer 10, të tjerët 9) ✅
-Jackpot-i ✅
-Llogaritja e pikëve ✅
-Validimi i kombinimeve ✅
-Mbyllja me ZION ✅
-Eliminimi në 71 pikë ✅
-Chat-i ✅
-Round aktual ✅
-Përzierja e letrave kur mbaron deku ✅
-
-KOPJOJE DHE ZËVENDËSO SERVER.JS-NË TËNDE! 🚀
