@@ -1,6 +1,12 @@
 /* ==========================================
-   1. BAZA DHE TAVOLINA (Pika 11)
+   1. BAZA DHE TAVOLINA
    ========================================== */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -9,19 +15,22 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
     height: 100vh;
+    width: 100vw;
     display: flex;
     flex-direction: column;
     align-items: center;
+    user-select: none;
     -webkit-user-select: none;
-    user-select: none; 
-    -webkit-tap-highlight-color: transparent;
+    position: fixed;
 }
 
-/* 2. LOBBY (Pika 14) */
+/* ==========================================
+   2. LOBBY DHE BUTONI START
+   ========================================== */
 #lobby-controls {
     position: fixed;
     z-index: 2000;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.95);
     width: 100%;
     height: 100%;
     display: flex;
@@ -29,776 +38,402 @@ body {
     justify-content: center;
     align-items: center;
     text-align: center;
+    gap: 20px;
+}
+
+#lobby-controls h1 {
+    font-size: 3rem;
+    color: #f1c40f;
+    text-shadow: 0 0 20px gold;
+    margin-bottom: 20px;
 }
 
 #btn-start {
     padding: 20px 40px;
-    font-size: 20px;
+    font-size: 24px;
     background: #e67e22;
     border: none;
-    border-radius: 10px;
+    border-radius: 15px;
     color: white;
     cursor: pointer;
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    font-weight: bold;
+    transition: transform 0.2s;
 }
 
-.deck-glow {
-    box-shadow: 0 0 20px 5px rgba(255, 215, 0, 0.8);
-    border: 2px solid gold;
-    cursor: pointer;
-    animation: pulse-glow 1.5s infinite;
+#btn-start:active {
+    transform: scale(0.95);
 }
 
-@keyframes pulse-glow {
-    0% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.05); opacity: 1; }
-    100% { transform: scale(1); opacity: 0.8; }
-}
-
-#score-modal {
-    z-index: 9000; 
-}
-
-#next-round-timer {
-    font-size: 1.2rem;
-    color: #f1c40f;
-    background: rgba(241, 196, 15, 0.1);
-    padding: 15px;
-    border-radius: 10px;
-    border: 1px dashed #f1c40f;
-    margin-top: 20px;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.02); opacity: 1; }
-    100% { transform: scale(1); opacity: 0.8; }
-}
-
+/* ==========================================
+   3. SKOREBOARD (Tabela e Pikëve)
+   ========================================== */
 #scoreboard-container {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 5px;
     border-radius: 8px;
-    font-size: 11px;
-    max-height: 180px;
+    font-size: 12px;
+    max-height: 200px;
     overflow-y: auto;
     cursor: pointer;
-    border: 1px solid rgba(241, 196, 15, 0.3);
+    border: 1px solid #f1c40f;
     z-index: 1000;
-}
-
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999 !important;
-}
-
-.modal-content {
-    background-color: #1a1a1a;
-    padding: 20px;
-    border-radius: 12px;
-    border: 2px solid #f1c40f;
-    max-width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+    width: auto;
+    min-width: 150px;
 }
 
 #side-score-table {
     width: 100%;
     color: white;
-    font-size: 12px;
-}
-
-#modal-score-table-container {
-    width: 100%;
-    max-height: 60vh; 
-    table-layout: auto;
-    overflow-y: auto;
-    margin-top: 10px;
-    -webkit-overflow-scrolling: touch;
-}
-
-#modal-score-table-container table {
-    width: 100% !important;
+    font-size: 11px;
     border-collapse: collapse;
-    margin-top: 15px;
-    background-color: #2c3e50;
-    color: white;
-    border-radius: 8px;
-    overflow: hidden;
 }
 
-#modal-score-table-container th {
-    background-color: #34495e;
+#side-score-table th {
     color: #f1c40f;
-    padding: 12px;
-    border-bottom: 2px solid #f1c40f;
+    padding: 4px;
+    font-size: 10px;
+}
+
+#side-score-table td {
+    padding: 3px;
     text-align: center;
-    font-size: 0.9em;
-    text-transform: uppercase;
+    border-bottom: 1px solid #333;
 }
 
-#modal-score-table-container td {
-    padding: 10px;
-    border-bottom: 1px solid #444;
-    text-align: center;
-    font-size: 0.9em;
+#side-score-table .active-row {
+    background: rgba(241, 196, 15, 0.2);
 }
 
-#modal-score-table-container td, 
-#modal-score-table-container th {
-    display: table-cell !important;
-}
-
-.active-row { 
-    background: rgba(241, 196, 15, 0.25) !important; 
-    border-left: 4px solid #f1c40f !important;
-    font-weight: bold;
-}
-
-.active-row td {
-    color: #f1c40f !important;
-}
-
-.temp-animating {
-    width: 60px;
-    height: 90px;
-    background-color: #2c3e50;
-    border-radius: 5px;
-    border: 2px solid white;
-    background-image: repeating-linear-gradient(45deg, #34495e, #34495e 10px, #2c3e50 10px, #2c3e50 20px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    z-index: 5000;
-    pointer-events: none;
-}
-
-.eliminated { 
-    color: #ff4d4d; 
-    text-decoration: line-through; 
+#side-score-table .eliminated {
+    color: #ff4d4d;
+    text-decoration: line-through;
     opacity: 0.6;
 }
 
-.winner-x {
-    color: #2ecc71;
-    font-weight: bold;
-    font-size: 1.2em;
-    text-shadow: 0 0 5px rgba(46, 204, 113, 0.5);
+/* ==========================================
+   4. MODALET (Dritaret)
+   ========================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
 }
 
-.jackpot-points {
-    color: #e67e22;
-    font-weight: bold;
+.modal-content {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 15px;
+    border: 3px solid #f1c40f;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: white;
 }
 
-.winner-cell {
-    color: #2ecc71 !important;
-    font-weight: bold;
-    text-shadow: 0 0 5px rgba(46, 204, 113, 0.3);
+#modal-score-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
 }
 
-.jackpot-cell {
-    color: #e74c3c !important;
-    font-weight: bold;
-    animation: flash-red 1s infinite;
+#modal-score-table th {
+    background: #34495e;
+    color: #f1c40f;
+    padding: 10px;
 }
 
-@keyframes flash-red {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
+#modal-score-table td {
+    padding: 8px;
+    border-bottom: 1px solid #444;
+    text-align: center;
 }
 
+/* ==========================================
+   5. ZONA QENDRORE (Deck, Jackpot, Asistenti)
+   ========================================== */
 .center-area {
+    position: absolute;
+    top: 15%;
+    left: 0;
+    width: 100%;
     display: flex;
-    justify-content: space-around;
-    align-items: flex-start;
-    margin-top: 50px;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    z-index: 100;
 }
 
-.card-stack, .card, .drop-zone {
-    width: 80px;
-    height: 120px;
-    border-radius: 8px;
+.deck-wrapper {
+    position: relative;
+    width: 70px;
+    height: 100px;
+}
+
+.card-stack {
+    width: 70px;
+    height: 100px;
+    background: linear-gradient(135deg, #444, #111);
     border: 2px solid #ccc;
-    background: white;
-    color: black;
+    border-radius: 8px;
+    color: white;
     display: flex;
     justify-content: center;
     align-items: center;
     font-weight: bold;
-    font-size: 18px;
-    position: relative;
-    user-select: none;
-}
-
-.card-stack {
-    background: #444;
-    color: white;
+    font-size: 16px;
     cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    transition: all 0.2s;
 }
 
-.active-deck { 
-    box-shadow: 0 0 25px #f1c40f !important; 
-    border-color: #f1c40f !important;
+.card-stack.active-deck {
+    box-shadow: 0 0 25px #f1c40f;
+    border-color: #f1c40f;
     animation: pulseGlow 1.5s infinite alternate;
 }
 
 @keyframes pulseGlow {
-    from { transform: scale(1); box-shadow: 0 0 15px #f1c40f; }
-    to { transform: scale(1.05); box-shadow: 0 0 30px #f1c40f; }
-}
-
-.card-on-table {
-    width: 65px;
-    height: 95px;
-    background: white;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-size: 22px;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-    pointer-events: none; 
-    position: absolute;
-    top: 7px;
-    border: 1px solid #ccc;
-    animation: dropEffect 0.2s ease-out;
-}
-
-@keyframes dropEffect {
-    0% { transform: scale(1.5); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-#deck-wrapper {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 20px;
-    width: 100%;
-}
-
-#discard-pile {
-    background: rgba(0, 0, 0, 0.2);
-    border: 2px dashed rgba(255, 255, 255, 0.3);
-    position: relative;
-    width: 80px;
-    height: 120px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 10px;
-    overflow: visible;
-}
-
-#discard-pile.over {
-    background-color: rgba(255, 255, 0, 0.2);
-    border: 2px dashed #ffcc00;
-}
-
-.led-orange {
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    background-color: #ffa500;
-    box-shadow: 0 0 10px #ffa500;
-    display: inline-block;
-}
-
-.drop-zone {
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px dashed #777;
-    color: #aaa;
-    font-size: 10px;
-}
-
-.drop-zone.over {
-    border-color: #0f0;
-    transform: scale(1.2);
-}
-
-#asistenti-container {
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    background: rgba(0,0,0,0.4);
-    padding: 10px 20px;
-    border-radius: 30px;
-}
-
-.led-red { width: 15px; height: 15px; background: #ff4d4d; border-radius: 50%; box-shadow: 0 0 10px #ff4d4d; }
-.led-green { width: 15px; height: 15px; background: #2ecc71; border-radius: 50%; box-shadow: 0 0 15px #2ecc71; animation: pulse 1s infinite; }
-.led-yellow { width: 15px; height: 15px; background: #f1c40f; border-radius: 50%; }
-
-@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-
-.hand-area {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90vw;
-    height: 140px;
-    display: flex;
-    justify-content: center; 
-    align-items: flex-end;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 20px;
-    padding: 10px;
-    z-index: 1000;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 -5px 25px rgba(0,0,0,0.5);
-    flex-wrap: nowrap; 
-    pointer-events: auto;
-    gap: 5px;
-    padding-left: 30px;
-}
-
-.hand-area .card {
-    pointer-events: auto;
-}
-
-.card {
-    width: 70px;
-    height: 110px;
-    background: #fff;
-    color: black;
-    border-radius: 10px;
-    border: 1px solid #555;
-    margin-left: -30px; 
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 8px;
-    box-shadow: -4px 0 10px rgba(0,0,0,0.4);
-    font-weight: bold;
-    cursor: grab;
-    transition: transform 0.2s ease, margin 0.2s ease;
-    background-image: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
-}
-
-.card.dragging {
-    cursor: grabbing !important;
-    opacity: 0.9;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-    transform: scale(1.1) !important;
-    z-index: 9999 !important;
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    margin: 0 !important; 
-    transition: none !important; 
-    pointer-events: none;
-    will-change: transform;
-}
-
-body.dragging-active {
-    cursor: grabbing !important;
-}
-
-body:has(.dragging) {
-    cursor: grabbing !important;
-}
-
-.card:hover {
-    transform: translateY(-35px) scale(1.05);
-    z-index: 1100;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+    from { transform: scale(1); }
+    to { transform: scale(1.05); }
 }
 
 #jackpot {
-    width: 80px;
-    height: 120px;
+    width: 70px;
+    height: 100px;
     background: linear-gradient(135deg, #f1c40f, #f39c12);
-    border: 3px solid #fff;
-    border-radius: 10px;
+    border: 3px solid white;
+    border-radius: 8px;
     display: none;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    box-shadow: 0 0 20px rgba(241, 196, 15, 0.6);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    z-index: 100;
+    box-shadow: 0 0 30px gold;
+    animation: jackpotPulse 1.5s infinite;
+    font-size: 24px;
+    color: black;
 }
 
-#jackpot::after {
-    content: "💰";
-    font-size: 2rem;
+@keyframes jackpotPulse {
+    0% { transform: scale(1); box-shadow: 0 0 20px gold; }
+    50% { transform: scale(1.05); box-shadow: 0 0 40px gold; }
+    100% { transform: scale(1); box-shadow: 0 0 20px gold; }
 }
 
-@media screen and (max-width: 600px) {
-    #jackpot {
-        width: 60px !important;
-        height: 90px !important;
-        position: relative !important;
-        margin: 5px auto !important;
-    }
-    
-    .center-area {
-        position: absolute !important;
-        top: 65px !important;
-        left: 0 !important;
-        width: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 20px !important;
-        height: auto !important;
-    }
-
-    .deck-wrapper {
-        position: relative !important;
-        width: 70px !important;
-        height: 100px !important;
-        margin: 0 !important;
-    }
-
-    #asistenti-container {
-        position: relative !important;
-        width: 90% !important;
-        background: rgba(0,0,0,0.3) !important;
-        padding: 8px 15px !important;
-        border-radius: 20px !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 10px !important;
-    }
-
-    #discard-pile {
-        position: relative !important;
-        width: 300px !important;
-        height: 200px !important;
-        margin: 0 !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-    }
-
-    #display-piket {
-        position: relative !important;
-        margin: 0 !important;
-        font-size: 16px !important;
-        color: #f1c40f !important;
-    }
-
-    #player-hand {
-        position: fixed !important;
-        bottom: 5px !important;
-        height: 100px !important;
-        background: transparent !important;
-        z-index: 2000 !important;
-    }
-    
-    #player-hand .card {
-        position: relative !important; 
-        top: 0 !important;
-        left: 0 !important;
-        transform: none !important;
-        margin: 0 -15px !important;
-        display: inline-block !important;
-        transition: transform 0.2s ease !important;
-    }
-
-    #player-hand .card.sortable-drag {
-        position: fixed !important; 
-        transform: scale(1.1) translateY(-20px) !important;
-        z-index: 9999 !important;
-    }
-
-    .sortable-ghost {
-        opacity: 0.3 !important;
-        transform: scale(0.9) !important;
-    }
-}
-
-@media screen and (max-width: 950px) and (orientation: landscape) {
-    h1 { display: none !important; }
-    
-    #scoreboard-container {
-        transform: scale(0.7) !important;
-        top: 5px !important;
-        z-index: 3000 !important;
-    }
-
-    .center-area {
-        position: absolute !important;
-        top: 5% !important;
-        left: 0 !important;
-        width: 100% !important;
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 40px !important;
-    }
-
-    .deck-wrapper, #deck-zion {
-        width: 50px !important;
-        height: 75px !important;
-        margin: 0 !important;
-    }
-
-    #discard-pile {
-        width: 110px !important;
-        height: 150px !important;
-        margin: 0 !important;
-    }
-
-    #asistenti-container {
-        width: auto !important;
-        min-width: 160px !important;
-        padding: 5px 12px !important;
-        background: rgba(0, 0, 0, 0.6) !important;
-        border-radius: 15px !important;
-        height: 35px !important;
-    }
-
-    #status-teksti {
-        font-size: 12px !important;
-        white-space: nowrap !important;
-    }
-
-    #display-piket {
-        position: fixed !important;
-        top: 10px !important;
-        right: 10px !important;
-        font-size: 13px !important;
-        margin: 0 !important;
-        z-index: 2500 !important;
-    }
-
-    #player-hand {
-        position: fixed !important;
-        bottom: 0 !important;
-        height: 80px !important;
-        width: 100% !important;
-        background: linear-gradient(transparent, rgba(0,0,0,0.4)) !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: flex-end !important;
-        padding-bottom: 5px !important;
-    }
-
-    #player-hand .card {
-        width: 45px !important;
-        height: 70px !important;
-        margin: 0 -10px !important;
-        font-size: 10px !important;
-    }
-
-    .hand-area {
-        box-shadow: none !important;
-    }
-}
-
-#player-hand {
+#asistenti-container {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    padding: 8px 15px;
+    border-radius: 30px;
     display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    transition: all 0.2s ease;
-    z-index: 1001 !important;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    min-height: 120px;
-    pointer-events: auto;
-}
-   
-.card:first-child {
-    margin-left: 0 !important;
-}
-
-.card:active { cursor: grabbing; }
-
-body.my-turn-glow {
-    box-shadow: inset 0 0 80px rgba(0, 255, 0, 0.15);
-    border: 4px solid #00ff00;
-    transition: all 0.4s ease-in-out;
-}
-
-@keyframes pulse-green {
-    0% { border-color: rgba(0, 255, 0, 0.5); }
-    50% { border-color: rgba(0, 255, 0, 1); }
-    100% { border-color: rgba(0, 255, 0, 0.5); }
-}
-
-body.my-turn-glow {
-    animation: pulse-green 2s infinite;
-}
-
-#deck-zion {
-    order: 2 !important;
-    width: 80px;
-    height: 120px;
-    border-radius: 8px;
-    border: 2px solid #ccc;
-    background: linear-gradient(135deg, #444, #111);
-    color: white;
-    display: flex;
-    justify-content: center;
     align-items: center;
-    font-weight: bold;
-    font-size: 18px;
-    position: relative;
-    cursor: pointer;
-    box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
-    transition: all 0.2s ease;
-}
-   
-#deck-zion:hover {
-    transform: translateY(-5px);
-    box-shadow: 6px 6px 15px rgba(0,0,0,0.6), 0 0 20px currentColor; 
-    filter: brightness(1.2);
+    gap: 10px;
+    border: 1px solid #f1c40f;
+    min-width: 180px;
 }
 
-#deck-zion:active {
-    transform: scale(0.95) !important;
+.led-red, .led-green, .led-yellow, .led-orange {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.led-red { background: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; }
+.led-green { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; animation: pulse 1s infinite; }
+.led-yellow { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
+.led-orange { background: #ffa500; box-shadow: 0 0 10px #ffa500; }
+
+@keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
 }
 
 #status-teksti {
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    padding: 10px;
-    border-radius: 5px;
+    font-size: 14px;
+    color: white;
+    white-space: nowrap;
 }
 
 #btn-mbyll {
     background: #27ae60;
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    padding: 8px 15px;
+    border-radius: 20px;
     font-weight: bold;
     cursor: pointer;
     animation: bounce 1s infinite;
+    font-size: 14px;
+    white-space: nowrap;
 }
 
-@keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
 
-#round-modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 10000;
+#discard-pile {
+    width: 70px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    color: #aaa;
+    font-size: 12px;
+}
+
+#discard-pile .label {
+    position: absolute;
+    z-index: 1;
+}
+
+#discard-pile .card {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 60px;
+    height: 90px;
+    margin: 0;
+    transform-origin: center;
+    pointer-events: none;
+}
+
+#display-piket {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #f1c40f;
+    white-space: nowrap;
+}
+
+/* ==========================================
+   6. DORA E LOJTARIT (KJO ËSHTË PJESA KRYESORE!)
+   ========================================== */
+#player-hand {
+    position: fixed;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 2px;
+    padding: 5px 10px;
+    z-index: 1000;
+    pointer-events: none;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    min-height: 130px;
+}
+
+#player-hand::-webkit-scrollbar {
+    display: none;
+}
+
+#player-hand .card {
+    pointer-events: auto;
+    flex: 0 0 auto;
+    width: 65px;
+    height: 105px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #555;
+    display: flex;
     flex-direction: column;
-}
-
-#round-winner-text {
-    font-size: 3rem;
-    text-shadow: 0 0 15px gold;
-    animation: glow 1.5s infinite alternate;
-}
-
-@keyframes glow {
-    from { transform: scale(1); }
-    to { transform: scale(1.1); }
-}
-
-#round-results-list p {
-    background: rgba(255, 255, 255, 0.1);
-    margin: 10px auto;
-    padding: 10px;
-    max-width: 300px;
-    border-radius: 5px;
-    border-left: 4px solid gold;
-}
-
-.joker {
-    color: gold;
+    justify-content: space-between;
+    padding: 6px;
     font-weight: bold;
+    font-size: 16px;
+    box-shadow: -3px 0 8px rgba(0,0,0,0.3);
+    transition: transform 0.15s ease;
+    margin-right: -25px; /* Krijon efektin e mbivendosjes */
+    position: relative;
+    color: black;
+    cursor: grab;
+    touch-action: pan-y pinch-zoom;
 }
 
-.card.joker {
+/* Efekti kur preket me gisht - REAGON MENJËHERË */
+#player-hand .card:active {
+    transform: translateY(-30px) scale(1.1);
+    z-index: 1001;
+    transition: transform 0.1s;
+    cursor: grabbing;
+}
+
+/* Për lojtarët aktivë - kur është radha */
+body.my-turn-glow #player-hand .card {
+    box-shadow: -3px 0 8px rgba(0,0,0,0.3), 0 0 10px rgba(46, 204, 113, 0.3);
+}
+
+/* Letra e parë nuk ka margin negativ majtas */
+#player-hand .card:first-child {
+    margin-left: 0;
+}
+
+/* Letrat e kuqe */
+#player-hand .card:has(.s:contains('♥')),
+#player-hand .card:has(.s:contains('♦')) {
+    color: #e74c3c;
+}
+
+/* Xhokeri */
+#player-hand .card.joker {
     background: linear-gradient(135deg, #2c3e50, #000);
     color: #f1c40f !important;
     border: 2px solid #f1c40f;
 }
 
 .joker-star {
-    font-size: 1.5rem;
+    font-size: 28px;
     line-height: 1;
 }
 
-body.game-active #lobby-controls {
-    display: none !important;
-}
-
-#game-table {
-    display: none;
-}
-
-.pile {
-    width: 120px;
-    height: 160px;
-    border: 2px dashed #777;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s, border-color 0.2s;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.card-placeholder {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    margin: 0 5px;
-    vertical-align: top;
-}
-
-#score-modal.modal-overlay {
+/* Letra që po tërhiqet */
+#player-hand .card.dragging {
+    opacity: 0.9;
+    transform: scale(1.2) rotate(5deg) !important;
+    z-index: 9999 !important;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.8);
+    transition: none !important;
+    pointer-events: none;
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background: rgba(0, 0, 0, 0.9) !important;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 999999 !important;
+    margin: 0 !important;
 }
 
-#score-modal .modal-content {
-    background: #1a1a1a;
-    padding: 20px;
-    border: 3px solid #f1c40f;
-    border-radius: 15px;
-    min-width: 300px;
-    color: white;
-    box-shadow: 0 0 30px rgba(0,0,0,1);
+/* Placeholder gjatë drag */
+.card-placeholder {
+    flex: 0 0 auto;
+    width: 65px;
+    height: 105px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    margin-right: -25px;
 }
 
-/* Stili për shfaqjen e letrave të fituesit (5 sekonda) */
+/* ==========================================
+   7. SHFAQJA E LETRAVE FITUESE (5 SEKONDA)
+   ========================================== */
 .winner-cards-overlay {
     position: fixed;
     top: 0;
@@ -820,43 +455,157 @@ body.game-active #lobby-controls {
 
 .winner-cards-content h2 {
     font-size: 2rem;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     text-shadow: 0 0 20px gold;
-    animation: glow 1s infinite alternate;
 }
 
-.winner-cards-content .hand-area {
-    position: relative;
-    bottom: auto;
-    left: auto;
-    transform: none;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 20px auto;
-    width: 80%;
+.winner-cards-content #winner-cards-container {
+    display: flex;
     justify-content: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin: 20px 0;
 }
 
-.winner-cards-content p {
-    font-size: 1.2rem;
-    color: white;
-    margin-top: 30px;
+.winner-cards-content .card {
+    width: 70px;
+    height: 110px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    color: black;
+    margin: 0 5px;
 }
 
-@keyframes glow {
-    from { text-shadow: 0 0 10px gold; }
-    to { text-shadow: 0 0 30px gold; }
+/* ==========================================
+   8. RESPONSIVE PËR TELEFON (PORTRAIT)
+   ========================================== */
+@media screen and (max-width: 600px) {
+    .center-area {
+        top: 10%;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .deck-wrapper, #jackpot, #discard-pile {
+        width: 55px;
+        height: 80px;
+    }
+    
+    .card-stack {
+        width: 55px;
+        height: 80px;
+        font-size: 12px;
+    }
+    
+    #asistenti-container {
+        padding: 5px 10px;
+        min-width: auto;
+    }
+    
+    #status-teksti {
+        font-size: 12px;
+    }
+    
+    #btn-mbyll {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    
+    #display-piket {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+    
+    #player-hand {
+        bottom: 5px;
+        padding: 5px;
+        min-height: 100px;
+    }
+    
+    #player-hand .card {
+        width: 50px;
+        height: 85px;
+        font-size: 14px;
+        padding: 4px;
+        margin-right: -20px;
+    }
+    
+    #player-hand .card:active {
+        transform: translateY(-25px) scale(1.15);
+    }
+    
+    .card-placeholder {
+        width: 50px;
+        height: 85px;
+        margin-right: -20px;
+    }
+    
+    #scoreboard-container {
+        font-size: 10px;
+        max-height: 150px;
+    }
 }
 
-/* Stili për Jackpot-in */
-.jackpot-card {
-    background: linear-gradient(135deg, #f1c40f, #f39c12) !important;
-    border: 3px solid white !important;
-    box-shadow: 0 0 30px gold !important;
-    animation: jackpot-pulse 1.5s infinite !important;
+/* ==========================================
+   9. RESPONSIVE PËR LANDSCAPE (Telefon anash)
+   ========================================== */
+@media screen and (max-width: 950px) and (orientation: landscape) {
+    body {
+        flex-direction: row;
+    }
+    
+    .center-area {
+        top: 5%;
+        gap: 15px;
+    }
+    
+    #player-hand {
+        bottom: 5px;
+    }
+    
+    #player-hand .card {
+        width: 45px;
+        height: 75px;
+        font-size: 12px;
+        margin-right: -18px;
+    }
+    
+    #player-hand .card:active {
+        transform: translateY(-20px) scale(1.15);
+    }
+    
+    .card-placeholder {
+        width: 45px;
+        height: 75px;
+        margin-right: -18px;
+    }
+    
+    #scoreboard-container {
+        top: 5px;
+        right: 5px;
+        font-size: 9px;
+    }
+    
+    h1 {
+        display: none;
+    }
 }
 
-@keyframes jackpot-pulse {
-    0% { transform: scale(1); box-shadow: 0 0 20px gold; }
-    50% { transform: scale(1.05); box-shadow: 0 0 40px gold; }
-    100% { transform: scale(1); box-shadow: 0 0 20px gold; }
+/* ==========================================
+   10. MY TURN GLOW (Kur është radha jote)
+   ========================================== */
+body.my-turn-glow {
+    box-shadow: inset 0 0 80px rgba(46, 204, 113, 0.2);
+    animation: borderPulse 2s infinite;
+}
+
+@keyframes borderPulse {
+    0% { border: 4px solid rgba(46, 204, 113, 0.3); }
+    50% { border: 4px solid rgba(46, 204, 113, 0.8); }
+    100% { border: 4px solid rgba(46, 204, 113, 0.3); }
 }
