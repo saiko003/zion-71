@@ -309,6 +309,19 @@ socket.on('updateGameState', (data) => {
 function updateGameFlow(data) {
     if (!data) data = {};
 
+    // 🟢 KONTROLLI I VICTORY ZONE - SHTO KËTË PJESË NË FILLIM
+    const victoryZone = document.getElementById('victory-drop-zone');
+    if (victoryZone) {
+        // Shfaqet vetëm kur: është radha jote, ke 11 letra, dhe loja ka filluar
+        if (isMyTurn && doraImeData.length === 11 && gameStarted) {
+            victoryZone.style.display = 'flex';
+            victoryZone.style.pointerEvents = 'auto';
+        } else {
+            victoryZone.style.display = 'none';
+            victoryZone.style.pointerEvents = 'none';
+        }
+    }
+
     if (data.myCards && Array.isArray(data.myCards)) {
         
         if (isDraggingCard) return; 
@@ -369,6 +382,9 @@ function updateGameFlow(data) {
         `;
         jackpot.style.color = isRed ? '#e74c3c' : '#2c3e50';
         jackpot.style.display = 'flex';
+    } else if (jackpot) {
+        // Nëse nuk ka jackpot, fshihet
+        jackpot.style.display = 'none';
     }
 
     const statusMsg = document.getElementById('status-message') || document.getElementById('status-teksti');
@@ -630,13 +646,16 @@ function updateZonesFeedback(x, y) {
     }
 
     if (victoryZone) {
-        if (typeof isMyTurn !== 'undefined' && isMyTurn && doraImeData.length === 11) {
+        // 🟢 NDRYSHO KËTË PJESË:
+        if (typeof isMyTurn !== 'undefined' && isMyTurn && doraImeData.length === 11 && gameStarted) {
             victoryZone.style.display = 'flex';
+            victoryZone.style.pointerEvents = 'auto';
             const r = victoryZone.getBoundingClientRect();
             const overV = x > r.left && x < r.right && y > r.top && y < r.bottom;
             victoryZone.classList.toggle('over', overV);
         } else {
             victoryZone.style.display = 'none';
+            victoryZone.style.pointerEvents = 'none';
         }
     }
 }
@@ -679,25 +698,33 @@ function onDragEnd(e) {
     }
 
     if (isOverVictory && isMyTurn && doraImeData.length === 11) {
-        if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
-            
-            socket.emit('declareZion', { 
-                isJackpotClosing: tookJackpotThisTurn || false
-            });
+    if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
+        
+        socket.emit('declareZion', { 
+            isJackpotClosing: tookJackpotThisTurn || false
+        });
 
-            isMyTurn = false;
-            if (placeholder) placeholder.remove();
-            
-            if (dragElement && dragElement.parentNode) {
-                dragElement.parentNode.removeChild(dragElement);
-            }
-            
-            finalizeCleanup();
-            dragElement = null;
-            placeholder = null;
-            return; 
+        isMyTurn = false;
+        if (placeholder) placeholder.remove();
+        
+        if (dragElement && dragElement.parentNode) {
+            dragElement.parentNode.removeChild(dragElement);
         }
+        
+        // 🟢 SHTO KËTË PJESË:
+        const victoryZone = document.getElementById('victory-drop-zone');
+        if (victoryZone) {
+            victoryZone.style.display = 'none';
+            victoryZone.classList.remove('over');
+            victoryZone.style.pointerEvents = 'none';
+        }
+        
+        finalizeCleanup();
+        dragElement = null;
+        placeholder = null;
+        return; 
     }
+}
 
     if (isOverPile && isMyTurn && doraImeData.length === 11) {
         if (placeholder) placeholder.remove();
@@ -755,6 +782,8 @@ function finalizeCleanup() {
     if (victoryZone) {
         victoryZone.classList.remove('over');
         victoryZone.style.display = 'none';
+        // 🟢 SHTO KËTË:
+        victoryZone.style.pointerEvents = 'none';
     }
 }
 
