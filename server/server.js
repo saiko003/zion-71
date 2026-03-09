@@ -704,9 +704,6 @@ function shuffle(array) {
     return array;
 }
 
-// ==========================================
-// 8. NIS SERVERIN
-// ==========================================
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`\n🚀 ========================`);
