@@ -1,750 +1,579 @@
-html, body {
-    background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%) !important;
-    margin: 0;
-    padding: 0;
-}
-
-#game-table {
-    display: none; /* Fillimisht i fshehur */
-    width: 100%;
-    height: 100%;
-    background: transparent !important; /* I detyrojmë transparent */
-    position: relative;
-    overflow: hidden;
-}
-
-div:not([class*="card"]):not([class*="modal"]) {
-    background: transparent !important;
-}
-/* Sigurohu që asnjë element tjetër nuk ka background të bardhë */
-.center-area,
-.deck-wrapper,
-#asistenti-container,
-#discard-pile,
-#player-hand,
-.hand-area {
-    background: transparent !important;
-}
-
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%) !important;
-    color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden;
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    user-select: none;
-    -webkit-user-select: none;
-    position: fixed;
-}
-
 /* ==========================================
-   2. LOBBY DHE BUTONI START
-   ========================================== */
-#lobby-controls {
-    position: fixed;
-    z-index: 2000;
-    background: rgba(0, 0, 0, 0.95);
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    gap: 20px;
-}
-
-#lobby-controls h1 {
-    font-size: min(3rem, 12vw);
-    color: #f1c40f;
-    text-shadow: 0 0 20px gold;
-    margin-bottom: 20px;
-}
-
-#btn-start {
-    padding: min(20px, 5vw) min(40px, 10vw);
-    font-size: min(24px, 6vw);
-    background: #e67e22;
-    border: none;
-    border-radius: 15px;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    font-weight: bold;
-    transition: transform 0.2s;
-}
-
-#btn-start:active {
-    transform: scale(0.95);
-}
-
-/* ==========================================
-   3. SKOREBOARD (Tabela e Pikëve)
-   ========================================== */
-#scoreboard-container {
-    position: absolute;
-    top: clamp(5px, 2vh, 10px);
-    right: clamp(5px, 2vw, 10px);
-    background: rgba(0, 0, 0, 0.8);
-    padding: clamp(3px, 1.5vw, 8px);
-    border-radius: 8px;
-    font-size: clamp(8px, 3vw, 12px);
-    max-height: min(200px, 30vh);
-    overflow-y: auto;
-    cursor: pointer;
-    border: 1px solid #f1c40f;
-    z-index: 1000;
-    backdrop-filter: blur(5px);
-    width: auto;
-    min-width: min(150px, 30vw);
-}
-
-#side-score-table {
-    width: 100%;
-    color: white;
-    font-size: clamp(8px, 2.5vw, 11px);
-    border-collapse: collapse;
-}
-
-#side-score-table th {
-    color: #f1c40f;
-    padding: clamp(2px, 1vw, 4px);
-}
-
-#side-score-table td {
-    padding: clamp(2px, 1vw, 3px);
-    text-align: center;
-    border-bottom: 1px solid #333;
-}
-
-#side-score-table .active-row {
-    background: rgba(241, 196, 15, 0.2);
-}
-
-#side-score-table .eliminated {
-    color: #ff4d4d;
-    text-decoration: line-through;
-    opacity: 0.6;
-}
-
-/* ==========================================
-   4. ZONA QENDRORE
-   ========================================== */
-.center-area {
-    position: absolute;
-    top: clamp(10%, 12vh, 15%);
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: clamp(8px, 3vw, 15px);
-    padding: clamp(5px, 2vw, 10px);
-    z-index: 100;
-    flex-wrap: wrap;
-}
-
-.deck-wrapper {
-    position: relative;
-    width: clamp(50px, 15vw, 70px);
-    height: clamp(70px, 22vw, 100px);
-}
-
-.card-stack {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #444, #111);
-    border: 2px solid #ccc;
-    border-radius: clamp(6px, 2vw, 8px);
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: clamp(12px, 4vw, 16px);
-    cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-    transition: all 0.2s;
-}
-
-.card-stack.active-deck {
-    box-shadow: 0 0 25px #f1c40f;
-    border-color: #f1c40f;
-    animation: pulseGlow 1.5s infinite alternate;
-}
-
-@keyframes pulseGlow {
-    from { transform: scale(1); }
-    to { transform: scale(1.05); }
-}
-
-#jackpot {
-    width: clamp(50px, 15vw, 70px);
-    height: clamp(70px, 22vw, 100px);
-    background: linear-gradient(135deg, #f1c40f, #f39c12);
-    border: 3px solid white;
-    border-radius: clamp(6px, 2vw, 8px);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 0 30px gold;
-    animation: jackpotPulse 1.5s infinite;
-    font-size: clamp(18px, 6vw, 24px);
-    color: black;
-}
-
-@keyframes jackpotPulse {
-    0% { transform: scale(1); box-shadow: 0 0 20px gold; }
-    50% { transform: scale(1.05); box-shadow: 0 0 40px gold; }
-    100% { transform: scale(1); box-shadow: 0 0 20px gold; }
-}
-
-/* ==========================================
-   5. ZONA E HEDHJES (Discard) - TË DUDSHME PËR TË GJITHË
-   ========================================== */
-#discard-pile {
-    position: relative;
-    width: clamp(50px, 15vw, 70px);
-    height: clamp(70px, 22vw, 100px);
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px dashed rgba(255, 255, 255, 0.3);
-    border-radius: clamp(6px, 2vw, 8px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: visible;
-}
-
-#discard-pile .label {
-    position: absolute;
-    z-index: 1;
-    color: #aaa;
-    font-size: clamp(8px, 2.5vw, 12px);
-}
-
-.discard-cards {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.discard-cards .card-mini {
-    position: absolute;
-    width: 85%;
-    height: 85%;
-    background: white;
-    border-radius: 4px;
-    border: 1px solid #555;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: clamp(10px, 3vw, 14px);
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    pointer-events: none;
-    transition: all 0.3s;
-}
-
-/* Pozicionet e ndryshme për letrat e hedhura */
-.discard-cards .card-mini:nth-child(1) {
-    transform: rotate(-5deg) translate(-2px, -2px);
-    z-index: 3;
-}
-
-.discard-cards .card-mini:nth-child(2) {
-    transform: rotate(3deg) translate(3px, 1px);
-    z-index: 2;
-    opacity: 0.9;
-}
-
-.discard-cards .card-mini:nth-child(3) {
-    transform: rotate(-2deg) translate(1px, 3px);
-    z-index: 1;
-    opacity: 0.8;
-}
-
-.discard-cards .card-mini:nth-child(4) {
-    transform: rotate(4deg) translate(-1px, -1px);
-    z-index: 0;
-    opacity: 0.7;
-}
-
-.discard-cards .card-mini:nth-child(5) {
-    transform: rotate(-3deg) translate(2px, 2px);
-    z-index: -1;
-    opacity: 0.6;
-}
-
-/* Letrat e kuqe */
-.discard-cards .card-mini.red {
-    color: #e74c3c;
-}
-
-/* Xhokeri (nëse ndodh) */
-.discard-cards .card-mini.joker {
-    background: linear-gradient(135deg, #2c3e50, #000);
-    color: #f1c40f;
-    border: 1px solid #f1c40f;
-}
-
-/* ==========================================
-   6. ASISTENTI
-   ========================================== */
-#asistenti-container {
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    padding: clamp(5px, 2vw, 8px) clamp(10px, 3vw, 15px);
-    border-radius: 30px;
-    display: flex;
-    align-items: center;
-    gap: clamp(5px, 2vw, 10px);
-    border: 1px solid #f1c40f;
-    min-width: min(180px, 45vw);
-}
-
-.led-red, .led-green, .led-yellow, .led-orange {
-    width: clamp(12px, 4vw, 15px);
-    height: clamp(12px, 4vw, 15px);
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.led-red { background: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; }
-.led-green { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; animation: pulse 1s infinite; }
-.led-yellow { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
-.led-orange { background: #ffa500; box-shadow: 0 0 10px #ffa500; }
-
-@keyframes pulse {
-    0% { opacity: 0.5; }
-    50% { opacity: 1; }
-    100% { opacity: 0.5; }
-}
-
-#status-teksti {
-    font-size: clamp(11px, 3.5vw, 14px);
-    color: white;
-    white-space: nowrap;
-}
-
-#btn-mbyll {
-    background: #27ae60;
-    color: white;
-    border: none;
-    padding: clamp(5px, 2vw, 8px) clamp(10px, 3vw, 15px);
-    border-radius: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    animation: bounce 1s infinite;
-    font-size: clamp(11px, 3.5vw, 14px);
-    white-space: nowrap;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
-#display-piket {
-    background: rgba(0, 0, 0, 0.6);
-    padding: clamp(4px, 1.5vw, 5px) clamp(6px, 2vw, 10px);
-    border-radius: 20px;
-    font-size: clamp(11px, 3.5vw, 14px);
-    color: #f1c40f;
-    white-space: nowrap;
-}
-
-/* ==========================================
-   7. DORA E LOJTARIT
-   ========================================== */
-#player-hand {
-    position: fixed;
-    bottom: clamp(5px, 2vh, 10px);
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 2px;
-    padding: clamp(3px, 1.5vw, 10px);
-    z-index: 1000;
-    pointer-events: none;
-    overflow-x: auto;
-    overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    min-height: clamp(90px, 25vh, 130px);
-}
-
-#player-hand::-webkit-scrollbar {
-    display: none;
-}
-
-#player-hand .card {
-    pointer-events: auto;
-    flex: 0 0 auto;
-    width: clamp(45px, 14vw, 65px);
-    height: clamp(75px, 22vh, 105px);
-    background: white;
-    border-radius: clamp(6px, 2vw, 8px);
-    border: 1px solid #555;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: clamp(4px, 1.5vw, 6px);
-    font-weight: bold;
-    font-size: clamp(12px, 4vw, 16px);
-    box-shadow: -3px 0 8px rgba(0,0,0,0.3);
-    transition: transform 0.1s ease;
-    margin-right: clamp(-15px, -4vw, -25px);
-    position: relative;
-    color: black;
-    cursor: grab;
-    touch-action: pan-y pinch-zoom;
-}
-
-/* Efekti i prekjes - SHUMË I SHPEJTË */
-#player-hand .card:active {
-    transform: translateY(clamp(-20px, -6vh, -30px)) scale(1.1);
-    z-index: 1001;
-    transition: transform 0.05s;
-    cursor: grabbing;
-}
-
-#player-hand .card:first-child {
-    margin-left: 0;
-}
-
-/* Letrat e kuqe */
-#player-hand .card[style*="color: red"] {
-    color: #e74c3c;
-}
-
-/* Xhokeri */
-#player-hand .card.joker {
-    background: linear-gradient(135deg, #2c3e50, #000);
-    color: #f1c40f !important;
-    border: 2px solid #f1c40f;
-}
-
-.joker-star {
-    font-size: clamp(20px, 7vw, 28px);
-    line-height: 1;
-}
-
-/* Letra që po tërhiqet */
-#player-hand .card.dragging {
-    opacity: 0.9;
-    transform: scale(1.2) rotate(5deg) !important;
-    z-index: 9999 !important;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-    transition: none !important;
-    pointer-events: none;
-    position: fixed !important;
-    margin: 0 !important;
-}
-
-.card-placeholder {
-    flex: 0 0 auto;
-    width: clamp(45px, 14vw, 65px);
-    height: clamp(75px, 22vh, 105px);
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px dashed rgba(255, 255, 255, 0.3);
-    border-radius: clamp(6px, 2vw, 8px);
-    margin-right: clamp(-15px, -4vw, -25px);
-}
-
-/* ==========================================
-   8. OPTIMIZIME PËR REZOLUCIONE SPECIFIKE
+   VETËM LANDSCAPE - BLLOKIMI I PORTRAIT
    ========================================== */
 
-/* iPhone 12/13/14 (390x844) */
-@media screen and (min-width: 385px) and (max-width: 395px) and (min-height: 840px) and (max-height: 850px) {
-    #player-hand .card {
-        width: 58px;
-        height: 95px;
-        margin-right: -22px;
-        font-size: 15px;
-    }
-    
-    .center-area {
-        top: 12%;
-        gap: 12px;
-    }
-}
-
-/* iPhone 14 Pro / 15 / 16 (393x852) */
-@media screen and (min-width: 390px) and (max-width: 400px) and (min-height: 845px) and (max-height: 860px) {
-    #player-hand .card {
-        width: 57px;
-        height: 94px;
-        margin-right: -21px;
-    }
-}
-
-/* iPhone Pro Max (428-440x926-956) */
-@media screen and (min-width: 425px) and (max-width: 445px) and (min-height: 920px) and (max-height: 960px) {
-    #player-hand .card {
-        width: 62px;
-        height: 100px;
-        margin-right: -24px;
-        font-size: 16px;
-    }
-    
-    .deck-wrapper, #jackpot, #discard-pile {
-        width: 65px;
-        height: 95px;
-    }
-}
-
-/* Samsung Galaxy (360x780-800) */
-@media screen and (min-width: 355px) and (max-width: 365px) and (min-height: 775px) and (max-height: 805px) {
-    #player-hand .card {
-        width: 52px;
-        height: 88px;
-        margin-right: -18px;
-        font-size: 13px;
-    }
-    
-    .deck-wrapper, #jackpot, #discard-pile {
-        width: 52px;
-        height: 78px;
-    }
-    
-    #asistenti-container {
-        padding: 4px 8px;
-    }
-    
-    #status-teksti {
-        font-size: 11px;
-    }
-}
-
-/* Galaxy Ultra (412x915) */
-@media screen and (min-width: 408px) and (max-width: 417px) and (min-height: 910px) and (max-height: 920px) {
-    #player-hand .card {
-        width: 60px;
-        height: 98px;
-        margin-right: -23px;
-    }
-    
-    .deck-wrapper, #jackpot, #discard-pile {
-        width: 62px;
-        height: 92px;
-    }
-}
-
-/* ==========================================
-   9. LANDSCAPE PËR TË GJITHË TELEFONAT
-   ========================================== */
-@media screen and (orientation: landscape) and (max-height: 500px) {
+/* 1. BLLOKO PORTRAIT - Shfaq mesazh për të rrotulluar */
+@media screen and (orientation: portrait) {
     body {
-        flex-direction: row;
+        overflow: hidden;
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
     }
-    
-    .center-area {
-        top: 5%;
-        gap: clamp(8px, 3vw, 20px);
-        flex-wrap: nowrap;
+
+    #lobby-controls,
+    #game-table,
+    .landscape-container,
+    .hand-section,
+    .action-area {
+        display: none !important;
     }
-    
-    .deck-wrapper, #jackpot, #discard-pile {
-        width: clamp(40px, 8vh, 55px);
-        height: clamp(60px, 12vh, 80px);
+
+    .rotate-message {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
+        z-index: 999999;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        text-align: center;
+        color: white;
     }
-    
-    #player-hand {
-        bottom: 2px;
-        min-height: clamp(60px, 15vh, 80px);
+
+    .rotate-message .icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+        animation: rotatePhone 2s infinite;
     }
-    
-    #player-hand .card {
-        width: clamp(35px, 7vh, 48px);
-        height: clamp(55px, 11vh, 75px);
-        margin-right: clamp(-12px, -3vw, -18px);
-        font-size: clamp(10px, 2.5vh, 13px);
-        padding: 3px;
+
+    .rotate-message h2 {
+        font-size: 28px;
+        color: #f1c40f;
+        margin-bottom: 10px;
+        text-shadow: 0 0 20px gold;
     }
-    
-    #player-hand .card:active {
-        transform: translateY(clamp(-15px, -4vh, -20px)) scale(1.1);
+
+    .rotate-message p {
+        font-size: 18px;
+        color: white;
+        max-width: 80%;
+        line-height: 1.5;
     }
-    
-    .card-placeholder {
-        width: clamp(35px, 7vh, 48px);
-        height: clamp(55px, 11vh, 75px);
-        margin-right: clamp(-12px, -3vw, -18px);
+
+    @keyframes rotatePhone {
+        0% { transform: rotate(0deg); }
+        50% { transform: rotate(90deg); }
+        100% { transform: rotate(90deg); }
     }
-    
+}
+
+/* 2. MESAZHI I ROTULLIMIT - FILLIMISHT I FSHEHUR */
+.rotate-message {
+    display: none;
+}
+
+/* ==========================================
+   LANDSCAPE - VETËM KUR ËSHTË ANASH
+   ========================================== */
+@media screen and (orientation: landscape) {
+    /* Rregullime bazë */
+    body {
+        overflow: hidden;
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
+    }
+
+    /* Fsheh mesazhin e rotullimit */
+    .rotate-message {
+        display: none !important;
+    }
+
+    #game-table {
+        display: block;
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+
+    /* ==========================================
+       HEADER I SIPËRM (Points & Round)
+       ========================================== */
+    .game-header {
+        position: absolute;
+        top: 5px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 10px;
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    .points-box {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        padding: 4px 12px;
+        border-radius: 20px;
+        border: 1px solid #f1c40f;
+        color: #f1c40f;
+        font-weight: bold;
+        font-size: 14px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .round-box {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        padding: 4px 12px;
+        border-radius: 20px;
+        border: 1px solid #2ecc71;
+        color: #2ecc71;
+        font-weight: bold;
+        font-size: 14px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    /* ==========================================
+       LAYOUT KRYESOR - 3 KOLONA
+       ========================================== */
+    .landscape-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        padding: 40px 5px 80px 5px;
+        gap: 8px;
+    }
+
+    /* KOLONA 1 - Lojtarët (majtas) - 4 LOJTARË */
+    .players-column {
+        flex: 0 0 150px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: transparent;
+        overflow-y: auto;
+        max-height: 100%;
+    }
+
+    .player-card {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        border-radius: 8px;
+        padding: 6px 10px;
+        border-left: 3px solid #f1c40f;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        position: relative;
+    }
+
+    .player-card.you {
+        border-left: 3px solid #2ecc71;
+        background: rgba(46, 204, 113, 0.15);
+    }
+
+    .player-card.eliminated {
+        opacity: 0.5;
+        border-left: 3px solid #ff4d4d;
+    }
+
+    .player-name {
+        font-size: 13px;
+        font-weight: bold;
+        color: #f1c40f;
+        white-space: nowrap;
+    }
+
+    .player-card.you .player-name {
+        color: #2ecc71;
+    }
+
+    .player-stats {
+        font-size: 11px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2px;
+    }
+
+    .player-turn-indicator {
+        position: absolute;
+        top: -8px;
+        right: 5px;
+        background: #2ecc71;
+        color: black;
+        font-size: 8px;
+        font-weight: bold;
+        padding: 2px 8px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        animation: turnPulse 1s infinite;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        z-index: 10;
+    }
+
+    .player-waiting-indicator {
+        position: absolute;
+        top: -8px;
+        right: 5px;
+        background: #f1c40f;
+        color: black;
+        font-size: 8px;
+        font-weight: bold;
+        padding: 2px 8px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        opacity: 0.8;
+        z-index: 10;
+    }
+
+    @keyframes turnPulse {
+        0% { transform: scale(1); background: #2ecc71; }
+        50% { transform: scale(1.05); background: #27ae60; box-shadow: 0 0 10px #2ecc71; }
+        100% { transform: scale(1); background: #2ecc71; }
+    }
+
+    /* KOLONA 2 - Qendra (tavolina) */
+    .center-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        min-width: 200px;
+    }
+
+    .table-area {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(5px);
+        padding: 10px 15px;
+        border-radius: 20px;
+        border: 1px solid rgba(241, 196, 15, 0.3);
+    }
+
+    .deck-wrapper {
+        position: relative;
+        width: 60px;
+        height: 85px;
+    }
+
+    .card-stack {
+        width: 60px;
+        height: 85px;
+        background: linear-gradient(135deg, #444, #111);
+        border: 2px solid #ccc;
+        border-radius: 6px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+
+    #jackpot {
+        width: 60px;
+        height: 85px;
+        background: linear-gradient(135deg, #f1c40f, #f39c12);
+        border: 3px solid white;
+        border-radius: 6px;
+        box-shadow: 0 0 15px gold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 10px;
+        color: black;
+        font-weight: bold;
+    }
+
+    #discard-pile {
+        width: 60px;
+        height: 85px;
+        background: rgba(255,255,255,0.1);
+        border: 2px dashed rgba(255,255,255,0.3);
+        border-radius: 6px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 10px;
+        color: #aaa;
+    }
+
+    /* Tabela e rezultatit - SHUMË E VOGËL */
+    .results-table {
+        width: 100%;
+        max-width: 220px;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        border-radius: 8px;
+        padding: 5px;
+        margin-top: 5px;
+        border: 1px solid #f1c40f;
+        font-size: 9px;
+    }
+
+    .results-table h3 {
+        color: #f1c40f;
+        margin: 0 0 3px 0;
+        font-size: 10px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .results-table table {
+        width: 100%;
+        font-size: 8px;
+        color: white;
+        border-collapse: collapse;
+    }
+
+    .results-table th {
+        color: #f1c40f;
+        padding: 2px;
+        font-size: 7px;
+        font-weight: bold;
+    }
+
+    .results-table td {
+        padding: 2px;
+        text-align: center;
+        border-bottom: 1px solid #333;
+        font-size: 8px;
+    }
+
+    /* KOLONA 3 - Chat (djathtas) */
+    .chat-column {
+        flex: 0 0 130px;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        border-radius: 8px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #f1c40f;
+        max-height: 100%;
+    }
+
+    .chat-header {
+        color: #f1c40f;
+        font-size: 11px;
+        font-weight: bold;
+        padding-bottom: 3px;
+        border-bottom: 1px solid #f1c40f;
+        margin-bottom: 5px;
+        text-align: center;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        font-size: 9px;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        max-height: calc(100% - 50px);
+    }
+
+    .chat-message {
+        padding: 3px 5px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        word-break: break-word;
+    }
+
+    .chat-username {
+        color: #f1c40f;
+        font-weight: bold;
+        margin-right: 3px;
+        font-size: 8px;
+    }
+
+    .chat-text {
+        font-size: 8px;
+    }
+
+    .chat-input-area {
+        display: flex;
+        gap: 3px;
+        margin-top: 5px;
+    }
+
+    .chat-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 12px;
+        padding: 4px 8px;
+        color: white;
+        font-size: 8px;
+        height: 22px;
+    }
+
+    .chat-input::placeholder {
+        color: rgba(255,255,255,0.5);
+        font-size: 7px;
+    }
+
+    .chat-send {
+        background: #f1c40f;
+        border: none;
+        border-radius: 12px;
+        padding: 4px 8px;
+        color: black;
+        font-weight: bold;
+        font-size: 8px;
+        cursor: pointer;
+        height: 22px;
+    }
+
+    /* ==========================================
+       BUTONI I MBYLLJES DHE ASISTENTI
+       ========================================== */
+    .action-area {
+        position: fixed;
+        bottom: 80px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        z-index: 2500;
+        pointer-events: none;
+    }
+
     #asistenti-container {
-        padding: 3px 8px;
-        min-width: auto;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 6px 15px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 2px solid #f1c40f;
+        pointer-events: auto;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
-    
+
+    .led-red, .led-green, .led-yellow, .led-orange {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .led-red { background: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; }
+    .led-green { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; animation: pulse 1s infinite; }
+    .led-yellow { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
+    .led-orange { background: #ffa500; box-shadow: 0 0 10px #ffa500; }
+
+    @keyframes pulse {
+        0% { opacity: 0.7; }
+        50% { opacity: 1; }
+        100% { opacity: 0.7; }
+    }
+
     #status-teksti {
-        font-size: clamp(10px, 2.5vh, 12px);
+        font-size: 12px;
+        color: white;
+        font-weight: bold;
     }
-    
+
     #btn-mbyll {
-        padding: 3px 8px;
-        font-size: clamp(10px, 2.5vh, 12px);
+        background: #27ae60;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-weight: bold;
+        font-size: 13px;
+        cursor: pointer;
+        animation: bounce 1s infinite;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        border: 2px solid #f1c40f;
+        pointer-events: auto;
+        letter-spacing: 1px;
     }
-    
-    #scoreboard-container {
-        font-size: clamp(8px, 2vh, 10px);
-        max-height: 90vh;
-        top: 2px;
-        right: 2px;
+
+    #btn-mbyll:active {
+        transform: scale(0.95);
     }
-    
-    h1 {
+
+    @keyframes bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    /* ==========================================
+       DORA E LOJTARIT (POSHTË)
+       ========================================== */
+    .hand-section {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 5px 0;
+        border-top: 2px solid #f1c40f;
+        z-index: 2000;
+        height: 75px;
+    }
+
+    #player-hand {
+        display: flex;
+        justify-content: center;
+        gap: 1px;
+        overflow-x: auto;
+        padding: 2px 5px;
+        height: 100%;
+        align-items: center;
+    }
+
+    #player-hand .card {
+        flex: 0 0 auto;
+        width: 45px;
+        height: 65px;
+        background: white;
+        border-radius: 5px;
+        border: 1px solid #555;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 4px;
+        font-size: 12px;
+        margin-right: -12px;
+        box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+        color: black;
+        cursor: pointer;
+        transition: transform 0.1s;
+    }
+
+    #player-hand .card:first-child {
+        margin-left: 0;
+    }
+
+    #player-hand .card:active {
+        transform: translateY(-15px) scale(1.1);
+        z-index: 100;
+    }
+
+    #player-hand .card.joker {
+        background: linear-gradient(135deg, #2c3e50, #000);
+        color: #f1c40f !important;
+        border: 2px solid #f1c40f;
+    }
+
+    /* Fshihet display-piket i vjetër */
+    #display-piket {
         display: none;
     }
 }
-
-/* Landscape për ekrane më të mëdha (tablet) */
-@media screen and (orientation: landscape) and (min-height: 500px) and (max-height: 800px) {
-    #player-hand .card {
-        width: 55px;
-        height: 90px;
-    }
-    
-    .deck-wrapper, #jackpot, #discard-pile {
-        width: 65px;
-        height: 95px;
-    }
-}
-
-/* ==========================================
-   10. MY TURN GLOW
-   ========================================== */
-body.my-turn-glow {
-    box-shadow: inset 0 0 min(80px, 10vh) rgba(46, 204, 113, 0.2);
-    animation: borderPulse 2s infinite;
-}
-
-@keyframes borderPulse {
-    0% { border: 4px solid rgba(46, 204, 113, 0.3); }
-    50% { border: 4px solid rgba(46, 204, 113, 0.8); }
-    100% { border: 4px solid rgba(46, 204, 113, 0.3); }
-}
-
-/* ==========================================
-   11. SHFAQJA E LETRAVE FITUESE
-   ========================================== */
-.winner-cards-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 10000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-.winner-cards-content h2 {
-    font-size: clamp(1.5rem, 6vw, 2rem);
-    margin-bottom: 20px;
-    color: gold;
-    text-align: center;
-}
-
-.winner-cards-content #winner-cards-container {
-    display: flex;
-    justify-content: center;
-    gap: clamp(5px, 2vw, 10px);
-    flex-wrap: wrap;
-    margin: 20px 0;
-    padding: 10px;
-}
-
-.winner-cards-content .card {
-    width: clamp(50px, 15vw, 70px);
-    height: clamp(80px, 22vh, 110px);
-    background: white;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-size: clamp(14px, 4vw, 18px);
-    color: black;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-}
-
-.winner-cards-content p {
-    color: white;
-    font-size: clamp(14px, 4vw, 18px);
-    margin-top: 20px;
-}
-
-/* ==========================================
-   12. MODALET
-   ========================================== */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-.modal-content {
-    background: #1a1a1a;
-    padding: clamp(15px, 5vw, 20px);
-    border-radius: 15px;
-    border: 3px solid #f1c40f;
-    max-width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    color: white;
-    width: min(500px, 90vw);
-}
-
-#modal-score-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: clamp(12px, 3.5vw, 14px);
-}
-
-#modal-score-table th {
-    background: #34495e;
-    color: #f1c40f;
-    padding: clamp(6px, 2vw, 10px);
-}
-
-#modal-score-table td {
-    padding: clamp(5px, 1.5vw, 8px);
-    border-bottom: 1px solid #444;
-    text-align: center;
-}
-
-#next-round-timer {
-    font-size: clamp(14px, 4vw, 18px);
-    color: #f1c40f;
-    text-align: center;
-    margin-top: 15px;
-}
-
