@@ -1,10 +1,6 @@
-PO! TANI BĒJMĒ SERVER.JS TĒ PLOTĒ DHE TĒ SINKRONIZUAR! 🚀
-
-```javascript
 // ==========================================
 // ZION 71 - SERVER I PLOTĒ
 // ==========================================
-
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
