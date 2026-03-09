@@ -61,7 +61,7 @@ function createDeck() {
     let newDeck = [];
     let idCounter = 1;
 
-    // 104 letra (2 pako)
+    // 104 letra (2 pako) - PA XHOKERË!
     for (let p = 0; p < 2; p++) {
         for (let s of suits) {
             for (let v of values) {
@@ -74,9 +74,7 @@ function createDeck() {
         }
     }
 
-    // 2 Xhokerë
-    newDeck.push({ v: '★', s: 'Joker', id: `c-${idCounter++}` });
-    newDeck.push({ v: '★', s: 'Joker', id: `c-${idCounter++}` });
+    // 🚫 NUK KA XHOKERË NË DEK!
 
     // Përzierja
     for (let i = newDeck.length - 1; i > 0; i--) {
@@ -84,7 +82,7 @@ function createDeck() {
         [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
     }
 
-    console.log(`🃏 Deku u krijua me ${newDeck.length} letra`);
+    console.log(`🃏 Deku u krijua me ${newDeck.length} letra (pa Xhokerë)`);
     return newDeck;
 }
 
@@ -235,6 +233,7 @@ function isDoraValid(cards) {
 // ==========================================
 // 4. FUNKSIONI PËR TË FILLUAR RAUNDIN E RI
 // ==========================================
+
 function startNewRound() {
     console.log(`\n🎮 ===== RAUNDI ${currentRound} FILLOI =====`);
 
@@ -310,7 +309,6 @@ function startNewRound() {
     // Njofto të gjithë për gjendjen
     broadcastState();
 }
-
 // ==========================================
 // 5. FUNKSIONI PËR TRANSMETIMIN E GJENDJES
 // ==========================================
