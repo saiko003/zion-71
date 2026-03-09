@@ -1,5 +1,5 @@
 /* ==========================================
-   ZION 71 - FULL EKRAN PA SHKRONJA TË SIPËRME
+   ZION 71 - FULL EKRAN 100% PA ASNJĒ RUBRIKĒ
    ========================================== */
 
 /* 1. BAZA DHE RESET - HEQ GJITHÇKA QË MUND TË DALË SIPËR */
@@ -12,8 +12,8 @@
 }
 
 html, body {
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     position: fixed;
     top: 0;
@@ -25,9 +25,11 @@ html, body {
     color: white;
     margin: 0;
     padding: 0;
+    border: 0;
+    outline: 0;
 }
 
-/* 2. LOBBY */
+/* 2. LOBBY - NISJA E LOJĒS */
 #lobby-controls {
     position: fixed;
     top: 0;
@@ -61,7 +63,7 @@ html, body {
     font-weight: bold;
 }
 
-/* 3. GAME TABLE */
+/* 3. GAME TABLE - ZONA E LOJĒS */
 #game-table {
     display: none;
     position: fixed;
@@ -81,478 +83,21 @@ html, body {
 }
 
 /* ==========================================
-   VETËM LANDSCAPE
-   ========================================== */
-@media screen and (orientation: landscape) {
-    /* GAME TABLE */
-    #game-table {
-        display: block;
-    }
-
-    /* HEADER ME POINTS DHE ROUND */
-    .game-header {
-        position: absolute;
-        top: 5px;
-        left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        padding: 0 10px;
-        z-index: 100;
-        pointer-events: none;
-    }
-
-    .points-box, .round-box {
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(5px);
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: bold;
-    }
-
-    .points-box {
-        border: 1px solid #f1c40f;
-        color: #f1c40f;
-    }
-
-    .round-box {
-        border: 1px solid #2ecc71;
-        color: #2ecc71;
-    }
-
-    /* LAYOUT 3 KOLONA */
-    .landscape-container {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        padding: 40px 5px 80px 5px;
-        gap: 8px;
-        background: transparent;
-    }
-
-    /* KOLONA 1 - LOJTARËT */
-    .players-column {
-        flex: 0 0 140px;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        overflow-y: auto;
-        background: transparent;
-        height: 100%;
-    }
-
-    .player-card {
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(5px);
-        border-radius: 8px;
-        padding: 6px 10px;
-        border-left: 3px solid #f1c40f;
-        position: relative;
-    }
-
-    .player-card.you {
-        border-left: 3px solid #2ecc71;
-        background: rgba(46, 204, 113, 0.15);
-    }
-
-    .player-name {
-        font-size: 13px;
-        font-weight: bold;
-        color: #f1c40f;
-    }
-
-    .player-card.you .player-name {
-        color: #2ecc71;
-    }
-
-    .player-stats {
-        font-size: 11px;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        margin-top: 2px;
-    }
-
-    .player-turn-indicator {
-        position: absolute;
-        top: -8px;
-        right: 5px;
-        background: #2ecc71;
-        color: black;
-        font-size: 8px;
-        font-weight: bold;
-        padding: 2px 8px;
-        border-radius: 10px;
-        animation: turnPulse 1s infinite;
-    }
-
-    .player-waiting-indicator {
-        position: absolute;
-        top: -8px;
-        right: 5px;
-        background: #f1c40f;
-        color: black;
-        font-size: 8px;
-        font-weight: bold;
-        padding: 2px 8px;
-        border-radius: 10px;
-    }
-
-    @keyframes turnPulse {
-        0% { transform: scale(1); background: #2ecc71; }
-        50% { transform: scale(1.05); background: #27ae60; box-shadow: 0 0 10px #2ecc71; }
-        100% { transform: scale(1); background: #2ecc71; }
-    }
-
-    /* KOLONA 2 - QENDRA */
-    .center-column {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        background: transparent;
-        height: 100%;
-        justify-content: flex-start;
-    }
-
-    .table-area {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(5px);
-        padding: 10px 15px;
-        border-radius: 20px;
-        border: 1px solid rgba(241, 196, 15, 0.3);
-    }
-
-    .deck-wrapper {
-        width: 60px;
-        height: 85px;
-    }
-
-    .card-stack {
-        width: 60px;
-        height: 85px;
-        background: linear-gradient(135deg, #444, #111);
-        border: 2px solid #ccc;
-        border-radius: 6px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        font-size: 12px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-    }
-
-    #jackpot {
-        width: 60px;
-        height: 85px;
-        background: linear-gradient(135deg, #f1c40f, #f39c12);
-        border: 3px solid white;
-        border-radius: 6px;
-        box-shadow: 0 0 15px gold;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: black;
-        font-weight: bold;
-        font-size: 10px;
-    }
-
-    #discard-pile {
-        width: 60px;
-        height: 85px;
-        background: rgba(255,255,255,0.1);
-        border: 2px dashed rgba(255,255,255,0.3);
-        border-radius: 6px;
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #aaa;
-        font-size: 10px;
-    }
-
-    .discard-cards {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-    }
-
-    .discard-cards .card-mini {
-        position: absolute;
-        width: 85%;
-        height: 85%;
-        background: white;
-        border-radius: 4px;
-        border: 1px solid #555;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 10px;
-        font-weight: bold;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    }
-
-    .discard-cards .card-mini:nth-child(1) { transform: rotate(-5deg) translate(-2px, -2px); z-index: 3; }
-    .discard-cards .card-mini:nth-child(2) { transform: rotate(3deg) translate(3px, 1px); z-index: 2; opacity: 0.9; }
-    .discard-cards .card-mini:nth-child(3) { transform: rotate(-2deg) translate(1px, 3px); z-index: 1; opacity: 0.8; }
-    .discard-cards .card-mini:nth-child(4) { transform: rotate(4deg) translate(-1px, -1px); z-index: 0; opacity: 0.7; }
-    .discard-cards .card-mini:nth-child(5) { transform: rotate(-3deg) translate(2px, 2px); z-index: -1; opacity: 0.6; }
-
-    .discard-cards .card-mini.red { color: #e74c3c; }
-    .discard-cards .card-mini.joker { background: linear-gradient(135deg, #2c3e50, #000); color: #f1c40f; }
-
-    /* TABELA E REZULTATIT */
-    .results-table {
-        width: 100%;
-        max-width: 220px;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(5px);
-        border-radius: 8px;
-        padding: 5px;
-        border: 1px solid #f1c40f;
-        margin-top: 5px;
-    }
-
-    .results-table h3 {
-        color: #f1c40f;
-        font-size: 10px;
-        text-align: center;
-        margin-bottom: 3px;
-    }
-
-    .results-table table {
-        width: 100%;
-        font-size: 8px;
-        color: white;
-        border-collapse: collapse;
-    }
-
-    .results-table th {
-        color: #f1c40f;
-        padding: 2px;
-        font-size: 7px;
-    }
-
-    .results-table td {
-        padding: 2px;
-        text-align: center;
-        border-bottom: 1px solid #333;
-        font-size: 8px;
-    }
-
-    /* KOLONA 3 - CHAT */
-    .chat-column {
-        flex: 0 0 130px;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(5px);
-        border-radius: 8px;
-        padding: 6px;
-        border: 1px solid #f1c40f;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-    .chat-header {
-        color: #f1c40f;
-        font-size: 11px;
-        font-weight: bold;
-        text-align: center;
-        padding-bottom: 3px;
-        border-bottom: 1px solid #f1c40f;
-        margin-bottom: 5px;
-    }
-
-    .chat-messages {
-        flex: 1;
-        overflow-y: auto;
-        font-size: 9px;
-        color: white;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        max-height: calc(100% - 50px);
-    }
-
-    .chat-message {
-        padding: 3px 5px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-    }
-
-    .chat-username {
-        color: #f1c40f;
-        font-weight: bold;
-        margin-right: 3px;
-        font-size: 8px;
-    }
-
-    .chat-input-area {
-        display: flex;
-        gap: 3px;
-        margin-top: 5px;
-    }
-
-    .chat-input {
-        flex: 1;
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        border-radius: 12px;
-        padding: 4px 8px;
-        color: white;
-        font-size: 8px;
-        height: 22px;
-    }
-
-    .chat-send {
-        background: #f1c40f;
-        border: none;
-        border-radius: 12px;
-        padding: 4px 8px;
-        color: black;
-        font-weight: bold;
-        font-size: 8px;
-        cursor: pointer;
-        height: 22px;
-    }
-
-    /* ACTION AREA */
-    .action-area {
-        position: fixed;
-        bottom: 80px;
-        left: 0;
-        right: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 20px;
-        z-index: 2500;
-        pointer-events: none;
-    }
-
-    #asistenti-container {
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(10px);
-        padding: 6px 15px;
-        border-radius: 30px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border: 2px solid #f1c40f;
-        pointer-events: auto;
-    }
-
-    .led-red, .led-green, .led-yellow, .led-orange {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
-
-    .led-red { background: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; }
-    .led-green { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; animation: pulse 1s infinite; }
-    .led-yellow { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
-    .led-orange { background: #ffa500; box-shadow: 0 0 10px #ffa500; }
-
-    @keyframes pulse {
-        0% { opacity: 0.7; }
-        50% { opacity: 1; }
-        100% { opacity: 0.7; }
-    }
-
-    #status-teksti {
-        font-size: 12px;
-        color: white;
-        font-weight: bold;
-    }
-
-    #btn-mbyll {
-        background: #27ae60;
-        color: white;
-        border: none;
-        padding: 8px 20px;
-        border-radius: 30px;
-        font-weight: bold;
-        font-size: 13px;
-        cursor: pointer;
-        animation: bounce 1s infinite;
-        border: 2px solid #f1c40f;
-        pointer-events: auto;
-    }
-
-    @keyframes bounce {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-    }
-
-    /* DORA E LOJTARIT */
-    .hand-section {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(10px);
-        padding: 5px 0;
-        border-top: 2px solid #f1c40f;
-        z-index: 2000;
-        height: 75px;
-    }
-
-    #player-hand {
-        display: flex;
-        justify-content: center;
-        gap: 1px;
-        overflow-x: auto;
-        padding: 2px 5px;
-        height: 100%;
-        align-items: center;
-    }
-
-    #player-hand .card {
-        flex: 0 0 auto;
-        width: 45px;
-        height: 65px;
-        background: white;
-        border-radius: 5px;
-        border: 1px solid #555;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        padding: 4px;
-        font-size: 12px;
-        margin-right: -12px;
-        box-shadow: -2px 0 5px rgba(0,0,0,0.3);
-        color: black;
-        cursor: pointer;
-    }
-
-    #player-hand .card:first-child { margin-left: 0; }
-    #player-hand .card:active { transform: translateY(-15px) scale(1.1); z-index: 100; }
-    #player-hand .card.joker { background: linear-gradient(135deg, #2c3e50, #000); color: #f1c40f !important; border: 2px solid #f1c40f; }
-
-    /* FSHEH ELEMENTET E VJETËR */
-    #display-piket,
-    .center-area {
-        display: none !important;
-    }
-}
-
-/* ==========================================
    PORTRAIT - MESAZH RROTULLIMI
    ========================================== */
 @media screen and (orientation: portrait) {
     #lobby-controls,
-    #game-table {
+    #game-table,
+    .landscape-container,
+    .hand-section,
+    .action-area,
+    .center-area,
+    #player-hand,
+    #scoreboard-container,
+    #asistenti-container,
+    #discard-pile,
+    #deck-zion,
+    #jackpot {
         display: none !important;
     }
 
@@ -597,6 +142,481 @@ html, body {
 }
 
 /* ==========================================
+   LANDSCAPE - FULL EKRAN 100%
+   ========================================== */
+@media screen and (orientation: landscape) {
+    /* GAME TABLE - ZË GJITHĒ HAPËSIRËN */
+    #game-table {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: transparent;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* HEADER I VOGËL (POINTS DHE ROUND) - I VENDOSUR NË KRYE */
+    .game-header {
+        position: absolute;
+        top: 2px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 5px;
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    .points-box, .round-box {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+        padding: 2px 8px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .points-box {
+        border: 1px solid #f1c40f;
+        color: #f1c40f;
+    }
+
+    .round-box {
+        border: 1px solid #2ecc71;
+        color: #2ecc71;
+    }
+
+    /* LAYOUT 3 KOLONA - ZË 100% TË LARTËSISË */
+    .landscape-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        padding: 30px 3px 70px 3px;
+        gap: 5px;
+        background: transparent;
+    }
+
+    /* KOLONA 1 - LOJTARËT */
+    .players-column {
+        flex: 0 0 130px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        overflow-y: auto;
+        background: transparent;
+        height: 100%;
+    }
+
+    .player-card {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+        border-radius: 6px;
+        padding: 4px 8px;
+        border-left: 3px solid #f1c40f;
+        position: relative;
+    }
+
+    .player-card.you {
+        border-left: 3px solid #2ecc71;
+        background: rgba(46, 204, 113, 0.15);
+    }
+
+    .player-name {
+        font-size: 12px;
+        font-weight: bold;
+        color: #f1c40f;
+    }
+
+    .player-card.you .player-name {
+        color: #2ecc71;
+    }
+
+    .player-stats {
+        font-size: 10px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2px;
+    }
+
+    .player-turn-indicator {
+        position: absolute;
+        top: -6px;
+        right: 3px;
+        background: #2ecc71;
+        color: black;
+        font-size: 7px;
+        font-weight: bold;
+        padding: 1px 6px;
+        border-radius: 8px;
+        animation: turnPulse 1s infinite;
+    }
+
+    .player-waiting-indicator {
+        position: absolute;
+        top: -6px;
+        right: 3px;
+        background: #f1c40f;
+        color: black;
+        font-size: 7px;
+        font-weight: bold;
+        padding: 1px 6px;
+        border-radius: 8px;
+    }
+
+    @keyframes turnPulse {
+        0% { transform: scale(1); background: #2ecc71; }
+        50% { transform: scale(1.05); background: #27ae60; box-shadow: 0 0 8px #2ecc71; }
+        100% { transform: scale(1); background: #2ecc71; }
+    }
+
+    /* KOLONA 2 - QENDRA */
+    .center-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        background: transparent;
+        height: 100%;
+        justify-content: flex-start;
+    }
+
+    .table-area {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(5px);
+        padding: 8px 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(241, 196, 15, 0.3);
+    }
+
+    .deck-wrapper {
+        width: 55px;
+        height: 80px;
+    }
+
+    .card-stack {
+        width: 55px;
+        height: 80px;
+        background: linear-gradient(135deg, #444, #111);
+        border: 2px solid #ccc;
+        border-radius: 6px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 11px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+
+    #jackpot {
+        width: 55px;
+        height: 80px;
+        background: linear-gradient(135deg, #f1c40f, #f39c12);
+        border: 3px solid white;
+        border-radius: 6px;
+        box-shadow: 0 0 15px gold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: black;
+        font-weight: bold;
+        font-size: 9px;
+    }
+
+    #discard-pile {
+        width: 55px;
+        height: 80px;
+        background: rgba(255,255,255,0.1);
+        border: 2px dashed rgba(255,255,255,0.3);
+        border-radius: 6px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #aaa;
+        font-size: 9px;
+    }
+
+    .discard-cards {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .discard-cards .card-mini {
+        position: absolute;
+        width: 85%;
+        height: 85%;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #555;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 9px;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .discard-cards .card-mini:nth-child(1) { transform: rotate(-5deg) translate(-2px, -2px); z-index: 3; }
+    .discard-cards .card-mini:nth-child(2) { transform: rotate(3deg) translate(3px, 1px); z-index: 2; opacity: 0.9; }
+    .discard-cards .card-mini:nth-child(3) { transform: rotate(-2deg) translate(1px, 3px); z-index: 1; opacity: 0.8; }
+    .discard-cards .card-mini:nth-child(4) { transform: rotate(4deg) translate(-1px, -1px); z-index: 0; opacity: 0.7; }
+    .discard-cards .card-mini:nth-child(5) { transform: rotate(-3deg) translate(2px, 2px); z-index: -1; opacity: 0.6; }
+
+    .discard-cards .card-mini.red { color: #e74c3c; }
+    .discard-cards .card-mini.joker { background: linear-gradient(135deg, #2c3e50, #000); color: #f1c40f; }
+
+    /* TABELA E REZULTATIT */
+    .results-table {
+        width: 100%;
+        max-width: 200px;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        border-radius: 8px;
+        padding: 4px;
+        border: 1px solid #f1c40f;
+        margin-top: 5px;
+    }
+
+    .results-table h3 {
+        color: #f1c40f;
+        font-size: 9px;
+        text-align: center;
+        margin-bottom: 2px;
+    }
+
+    .results-table table {
+        width: 100%;
+        font-size: 7px;
+        color: white;
+        border-collapse: collapse;
+    }
+
+    .results-table th {
+        color: #f1c40f;
+        padding: 1px;
+        font-size: 6px;
+    }
+
+    .results-table td {
+        padding: 1px;
+        text-align: center;
+        border-bottom: 1px solid #333;
+        font-size: 7px;
+    }
+
+    /* KOLONA 3 - CHAT */
+    .chat-column {
+        flex: 0 0 120px;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        border-radius: 8px;
+        padding: 5px;
+        border: 1px solid #f1c40f;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .chat-header {
+        color: #f1c40f;
+        font-size: 10px;
+        font-weight: bold;
+        text-align: center;
+        padding-bottom: 2px;
+        border-bottom: 1px solid #f1c40f;
+        margin-bottom: 4px;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        font-size: 8px;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        max-height: calc(100% - 45px);
+    }
+
+    .chat-message {
+        padding: 2px 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+
+    .chat-username {
+        color: #f1c40f;
+        font-weight: bold;
+        margin-right: 2px;
+        font-size: 7px;
+    }
+
+    .chat-input-area {
+        display: flex;
+        gap: 2px;
+        margin-top: 4px;
+    }
+
+    .chat-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 10px;
+        padding: 3px 6px;
+        color: white;
+        font-size: 7px;
+        height: 20px;
+    }
+
+    .chat-send {
+        background: #f1c40f;
+        border: none;
+        border-radius: 10px;
+        padding: 3px 6px;
+        color: black;
+        font-weight: bold;
+        font-size: 7px;
+        cursor: pointer;
+        height: 20px;
+    }
+
+    /* ACTION AREA */
+    .action-area {
+        position: fixed;
+        bottom: 75px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        z-index: 2500;
+        pointer-events: none;
+    }
+
+    #asistenti-container {
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 4px 12px;
+        border-radius: 25px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 2px solid #f1c40f;
+        pointer-events: auto;
+    }
+
+    .led-red, .led-green, .led-yellow, .led-orange {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .led-red { background: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; }
+    .led-green { background: #2ecc71; box-shadow: 0 0 12px #2ecc71; animation: pulse 1s infinite; }
+    .led-yellow { background: #f1c40f; box-shadow: 0 0 8px #f1c40f; }
+    .led-orange { background: #ffa500; box-shadow: 0 0 8px #ffa500; }
+
+    @keyframes pulse {
+        0% { opacity: 0.7; }
+        50% { opacity: 1; }
+        100% { opacity: 0.7; }
+    }
+
+    #status-teksti {
+        font-size: 11px;
+        color: white;
+        font-weight: bold;
+    }
+
+    #btn-mbyll {
+        background: #27ae60;
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 12px;
+        cursor: pointer;
+        animation: bounce 1s infinite;
+        border: 2px solid #f1c40f;
+        pointer-events: auto;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    /* DORA E LOJTARIT */
+    .hand-section {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 3px 0;
+        border-top: 2px solid #f1c40f;
+        z-index: 2000;
+        height: 65px;
+    }
+
+    #player-hand {
+        display: flex;
+        justify-content: center;
+        gap: 1px;
+        overflow-x: auto;
+        padding: 2px 3px;
+        height: 100%;
+        align-items: center;
+    }
+
+    #player-hand .card {
+        flex: 0 0 auto;
+        width: 40px;
+        height: 58px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #555;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 3px;
+        font-size: 10px;
+        margin-right: -10px;
+        box-shadow: -2px 0 4px rgba(0,0,0,0.3);
+        color: black;
+        cursor: pointer;
+    }
+
+    #player-hand .card:first-child { margin-left: 0; }
+    #player-hand .card:active { transform: translateY(-12px) scale(1.1); z-index: 100; }
+    #player-hand .card.joker { background: linear-gradient(135deg, #2c3e50, #000); color: #f1c40f !important; border: 2px solid #f1c40f; }
+
+    /* FSHEH ELEMENTET E VJETËR */
+    #display-piket,
+    .center-area {
+        display: none !important;
+    }
+}
+
+/* ==========================================
    MODALET
    ========================================== */
 .modal-overlay {
@@ -612,8 +632,8 @@ html, body {
 
 .modal-content {
     background: #1a1a1a;
-    padding: 20px;
-    border-radius: 15px;
+    padding: 15px;
+    border-radius: 12px;
     border: 3px solid #f1c40f;
     max-width: 90%;
     max-height: 80vh;
@@ -635,33 +655,33 @@ html, body {
 
 .winner-cards-content h2 {
     color: gold;
-    font-size: 2rem;
+    font-size: 1.8rem;
     text-align: center;
 }
 
 /* ==========================================
-   SCOREBOARD I VOGËL (NËSE DUHET)
+   SCOREBOARD I VOGËL
    ========================================== */
 #scoreboard-container {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 5px;
+    right: 5px;
     background: rgba(0, 0, 0, 0.8);
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #f1c40f;
     z-index: 100;
-    font-size: 11px;
-    min-width: 120px;
+    font-size: 9px;
+    min-width: 100px;
 }
 
 #side-score-table {
     width: 100%;
     color: white;
-    font-size: 10px;
+    font-size: 8px;
     border-collapse: collapse;
 }
 
 #side-score-table th {
     color: #f1c40f;
-    padding: 3px;
+    padding: 2px;
 }
