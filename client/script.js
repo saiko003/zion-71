@@ -1239,29 +1239,34 @@ function getHandOrder() {
     }));
 }
 
-window.addEventListener('beforeunload', () => {
-    localStorage.setItem('zion_player_name', myName);
-});
-
 socket.on('initGame', () => {
     console.log("Loja nisi! Po fsheh Lobby-n...");
+    
+    // 🟢 FORCEO background të gjelbër
+    document.body.style.background = "radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%)";
     
     const lobby = document.getElementById('lobby-controls'); 
     const lobbyText = document.getElementById('lobby-text');
     const table = document.getElementById('game-table');
 
+    console.log("Lobby elementi:", lobby);
+    console.log("Table elementi:", table);
+
     if (lobby) {
         lobby.style.display = 'none'; 
         lobby.classList.add('hidden');
+        console.log("✅ Lobby u fsheh");
     } else {
-        console.warn("Elementi 'lobby-controls' nuk u gjet!");
+        console.warn("❌ Elementi 'lobby-controls' nuk u gjet!");
     }
 
+    // 🟢 VETËM NJË HERE!
     if (table) {
         table.style.display = 'block';
         table.classList.remove('hidden');
+        console.log("✅ Table u shfaq");
     } else {
-        console.warn("Elementi 'game-table' nuk u gjet!");
+        console.warn("❌ Elementi 'game-table' nuk u gjet!");
     }
 });
 
