@@ -964,6 +964,7 @@ function processDiscard(cardElement) {
         socket.emit('discardCard', letraObjekt);
 
         const discardZone = document.getElementById('discard-pile');
+        const discardContainer = document.getElementById('discard-cards-container');
         const rect = cardElement.getBoundingClientRect();
         const targetRect = discardZone.getBoundingClientRect();
 
@@ -979,23 +980,34 @@ function processDiscard(cardElement) {
         requestAnimationFrame(() => {
             cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
             cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
-            cardElement.style.transform = "scale(0.3) rotate(30deg)";
+            cardElement.style.transform = "scale(0.5) rotate(10deg)";
             cardElement.style.opacity = "0";
         });
         
         setTimeout(() => {
-            const visualDiscard = document.createElement('div');
-            visualDiscard.className = 'card discarded-static';
-            visualDiscard.innerHTML = cardElement.innerHTML;
-            visualDiscard.style.color = cardElement.style.color;
+            // 🟢 KRIJOJMË NJË KARTELË TË VOGËL PËR T'U PARË NGA TË GJITHË
+            const miniCard = document.createElement('div');
+            miniCard.className = 'card-mini';
             
-            const randomRot = Math.floor(Math.random() * 40) - 20; 
-            visualDiscard.style.transform = `translate(-50%, -50%) rotate(${randomRot}deg)`;
-            
-            if (discardZone.children.length >= 3) {
-                discardZone.removeChild(discardZone.firstChild);
+            if (letraObjekt.v === '★' || letraObjekt.v === 'Xhoker') {
+                miniCard.classList.add('joker');
+                miniCard.innerHTML = '★';
+            } else {
+                miniCard.innerHTML = `${letraObjekt.v}${letraObjekt.s}`;
+                if (['♥', '♦'].includes(letraObjekt.s)) {
+                    miniCard.classList.add('red');
+                }
             }
-            discardZone.appendChild(visualDiscard);
+            
+            // Shtojmë në container
+            if (discardContainer) {
+                discardContainer.appendChild(miniCard);
+                
+                // Mbajmë vetëm 4-5 letrat e fundit
+                while (discardContainer.children.length > 5) {
+                    discardContainer.removeChild(discardContainer.firstChild);
+                }
+            }
 
             if (cardElement.parentNode) cardElement.remove();
             
