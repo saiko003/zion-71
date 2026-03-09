@@ -704,11 +704,11 @@ function shuffle(array) {
     return array;
 }
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`\n🚀 ========================`);
-    console.log(`✅ ZION 71 SERVERI U NIS!`);
-    console.log(`📡 Porta: ${PORT}`);
-    console.log(`🎮 Lojtarët: ${players.length}`);
-    console.log(`===========================\n`);
-});
+//const PORT = process.env.PORT || 3000;
+//server.listen(PORT, () => {
+//    console.log(`\n🚀 ========================`);
+//    console.log(`✅ ZION 71 SERVERI U NIS!`);
+//    console.log(`📡 Porta: ${PORT}`);
+//    console.log(`🎮 Lojtarët: ${players.length}`);
+//    console.log(`===========================\n`);
+// });
