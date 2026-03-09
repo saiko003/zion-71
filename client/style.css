@@ -331,39 +331,6 @@ body {
     transform: scale(1.2);
 }
 
-.victory-zone {
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    width: 90px;
-    height: 130px;
-    background: rgba(46, 204, 113, 0.4);
-    border: 3px solid #2ecc71;
-    border-radius: 10px;
-    z-index: 100;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
-    box-shadow: 0 0 20px #2ecc71;
-    animation: victoryGlow 1s infinite alternate;
-    pointer-events: auto;
-}
-
-@keyframes victoryGlow {
-    from { opacity: 0.6; transform: scale(1); }
-    to { opacity: 1; transform: scale(1.05); }
-}
-
-.victory-zone.over {
-    background: rgba(46, 204, 113, 0.8);
-    transform: scale(1.1);
-    box-shadow: 0 0 40px #2ecc71;
-}
-
 #asistenti-container {
     margin-top: 20px;
     display: flex;
