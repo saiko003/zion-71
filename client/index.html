@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a4a1a">
     <title>ZION 71</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -20,7 +21,7 @@
 <!-- GAME TABLE -->
 <div id="game-table" style="display: none;">
     
-    <!-- Header me Points dhe Round -->
+    <!-- HEADER ME POINTS DHE ROUND -->
     <div class="game-header">
         <div class="points-box" id="display-piket-header">Pikët: <span id="piket-vlera-header">0</span></div>
         <div class="round-box" id="round-display">Raundi: <span id="current-round">1</span>/<span id="max-rounds">10</span></div>
@@ -32,27 +33,36 @@
         <!-- KOLONA 1 - LOJTARËT -->
         <div class="players-column" id="players-column"></div>
 
-        <!-- KOLONA 2 - QENDRA -->
+        <!-- KOLONA 2 - QENDRA (TAVOLINA) -->
         <div class="center-column">
             <div class="table-area">
+                <!-- DECK - ZION -->
                 <div class="deck-wrapper">
                     <div id="deck-zion" class="card-stack">ZION</div>
                 </div>
-                <div id="jackpot" class="card-stack jackpot-card" style="display: none;">JACKPOT</div>
+                
+                <!-- JACKPOT -->
+                <div id="jackpot" class="card-stack jackpot-card" style="display: none;">
+                    <span class="jp-text">JACK</span>
+                    <span class="jp-text">POT</span>
+                </div>
+                
+                <!-- DISCARD - HEDHJE -->
                 <div id="discard-pile" class="drop-zone">
-                    <span class="label">HEDH</span>
+                    <span class="label">DISCARD</span>
                     <div id="discard-cards-container" class="discard-cards"></div>
                 </div>
             </div>
 
-            <!-- Tabela e rezultatit - E VOGËL, KLIKOHET -->
+            <!-- TABELA E REZULTATIT - 3 KOLONA -->
             <div class="results-table" id="results-table-clickable">
                 <h3>TABELA E REZULTATIT</h3>
                 <table id="landscape-score-table">
                     <thead>
                         <tr>
                             <th>Lojtari</th>
-                            <th>Pikët</th>
+                            <th>Raundi Piket</th>
+                            <th>Totali</th>
                         </tr>
                     </thead>
                     <tbody id="landscape-score-body"></tbody>
@@ -71,7 +81,7 @@
         </div>
     </div>
 
-    <!-- Asistenti dhe butoni -->
+    <!-- ASISTENTI DHE BUTONI -->
     <div class="action-area">
         <div id="asistenti-container">
             <div id="status-drita" class="led-red"></div>
@@ -80,33 +90,59 @@
         <button id="btn-mbyll" style="display: none;">MBYLL LOJËN</button>
     </div>
 
-    <!-- Dora e lojtarit -->
+    <!-- DORA E LOJTARIT -->
     <div class="hand-section">
         <div id="player-hand" class="hand-area"></div>
     </div>
 
     <!-- MODAL I MADH PËR TABELËN -->
-    <div id="score-modal" class="modal-overlay" style="display: none;">
+    <div id="score-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>📊 Historiku i Pikëve</h2>
                 <span class="close-button" onclick="toggleScoreboard()">&times;</span>
             </div>
             <div id="modal-score-table-container"></div>
-            <button onclick="toggleScoreboard()">Mbyll</button>
+            <button onclick="toggleScoreboard()" style="margin-top: 20px; padding: 10px 20px; background: #f1c40f; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Mbyll</button>
         </div>
     </div>
 
-    <!-- Modalët e tjerë -->
-    <div id="round-modal" class="modal-overlay" style="display: none;">...</div>
-    <div id="winner-cards-display" class="winner-cards-overlay" style="display: none;">...</div>
+    <!-- MODAL PËR REZULTATET E RAUNDIT -->
+    <div id="round-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>📊 Rezultatet e Raundit</h2>
+            <table id="modal-score-table">
+                <thead>
+                    <tr>
+                        <th>Lojtari</th>
+                        <th>Raundi</th>
+                        <th>Totali</th>
+                        <th>Statusi</th>
+                    </tr>
+                </thead>
+                <tbody id="score-body"></tbody>
+            </table>
+            <div class="modal-footer">
+                <p id="next-round-timer">Raundi i ri nis pas pak...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY PËR LETRAT FITUESE -->
+    <div id="winner-cards-display" class="winner-cards-overlay" style="display: none;">
+        <div class="winner-cards-content">
+            <h2>🏆 LETRAT FITUESE 🏆</h2>
+            <div id="winner-cards-container" class="hand-area"></div>
+            <p>Raundi i ri fillon pas 5 sekondash...</p>
+        </div>
+    </div>
 </div>
 
-<!-- Mesazhi për rotullim -->
+<!-- MESAZHI PËR RROTULLIM -->
 <div class="rotate-message">
     <div class="icon">📱</div>
     <h2>Rrotullo telefonin!</h2>
-    <p>Kjo lojë luhet vetëm në pozicion horizontal</p>
+    <p>Kjo lojë luhet vetëm në pozicion horizontal (landscape)</p>
 </div>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
