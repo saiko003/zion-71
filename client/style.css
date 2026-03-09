@@ -4,15 +4,15 @@
 body {
     margin: 0;
     padding: 0;
-    background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%); /* Ngjyrë tavoline kazinoje */
+    background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden; /* Ndalon scroll-in në iPhone */
+    overflow: hidden;
     height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-   -webkit-user-select: none; /* Safari */
+    -webkit-user-select: none;
     user-select: none; 
     -webkit-tap-highlight-color: transparent;
 }
@@ -41,7 +41,7 @@ body {
     cursor: pointer;
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 }
-/* Efekti që bën dekun të ndriçojë kur është radha për të tërhequr */
+
 .deck-glow {
     box-shadow: 0 0 20px 5px rgba(255, 215, 0, 0.8);
     border: 2px solid gold;
@@ -58,6 +58,7 @@ body {
 #score-modal {
     z-index: 9000; 
 }
+
 #next-round-timer {
     font-size: 1.2rem;
     color: #f1c40f;
@@ -74,6 +75,7 @@ body {
     50% { transform: scale(1.02); opacity: 1; }
     100% { transform: scale(1); opacity: 0.8; }
 }
+
 #scoreboard-container {
     position: absolute;
     top: 10px;
@@ -84,46 +86,49 @@ body {
     font-size: 11px;
     max-height: 180px;
     overflow-y: auto;
-    cursor: pointer; /* E bën me dorë që lojtari ta dijë që klikohet */
+    cursor: pointer;
     border: 1px solid rgba(241, 196, 15, 0.3);
-    z-index: 1000; /* Kjo e nxjerr sipër çdo gjëje tjetër */
+    z-index: 1000;
 }
+
 .modal-overlay {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85); /* E zezë gjysmë-transparente */
-    display: none; /* Fshihet fillimisht */
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 9999 !important;
 }
 
 .modal-content {
-    background-color: #1a1a1a; /* Ngjyrë e errët që të dallohet tabela */
+    background-color: #1a1a1a;
     padding: 20px;
     border-radius: 12px;
-    border: 2px solid #f1c40f; /* Kornizë e verdhë si ZION */
+    border: 2px solid #f1c40f;
     max-width: 90%;
     max-height: 80vh;
-    overflow-y: auto; /* Lejon scroll nëse tabela është e gjatë */
+    overflow-y: auto;
     position: relative;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
+
 #side-score-table {
     width: 100%;
     color: white;
     font-size: 12px;
 }
+
 #modal-score-table-container {
     width: 100%;
     max-height: 60vh; 
-    table-layout: auto;/* Mos lejo që tabela të dalë jashtë ekranit */
-    overflow-y: auto; /* Shto scroll vetëm brenda tabelës */
+    table-layout: auto;
+    overflow-y: auto;
     margin-top: 10px;
-    -webkit-overflow-scrolling: touch; /* Scroll i butë për iPhone */
+    -webkit-overflow-scrolling: touch;
 }
-/* STILI I RI DHE I PASTRUAR PËR TABELËN NË MODAL */
+
 #modal-score-table-container table {
     width: 100% !important;
     border-collapse: collapse;
@@ -136,7 +141,7 @@ body {
 
 #modal-score-table-container th {
     background-color: #34495e;
-    color: #f1c40f; /* Ngjyra e verdhë ZION */
+    color: #f1c40f;
     padding: 12px;
     border-bottom: 2px solid #f1c40f;
     text-align: center;
@@ -151,12 +156,11 @@ body {
     font-size: 0.9em;
 }
 
-/* Kjo detyron historinë (R1, R2...) të shfaqet në modal */
 #modal-score-table-container td, 
 #modal-score-table-container th {
     display: table-cell !important;
 }
-/* Vetëm kjo duhet të mbetet për lojtarin aktual */
+
 .active-row { 
     background: rgba(241, 196, 15, 0.25) !important; 
     border-left: 4px solid #f1c40f !important;
@@ -173,21 +177,18 @@ body {
     background-color: #2c3e50;
     border-radius: 5px;
     border: 2px solid white;
-    /* Pamja e shpinës së letrës */
     background-image: repeating-linear-gradient(45deg, #34495e, #34495e 10px, #2c3e50 10px, #2c3e50 20px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     z-index: 5000;
     pointer-events: none;
 }
 
-/* Lojtarët e eliminuar */
 .eliminated { 
     color: #ff4d4d; 
     text-decoration: line-through; 
-    opacity: 0.6; /* I bëjmë pak më të zbehtë */
+    opacity: 0.6;
 }
 
-/* Stili për fituesin (X) */
 .winner-x {
     color: #2ecc71;
     font-weight: bold;
@@ -195,11 +196,10 @@ body {
     text-shadow: 0 0 5px rgba(46, 204, 113, 0.5);
 }
 
-/* Stili për pikët me Jackpot (!) */
-#.jackpot-points {
-  #  color: #e67e22;
-    font-weight:# bold;
-#}
+.jackpot-points {
+    color: #e67e22;
+    font-weight: bold;
+}
 
 .winner-cell {
     color: #2ecc71 !important;
@@ -207,11 +207,10 @@ body {
     text-shadow: 0 0 5px rgba(46, 204, 113, 0.3);
 }
 
-/* Humbësi me Jackpot ! */
-#.jackpot-cell {
-  #  color: #e74c3c !important;
- #   font-weight: #bold;
-    animation: #flash-red 1s infinite;
+.jackpot-cell {
+    color: #e74c3c !important;
+    font-weight: bold;
+    animation: flash-red 1s infinite;
 }
 
 @keyframes flash-red {
@@ -219,9 +218,7 @@ body {
     50% { opacity: 0.7; }
     100% { opacity: 1; }
 }
-/* ==========================================
-   4. ELEMENTET E LOJËS (Deck, Jackpot, Discard)
-   ========================================== */
+
 .center-area {
     display: flex;
     justify-content: space-around;
@@ -250,6 +247,7 @@ body {
     color: white;
     cursor: pointer;
 }
+
 .active-deck { 
     box-shadow: 0 0 25px #f1c40f !important; 
     border-color: #f1c40f !important;
@@ -261,7 +259,6 @@ body {
     to { transform: scale(1.05); box-shadow: 0 0 30px #f1c40f; }
 }
 
-/* STILI PËR LETRËN QË QËNDRON NË TOKË (DISCARD PILE) */
 .card-on-table {
     width: 65px;
     height: 95px;
@@ -275,35 +272,31 @@ body {
     font-weight: bold;
     box-shadow: 0 4px 8px rgba(0,0,0,0.5);
     pointer-events: none; 
-    
-    /* NDRYSHIMET: */
-    position: absolute;    /* Kjo i lejon JS-it t'i vendosë te 'left: index * 15px' */
-    top: 7px;              /* Që të jetë në mes të kutisë vertikalisht */
-    border: 1px solid #ccc; /* Një kornizë e hollë që të dallohen letrat e bardha mbi njëra-tjetrën */
-    
+    position: absolute;
+    top: 7px;
+    border: 1px solid #ccc;
     animation: dropEffect 0.2s ease-out;
 }
 
-/* Animacioni që ke përmendur (sigurohu ta kesh të shkruar) */
 @keyframes dropEffect {
     0% { transform: scale(1.5); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
+
 #deck-wrapper {
     display: flex !important;
-    flex-direction: row !important; /* Letrat krah për krah */
+    flex-direction: row !important;
     justify-content: center !important;
     align-items: center !important;
     gap: 20px;
     width: 100%;
 }
-/* Rregullojmë zonën ku hidhet letra që të mos ketë tekstin "HEDH KËTU" kur ka letër sipër */
+
 #discard-pile {
-   
     background: rgba(0, 0, 0, 0.2);
     border: 2px dashed rgba(255, 255, 255, 0.3);
     position: relative;
-    width: 80px;  /* Madhësi fikse në vend të min-width 500px */
+    width: 80px;
     height: 120px;
     display: flex;
     justify-content: center;
@@ -311,8 +304,9 @@ body {
     border-radius: 10px;
     overflow: visible;
 }
-   #discard-pile.over {
-    background-color: rgba(255, 255, 0, 0.2); /* Ngjyrë e verdhë e lehtë kur je sipër */
+
+#discard-pile.over {
+    background-color: rgba(255, 255, 0, 0.2);
     border: 2px dashed #ffcc00;
 }
 
@@ -320,16 +314,16 @@ body {
     width: 15px;
     height: 15px;
     border-radius: 50%;
-    background-color: #ffa500; /* Ngjyra portokalli */
+    background-color: #ffa500;
     box-shadow: 0 0 10px #ffa500;
     display: inline-block;
 }
+
 .drop-zone {
     background: rgba(255, 255, 255, 0.1);
     border: 2px dashed #777;
     color: #aaa;
     font-size: 10px;
-    border: 2px dashed #777;
 }
 
 .drop-zone.over {
@@ -341,7 +335,7 @@ body {
     position: absolute;
     top: -5px;
     left: -5px;
-    width: 90px; /* Pak më e madhe se deku */
+    width: 90px;
     height: 130px;
     background: rgba(46, 204, 113, 0.4);
     border: 3px solid #2ecc71;
@@ -356,7 +350,7 @@ body {
     font-weight: bold;
     box-shadow: 0 0 20px #2ecc71;
     animation: victoryGlow 1s infinite alternate;
-    pointer-events: auto; /* Kjo lejon që ta kapë letrën */
+    pointer-events: auto;
 }
 
 @keyframes victoryGlow {
@@ -364,13 +358,12 @@ body {
     to { opacity: 1; transform: scale(1.05); }
 }
 
-/* Kur letra është sipër zonës së mbylljes */
 .victory-zone.over {
     background: rgba(46, 204, 113, 0.8);
     transform: scale(1.1);
     box-shadow: 0 0 40px #2ecc71;
 }
-/* 5. ASISTENTI DHE DRITA LED (Pika 7) */
+
 #asistenti-container {
     margin-top: 20px;
     display: flex;
@@ -387,10 +380,9 @@ body {
 
 @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-/* 6. DORA E LOJTARIT (Pika 18) */
 .hand-area {
     position: fixed;
-    bottom: 20px; /* E ngremë pak më lart nga fundi i ekranit */
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     width: 90vw;
@@ -405,15 +397,15 @@ body {
     backdrop-filter: blur(8px);
     box-shadow: 0 -5px 25px rgba(0,0,0,0.5);
     flex-wrap: nowrap; 
-    pointer-events: auto; /* Sigurohu që është AUTO këtu */
-    gap: 5px; /* Shto pak hapësirë mes letrave nëse margin-left nuk mjafton */
-    padding-left: 30px
+    pointer-events: auto;
+    gap: 5px;
+    padding-left: 30px;
 }
 
-/* Lejon klikimin vetëm te letrat, jo te hapësira boshe e container-it */
 .hand-area .card {
     pointer-events: auto;
 }
+
 .card {
     width: 70px;
     height: 110px;
@@ -421,7 +413,6 @@ body {
     color: black;
     border-radius: 10px;
     border: 1px solid #555;
-    /* Për efektin "lepe-lepe" (shkallë-shkallë) */
     margin-left: -30px; 
     position: relative;
     display: flex;
@@ -434,6 +425,7 @@ body {
     transition: transform 0.2s ease, margin 0.2s ease;
     background-image: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
 }
+
 .card.dragging {
     cursor: grabbing !important;
     opacity: 0.9;
@@ -445,64 +437,31 @@ body {
     left: 0;
     margin: 0 !important; 
     transition: none !important; 
-    pointer-events: none; /* Shumë e rëndësishme për të detektuar stivën poshtë letrës */
-    will-change: transform; /* Optimizim për celular */
-}
-
-/* Stili i zonës së mbylljes mbi dekun */
-.victory-zone {
-    position: absolute;
-    top: -8px;    /* Pak më lart se deku */
-    left: -8px;   /* Pak më anash se deku */
-    width: 96px;  /* Pak më e gjerë se 80px e dekut */
-    height: 126px; /* Pak më e lartë se 110px e dekut */
-    background: rgba(46, 204, 113, 0.5); /* Ngjyrë e gjelbër transparente */
-    border: 3px solid #2ecc71;
-    border-radius: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    color: white;
-    font-weight: bold;
-    font-size: 14px;
-    z-index: 500; /* Mbi dekun */
-    box-shadow: 0 0 25px #2ecc71;
-    animation: pulseVictory 1s infinite alternate;
-    pointer-events: none; /* Në fillim nuk e pengon klikimin e dekut */
-    transition: all 0.3s ease;
-}
-
-/* Kur letra është mbi këtë zonë gjatë tërheqjes */
-.victory-zone.over {
-    background: rgba(46, 204, 113, 0.9);
-    transform: scale(1.1);
-    box-shadow: 0 0 40px #27ae60;
-}
-
-@keyframes pulseVictory {
-    from { opacity: 0.7; transform: scale(1); }
-    to { opacity: 1; transform: scale(1.05); }
+    pointer-events: none;
+    will-change: transform;
 }
 
 body.dragging-active {
     cursor: grabbing !important;
 }
+
 body:has(.dragging) {
     cursor: grabbing !important;
 }
+
 .card:hover {
     transform: translateY(-35px) scale(1.05);
     z-index: 1100;
     box-shadow: 0 10px 20px rgba(0,0,0,0.6);
 }
+
 #jackpot {
     width: 80px;
     height: 120px;
-    background: linear-gradient(135deg, #f1c40f, #f39c12); /* Ngjyrë ari */
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
     border: 3px solid #fff;
     border-radius: 10px;
-    display: none; /* Fshehur fillimisht, JS e shfaq kur duhet */
+    display: none;
     justify-content: center;
     align-items: center;
     cursor: pointer;
@@ -512,30 +471,30 @@ body:has(.dragging) {
 }
 
 #jackpot::after {
-    content: "💰"; /* Një simbol që ta dallojë lojtari */
+    content: "💰";
     font-size: 2rem;
 }
+
 @media screen and (max-width: 600px) {
-  #jackpot {
-        width: 60px !important;  /* Pak më i vogël për telefon */
+    #jackpot {
+        width: 60px !important;
         height: 90px !important;
-        position: relative !important; /* Që të qëndrojë në rresht me Dekun dhe Asistentin */
+        position: relative !important;
         margin: 5px auto !important;
     }
-    /* Prindi kryesor që i mban të gjitha në rresht */
+    
     .center-area {
         position: absolute !important;
-        top: 65px !important; /* Hapësirë nga titulli ZION 71 lart */
+        top: 65px !important;
         left: 0 !important;
         width: 100% !important;
         display: flex !important;
-        flex-direction: column !important; /* I rreshton elementet vertikalisht */
+        flex-direction: column !important;
         align-items: center !important;
-        gap: 20px !important; /* Hapësirë e barabartë mes çdo div-i */
+        gap: 20px !important;
         height: auto !important;
     }
 
-    /* Deku */
     .deck-wrapper {
         position: relative !important;
         width: 70px !important;
@@ -543,7 +502,6 @@ body:has(.dragging) {
         margin: 0 !important;
     }
 
-    /* Asistenti - Tani zë vendin e vet në rresht */
     #asistenti-container {
         position: relative !important;
         width: 90% !important;
@@ -556,7 +514,6 @@ body:has(.dragging) {
         gap: 10px !important;
     }
 
-    /* Zona ku hidhen letrat */
     #discard-pile {
         position: relative !important;
         width: 300px !important;
@@ -567,7 +524,6 @@ body:has(.dragging) {
         align-items: center !important;
     }
 
-    /* Pikët */
     #display-piket {
         position: relative !important;
         margin: 0 !important;
@@ -575,7 +531,6 @@ body:has(.dragging) {
         color: #f1c40f !important;
     }
 
-    /* Dora e lojtarit */
     #player-hand {
         position: fixed !important;
         bottom: 5px !important;
@@ -583,57 +538,50 @@ body:has(.dragging) {
         background: transparent !important;
         z-index: 2000 !important;
     }
-   #player-hand .card {
+    
+    #player-hand .card {
         position: relative !important; 
         top: 0 !important;
         left: 0 !important;
-        transform: none !important; /* Kjo heq "mbetjet" e lëvizjes */
-        margin: 0 -15px !important; /* Për t'i mbledhur pak letrat që të nxënë vend */
+        transform: none !important;
+        margin: 0 -15px !important;
         display: inline-block !important;
         transition: transform 0.2s ease !important;
     }
 
-    /* Lejo lëvizjen vetëm kur letra po tërhiqet realisht */
     #player-hand .card.sortable-drag {
         position: fixed !important; 
-        transform: scale(1.1) translateY(-20px) !important; /* Efekti i ngritjes */
+        transform: scale(1.1) translateY(-20px) !important;
         z-index: 9999 !important;
     }
 
-    /* Shmang hapësirën boshe që mund të krijohet gabimisht */
     .sortable-ghost {
         opacity: 0.3 !important;
         transform: scale(0.9) !important;
     }
 }
-/* ============================================================
-   MODALITETI LANDSCAPE (TELEFONI ANASH)
-   ============================================================ */
+
 @media screen and (max-width: 950px) and (orientation: landscape) {
-    /* 1. Zvogëlojmë titullin dhe scoreboard që të lirojmë hapësirë lart */
     h1 { display: none !important; }
     
     #scoreboard-container {
         transform: scale(0.7) !important;
         top: 5px !important;
-        
         z-index: 3000 !important;
     }
 
-    /* 2. Rregullojmë zonën qendrore si RRESHT (Horizontal) */
     .center-area {
         position: absolute !important;
-        top: 5% !important; /* E ngrejmë pak lart që të mos e mbulojë dora */
+        top: 5% !important;
         left: 0 !important;
         width: 100% !important;
         display: flex !important;
-        flex-direction: row !important; /* Elementet dalin anash njëri-tjetrit */
+        flex-direction: row !important;
         justify-content: center !important;
         align-items: center !important;
-        gap: 40px !important; /* Hapësirë mes Dekut, Asistentit dhe Discard */
+        gap: 40px !important;
     }
 
-    /* 3. Zvogëlojmë Dekun dhe Zonën e Hedhjes */
     .deck-wrapper, #deck-zion {
         width: 50px !important;
         height: 75px !important;
@@ -646,7 +594,6 @@ body:has(.dragging) {
         margin: 0 !important;
     }
 
-    /* 4. Asistenti (Rregullo grupet...) - e bëjmë më të hollë */
     #asistenti-container {
         width: auto !important;
         min-width: 160px !important;
@@ -661,7 +608,6 @@ body:has(.dragging) {
         white-space: nowrap !important;
     }
 
-    /* 5. Pikët në dorë - i zhvendosim në qoshe lart djathtas */
     #display-piket {
         position: fixed !important;
         top: 10px !important;
@@ -671,11 +617,10 @@ body:has(.dragging) {
         z-index: 2500 !important;
     }
 
-    /* 6. DORA E LOJTARIT (Kritike për Landscape) */
     #player-hand {
         position: fixed !important;
-        bottom: 0 !important; /* E ngjisim fiks në fund */
-        height: 80px !important; /* E ulim lartësinë që të mos mbulojë fushën */
+        bottom: 0 !important;
+        height: 80px !important;
         width: 100% !important;
         background: linear-gradient(transparent, rgba(0,0,0,0.4)) !important;
         display: flex !important;
@@ -685,22 +630,22 @@ body:has(.dragging) {
     }
 
     #player-hand .card {
-        width: 45px !important; /* Letra më të vogla në landscape */
+        width: 45px !important;
         height: 70px !important;
-        margin: 0 -10px !important; /* I mbledhim që të nxënë vend */
+        margin: 0 -10px !important;
         font-size: 10px !important;
     }
 
-    /* 7. Heqim hije apo elemente që zënë vend vizualisht */
     .hand-area {
         box-shadow: none !important;
     }
 }
- #player-hand {
+
+#player-hand {
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    transition: all 0.2s ease; /* Kjo i bën letrat të rrëshqasin butë */
+    transition: all 0.2s ease;
     z-index: 1001 !important;
     position: fixed;
     bottom: 20px;
@@ -708,23 +653,21 @@ body:has(.dragging) {
     transform: translateX(-50%);
     width: 100%;
     min-height: 120px;
-    pointer-events: auto; /* Sigurohu që mund t'i prekësh letrat */
+    pointer-events: auto;
 }
    
 .card:first-child {
     margin-left: 0 !important;
 }
+
 .card:active { cursor: grabbing; }
 
-  
-
 body.my-turn-glow {
-    box-shadow: inset 0 0 80px rgba(0, 255, 0, 0.15); /* Dritë më e përhapur */
-    border: 4px solid #00ff00; /* Kufi më i trashë për t'u dukur */
-    transition: all 0.4s ease-in-out; /* Animacion që të mos kërcejë papritur */
+    box-shadow: inset 0 0 80px rgba(0, 255, 0, 0.15);
+    border: 4px solid #00ff00;
+    transition: all 0.4s ease-in-out;
 }
 
-/* Opsionale: Një pulsim i lehtë që lojtari ta kuptojë që po e pret ai */
 @keyframes pulse-green {
     0% { border-color: rgba(0, 255, 0, 0.5); }
     50% { border-color: rgba(0, 255, 0, 1); }
@@ -734,6 +677,7 @@ body.my-turn-glow {
 body.my-turn-glow {
     animation: pulse-green 2s infinite;
 }
+
 #deck-zion {
     order: 2 !important;
     width: 80px;
@@ -755,13 +699,14 @@ body.my-turn-glow {
    
 #deck-zion:hover {
     transform: translateY(-5px);
-    /* Shto këtë rresht që të ruhet shkëlqimi nëse është aktiv */
     box-shadow: 6px 6px 15px rgba(0,0,0,0.6), 0 0 20px currentColor; 
     filter: brightness(1.2);
 }
+
 #deck-zion:active {
-    transform: scale(0.95) !important; /* Mjafton kjo për efektin e shtypjes */
+    transform: scale(0.95) !important;
 }
+
 #status-teksti {
     font-size: 1.5rem;
     font-weight: bold;
@@ -769,6 +714,7 @@ body.my-turn-glow {
     padding: 10px;
     border-radius: 5px;
 }
+
 #btn-mbyll {
     background: #27ae60;
     color: white;
@@ -782,21 +728,18 @@ body.my-turn-glow {
 
 @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
-/* Stili për dritaren e rezultateve që shtuam në HTML */
 #round-modal {
-    display: none; /* JS e bën 'flex' kur mbaron loja */
+    display: none;
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.95);
-    z-index: 10000; /* Sigurohu që është shumë i lartë */
+    z-index: 10000;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    z-index: 10000;
 }
 
-/* Animacion për fituesin */
 #round-winner-text {
     font-size: 3rem;
     text-shadow: 0 0 15px gold;
@@ -808,7 +751,6 @@ body.my-turn-glow {
     to { transform: scale(1.1); }
 }
 
-/* Stilimi i listës së pikëve brenda modal-it */
 #round-results-list p {
     background: rgba(255, 255, 255, 0.1);
     margin: 10px auto;
@@ -828,10 +770,12 @@ body.my-turn-glow {
     color: #f1c40f !important;
     border: 2px solid #f1c40f;
 }
+
 .joker-star {
     font-size: 1.5rem;
     line-height: 1;
 }
+
 body.game-active #lobby-controls {
     display: none !important;
 }
@@ -839,6 +783,7 @@ body.game-active #lobby-controls {
 #game-table {
     display: none;
 }
+
 .pile {
     width: 120px;
     height: 160px;
@@ -862,6 +807,7 @@ body.game-active #lobby-controls {
     margin: 0 5px;
     vertical-align: top;
 }
+
 #score-modal.modal-overlay {
     position: fixed !important;
     top: 0 !important;
@@ -869,10 +815,10 @@ body.game-active #lobby-controls {
     width: 100vw !important;
     height: 100vh !important;
     background: rgba(0, 0, 0, 0.9) !important;
-    display: none; /* Kjo ndryshon nga JS */
+    display: none;
     justify-content: center;
     align-items: center;
-    z-index: 999999 !important; /* Shifra shumë e lartë që të dalë sipër */
+    z-index: 999999 !important;
 }
 
 #score-modal .modal-content {
@@ -883,4 +829,67 @@ body.game-active #lobby-controls {
     min-width: 300px;
     color: white;
     box-shadow: 0 0 30px rgba(0,0,0,1);
+}
+
+/* Stili për shfaqjen e letrave të fituesit (5 sekonda) */
+.winner-cards-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.winner-cards-content {
+    text-align: center;
+    color: gold;
+}
+
+.winner-cards-content h2 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    text-shadow: 0 0 20px gold;
+    animation: glow 1s infinite alternate;
+}
+
+.winner-cards-content .hand-area {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 20px auto;
+    width: 80%;
+    justify-content: center;
+}
+
+.winner-cards-content p {
+    font-size: 1.2rem;
+    color: white;
+    margin-top: 30px;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 10px gold; }
+    to { text-shadow: 0 0 30px gold; }
+}
+
+/* Stili për Jackpot-in */
+.jackpot-card {
+    background: linear-gradient(135deg, #f1c40f, #f39c12) !important;
+    border: 3px solid white !important;
+    box-shadow: 0 0 30px gold !important;
+    animation: jackpot-pulse 1.5s infinite !important;
+}
+
+@keyframes jackpot-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 20px gold; }
+    50% { transform: scale(1.05); box-shadow: 0 0 40px gold; }
+    100% { transform: scale(1); box-shadow: 0 0 20px gold; }
 }
