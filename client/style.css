@@ -1,9 +1,9 @@
-/* ==========================================
-   1. BAZA DHE TAVOLINA
-   ========================================== */
-/* ==========================================
-   1. BAZA DHE TAVOLINA (FIX)
-   ========================================== */
+html, body {
+    background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%) !important;
+    margin: 0;
+    padding: 0;
+}
+
 #game-table {
     display: none; /* Fillimisht i fshehur */
     width: 100%;
@@ -13,6 +13,9 @@
     overflow: hidden;
 }
 
+div:not([class*="card"]):not([class*="modal"]) {
+    background: transparent !important;
+}
 /* Sigurohu që asnjë element tjetër nuk ka background të bardhë */
 .center-area,
 .deck-wrapper,
