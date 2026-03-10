@@ -573,6 +573,10 @@ html, body {
     display: none;
 }
 
+/* ==========================================
+   LETRAT - RREGULLIMI I KAPJES (FIX)
+   ========================================== */
+
 #player-hand .card {
     flex: 0 0 auto;
     width: 75px;
@@ -580,39 +584,73 @@ html, body {
     background: white;
     border-radius: 10px;
     border: 2px solid #333;
+    
+    /* NDRYSHIMET PËR KAPJE MË TË LEHTË */
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 8px 5px;
-    font-size: 22px;
-    font-weight: bold;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0 !important;
     margin-right: -18px;
+    font-size: 24px;
+    font-weight: bold;
+    
+    /* Efektet ekzistuese */
     box-shadow: -5px 0 12px rgba(0,0,0,0.5);
     color: black;
     cursor: pointer;
     transition: transform 0.15s ease;
     position: relative;
+    
+    /* Për touch devices */
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-appearance: none;
+}
+
+/* Bëj që elementet brenda të mos ndërhyjnë në klikim */
+#player-hand .card * {
+    pointer-events: none;
+}
+
+/* Efekti kur klikohet */
+#player-hand .card:active {
+    transform: translateY(-25px) scale(1.15);
+    z-index: 100;
+    transition: transform 0.1s ease;
+    outline: none;
+    box-shadow: 0 15px 25px rgba(0,0,0,0.6);
 }
 
 #player-hand .card:first-child {
     margin-left: 5px;
 }
 
-#player-hand .card:active {
-    transform: translateY(-25px) scale(1.15);
-    z-index: 100;
-    box-shadow: 0 15px 25px rgba(0,0,0,0.6);
-}
-
+/* Rregullimi për Xhoker */
 #player-hand .card.joker {
     background: linear-gradient(135deg, #2c3e50, #000);
     color: #f1c40f !important;
     border: 3px solid #f1c40f;
+    font-size: 32px;
 }
 
-.joker-star {
-    font-size: 32px;
-    line-height: 1;
+/* Sigurohu që placeholder-i nuk bllokon */
+.card-placeholder {
+    pointer-events: none;
+}
+
+/* Për drag & drop */
+#player-hand .card.dragging {
+    opacity: 0.9;
+    transform: scale(1.2) rotate(5deg) !important;
+    z-index: 9999 !important;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.8);
+    transition: none !important;
+    position: fixed !important;
+    margin: 0 !important;
 }
 
 /* ==========================================
