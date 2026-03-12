@@ -2,104 +2,638 @@
 <html lang="sq">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ZION 71 · Mobile</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZION 71 · Demo Lojë</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #1a472a; /* jeshile tavoline */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+        }
+        .table {
+            background: #2a5a3a;
+            width: 1100px;
+            max-width: 100%;
+            border-radius: 60px 60px 30px 30px;
+            box-shadow: inset 0 -4px 10px rgba(0,0,0,0.4), 0 20px 30px rgba(0,0,0,0.6);
+            padding: 24px 20px;
+            border: 12px solid #6b4f3c;
+            position: relative;
+        }
+        .play-area {
+            background: #1e3b2a;
+            border-radius: 40px;
+            padding: 20px 16px;
+            box-shadow: inset 0 0 0 2px #9f7e5e, inset 0 0 15px #0f2f1e;
+        }
+        .center-stuff {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0 40px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .deck-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            filter: drop-shadow(0 8px 6px #00000066);
+        }
+        .stack {
+            position: relative;
+            width: 70px;
+            height: 95px;
+            margin-bottom: 10px;
+        }
+        .stack-card {
+            position: absolute;
+            width: 60px;
+            height: 85px;
+            background: #2b1e10;
+            border: 2px solid #c9a87c;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px black;
+            background-image: radial-gradient(circle at 30% 30%, #493c2c, #0f0b06);
+            top: 0;
+            left: 0;
+        }
+        .stack-card:nth-child(1) { transform: rotate(0deg); left: 2px; top: -2px; }
+        .stack-card:nth-child(2) { transform: rotate(0.8deg); left: 5px; top: -3px; background: #342813; }
+        .stack-card:nth-child(3) { transform: rotate(1.5deg); left: 8px; top: -4px; background: #3e2f1b; }
+        .jackpot-card {
+            width: 60px;
+            height: 85px;
+            background: #e6d8b5;
+            border: 3px solid gold;
+            border-radius: 10px;
+            transform: rotate(90deg);
+            margin: 10px 0 0 20px;
+            box-shadow: 0 0 15px #ffd966, 0 6px 10px black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #b8860b;
+            background: linear-gradient(145deg, #fff2c0, #e5c687);
+        }
+        .jackpot-glow {
+            box-shadow: 0 0 25px 8px #f9e779, 0 0 40px #ffb347;
+            transition: 0.3s;
+        }
+        .info-panel {
+            background: #321f12e0;
+            backdrop-filter: blur(4px);
+            padding: 16px 24px;
+            border-radius: 100px;
+            color: #ffebc0;
+            font-weight: bold;
+            font-size: 1.5rem;
+            border: 2px solid #c5a069;
+            text-shadow: 2px 2px 0 #3f2b16;
+            box-shadow: inset 0 1px 5px #efd29e;
+        }
+        .players-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            margin: 20px 0 10px;
+        }
+        .player-zone {
+            background: #1b4b2b;
+            border-radius: 40px 40px 25px 25px;
+            padding: 16px 12px 20px 12px;
+            box-shadow: inset 0 -3px 0 #b5a07e, 0 5px 0 #2c4f2c;
+            border: 2px solid #b2915d;
+            min-width: 210px;
+            transition: 0.2s;
+        }
+        .player-active {
+            box-shadow: 0 0 0 4px #ffd966, 0 0 0 8px #ffbf0090, 0 5px 0 #2c4f2c;
+            background: #236b39;
+        }
+        .player-name {
+            background: #654321;
+            color: #f9e2b7;
+            padding: 8px 12px;
+            border-radius: 40px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            border: 1px solid #ebc27e;
+            box-shadow: inset 0 1px 4px #ffe3a0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .player-hand {
+            min-height: 100px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            padding: 6px;
+            background: #2c5e3a80;
+            border-radius: 25px;
+            transition: 0.1s;
+        }
+        .card {
+            width: 48px;
+            height: 68px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid black;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: -2px 2px 3px rgba(0,0,0,0.5);
+            transition: 0.1s ease;
+            cursor: pointer;
+            color: #222;
+            position: relative;
+        }
+        .card[data-suit="♥"], .card[data-suit="♦"] { color: #c33; }
+        .card[data-suit="♠"], .card[data-suit="♣"] { color: #111; }
+        .joker-card {
+            background: #f1d28c;
+            border: 2px solid #aa7c4f;
+            color: #5e3a1c;
+            font-size: 26px;
+            line-height: 1;
+        }
+        .card.dragging {
+            opacity: 0.5;
+            transform: scale(1.1);
+        }
+        .discard-pile {
+            background: #2d482e;
+            min-height: 85px;
+            border-radius: 30px;
+            margin: 20px 0 10px;
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 25px;
+            border: 2px dashed #b5915f;
+            box-shadow: inset 0 0 0 3px #6f5438;
+            justify-content: center;
+        }
+        .discard-card {
+            transform: rotate(3deg) scale(0.9);
+            box-shadow: 4px 6px 6px #00000060;
+        }
+        .close-button {
+            background: #27ae60;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            padding: 10px 30px;
+            border-radius: 60px;
+            box-shadow: 0 6px 0 #1e8449, 0 10px 15px black;
+            cursor: pointer;
+            transition: 0.06s linear;
+            margin-top: 20px;
+        }
+        .close-button:active {
+            transform: translateY(5px);
+            box-shadow: 0 2px 0 #1e8449, 0 5px 10px black;
+        }
+        .close-button.glow-green {
+            box-shadow: 0 0 20px #2ecc71, 0 6px 0 #1e8449;
+            animation: pulse 1.2s infinite;
+        }
+        .scoreboard {
+            background: #142d1d;
+            color: #ecd59c;
+            padding: 12px;
+            border-radius: 30px;
+            margin: 20px 0 0;
+            border: 2px solid #be9f6b;
+            font-size: 0.9rem;
+        }
+        .score-row {
+            display: grid;
+            grid-template-columns: 100px repeat(3, 1fr) 70px;
+            gap: 6px;
+            padding: 4px 8px;
+        }
+        .score-header {
+            font-weight: bold;
+            background: #2c451f;
+            border-radius: 20px;
+            padding: 5px;
+        }
+        .eliminated {
+            opacity: 0.3;
+            text-decoration: line-through;
+        }
+        .x-mark {
+            background: #c0392b;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            line-height: 24px;
+            text-align: center;
+            font-weight: bold;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px #2ecc71, 0 6px 0 #1e8449; }
+            50% { box-shadow: 0 0 30px #b0ffb0, 0 6px 0 #1e8449; }
+        }
+        .turn-indicator {
+            background: gold;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+            box-shadow: 0 0 15px yellow;
+        }
+        .footer-note {
+            color: #a3c9a8;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header me informacion -->
-    <div class="game-header">
-        <div class="round-info">
-            <span>Raundi <span id="current-round">1</span>/<span id="max-rounds">10</span></span>
-        </div>
-        <div class="score-toggle" onclick="toggleScoreboard()">
-            <span>🏆</span>
-        </div>
-        <div class="player-status">
-            <span class="led" id="status-drita"></span>
-            <span id="status-teksti">Pret radhën...</span>
-        </div>
-    </div>
+<div class="table">
+    <div class="play-area">
 
-    <!-- Pjesa qendrore: Stiva dhe Jackpot -->
-    <div class="center-area">
-        <!-- Stiva (Deck) -->
-        <div class="deck-container" id="deck-zion">
-            <div class="deck-card"></div>
-            <div class="deck-card"></div>
-            <div class="deck-card"></div>
-            <div class="deck-card"></div>
-            <span class="deck-label">STIVA</span>
-        </div>
-
-        <!-- Jackpot -->
-        <div class="jackpot-container" id="jackpot">
-            <div class="jackpot-card">
-                <span class="v">?</span>
-                <span class="s">★</span>
+        <!-- zona qendrore: stivë, jackpot, pikë -->
+        <div class="center-stuff">
+            <div class="deck-area">
+                <div class="stack" id="stack">
+                    <div class="stack-card"></div>
+                    <div class="stack-card"></div>
+                    <div class="stack-card"></div>
+                    <div class="stack-card" style="background: #5c4a30;"></div>
+                </div>
+                <span style="color:#efdeb0;">stiva</span>
             </div>
-            <span class="jackpot-label">JACKPOT</span>
-        </div>
-    </div>
 
-    <!-- Dora e lojtarit -->
-    <div class="hand-area">
-        <div class="hand-header">
-            <span>Letrat e mia (<span id="card-count">0</span>)</span>
-            <span id="display-piket-header">Pikët: 0</span>
-        </div>
-        <div class="hand-container" id="player-hand"></div>
-    </div>
-
-    <!-- Zona e hedhjes (Discard) -->
-    <div class="discard-area">
-        <div class="discard-header">Letrat e hedhura</div>
-        <div class="discard-pile" id="discard-pile">
-            <div class="discard-cards-container" id="discard-cards-container"></div>
-        </div>
-    </div>
-
-    <!-- Butoni i mbylljes -->
-    <div class="close-button-container">
-        <button class="zion-button" id="btn-mbyll" style="display: none;">MBYLL (ZION)</button>
-    </div>
-
-    <!-- Scoreboard Modal -->
-    <div class="modal" id="score-modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Tabela e Rezultateve</h3>
-                <span class="close-modal" onclick="toggleScoreboard()">×</span>
+            <div class="deck-area">
+                <div class="jackpot-card" id="jackpotCard">?</div>
+                <span style="color:#efdeb0;">jackpot</span>
             </div>
-            <div class="modal-body" id="modal-score-table-container"></div>
-        </div>
-    </div>
 
-    <!-- Winner Cards Modal -->
-    <div class="modal" id="winner-cards-display" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🏆 Letrat Fituese 🏆</h3>
+            <div class="info-panel" id="turnDisplay">
+                Radha: Ardi ◀
             </div>
-            <div class="modal-body" id="winner-cards-container"></div>
         </div>
-    </div>
 
-    <!-- Chat (minimal) -->
-    <div class="chat-container">
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Chat..." maxlength="50">
-            <button id="chat-send">→</button>
+        <!-- 3 lojtarë shembull (për demo) -->
+        <div class="players-row" id="playersRow">
+            <!-- Lojtari 1: Ardi (aktiv) -->
+            <div class="player-zone player-active" id="player0zone">
+                <div class="player-name">
+                    <span>Ardi</span>
+                    <span class="turn-indicator"></span>
+                </div>
+                <div class="player-hand" id="player0hand"></div>
+            </div>
+            <!-- Lojtari 2: Riad (jo aktiv) -->
+            <div class="player-zone" id="player1zone">
+                <div class="player-name">Riad</div>
+                <div class="player-hand" id="player1hand"></div>
+            </div>
+            <!-- Lojtari 3: Vait (jo aktiv) -->
+            <div class="player-zone" id="player2zone">
+                <div class="player-name">Vait</div>
+                <div class="player-hand" id="player2hand"></div>
+            </div>
         </div>
+
+        <!-- zonat e hedhura (discard) -->
+        <div class="discard-pile" id="discardPile">
+            <!-- kartat e hedhura do futen ktu -->
+        </div>
+
+        <!-- butoni i mbylljes (close) -->
+        <div style="display: flex; justify-content: center;">
+            <button class="close-button" id="closeButton" disabled>MBYLL dorën</button>
+        </div>
+
+        <!-- scoreboard kumulativ (demo) -->
+        <div class="scoreboard" id="scoreboard">
+            <div class="score-row score-header">
+                <span>Loja</span><span>R1</span><span>R2</span><span>R3</span><span>Total</span>
+            </div>
+            <div class="score-row" id="scoreArdi">
+                <span>Ardi</span><span>X</span><span>29</span><span>12</span><span>41</span>
+            </div>
+            <div class="score-row" id="scoreRiad">
+                <span>Riad</span><span>15</span><span>X</span><span>7</span><span>22</span>
+            </div>
+            <div class="score-row" id="scoreVait">
+                <span>Vait</span><span>12</span><span>8</span><span>X</span><span>20</span>
+            </div>
+        </div>
+
+        <div class="footer-note">ZION 71 – demo (rregulla: grup/rresht, flush, xhoker 0 pikë)</div>
     </div>
+</div>
 
-    <!-- Hidden elements -->
-    <div id="side-score-table" style="display: none;"></div>
+<script>
+    (function() {
+        // -----------------------------------------------
+        // SIMULIM I LEHTË – nuk është lojë e plotë, por tregon funksionalitet
+        // -----------------------------------------------
 
-    <!-- Socket.io dhe script-et -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <script src="script.js"></script>
+        // Gjendja e lojës
+        let players = [
+            { name: 'Ardi', hand: [], points: 0, eliminated: false, closedThisRound: false },
+            { name: 'Riad', hand: [], points: 0, eliminated: false, closedThisRound: false },
+            { name: 'Vait', hand: [], points: 0, eliminated: false, closedThisRound: false }
+        ];
+        let currentPlayer = 0; // indeksi i lojtarit aktiv
+        let deckCards = [];    // stiva (pack)
+        let discardPile = [];  // letrat e hedhura
+        let jokerInPlay = true; // ka një xhoker në lojë
+        let gameActive = true;
+        let closePossible = false;
+
+        // elementet
+        const playerHands = [
+            document.getElementById('player0hand'),
+            document.getElementById('player1hand'),
+            document.getElementById('player2hand')
+        ];
+        const playerZones = [
+            document.getElementById('player0zone'),
+            document.getElementById('player1zone'),
+            document.getElementById('player2zone')
+        ];
+        const turnDisplay = document.getElementById('turnDisplay');
+        const closeBtn = document.getElementById('closeButton');
+        const jackpotCardDiv = document.getElementById('jackpotCard');
+        const discardDiv = document.getElementById('discardPile');
+
+        // Gjenero disa letra fillestare për secilin lojtar (për demo)
+        function initDemoHands() {
+            // Ardi (disa letra)
+            players[0].hand = [
+                { rank: '7', suit: '♥', id: 'h7' },
+                { rank: '8', suit: '♥', id: 'h8' },
+                { rank: '9', suit: '♥', id: 'h9' },  // rresht i mundshëm
+                { rank: 'K', suit: '♠', id: 'sk' },
+                { rank: 'Q', suit: '♠', id: 'sq' },
+                { rank: 'A', suit: '♣', id: 'ca' },
+                { rank: '2', suit: '♦', id: 'd2' },
+                { rank: '5', suit: '♦', id: 'd5' },
+                { rank: 'JOKER', suit: '⭐', id: 'jok1', joker: true }
+            ];
+            // Riad
+            players[1].hand = [
+                { rank: '10', suit: '♣', id: 'c10' },
+                { rank: 'J', suit: '♣', id: 'cj' },
+                { rank: 'Q', suit: '♣', id: 'cq' },
+                { rank: '3', suit: '♥', id: 'h3' },
+                { rank: '3', suit: '♦', id: 'd3' },
+                { rank: '3', suit: '♠', id: 's3' },
+                { rank: 'A', suit: '♥', id: 'ha' },
+                { rank: '4', suit: '♠', id: 's4' },
+                { rank: '6', suit: '♦', id: 'd6' }
+            ];
+            // Vait
+            players[2].hand = [
+                { rank: 'A', suit: '♠', id: 'sax' },
+                { rank: 'K', suit: '♠', id: 'skx' },
+                { rank: 'Q', suit: '♠', id: 'sqx' },
+                { rank: '2', suit: '♣', id: 'c2x' },
+                { rank: '2', suit: '♦', id: 'd2x' },
+                { rank: '2', suit: '♥', id: 'h2x' },
+                { rank: '9', suit: '♣', id: 'c9x' },
+                { rank: '9', suit: '♦', id: 'd9x' },
+                { rank: 'J', suit: '♦', id: 'djx' }
+            ];
+        }
+        initDemoHands();
+
+        // Krijon paraqitjen e letrave në dorë
+        function renderHands() {
+            for (let i = 0; i < players.length; i++) {
+                if (players[i].eliminated) {
+                    playerHands[i].innerHTML = '<i style="color:#aaa;">eliminuar</i>';
+                    continue;
+                }
+                let html = '';
+                players[i].hand.forEach((card, idx) => {
+                    let isJoker = card.joker || card.rank === 'JOKER';
+                    let classes = 'card' + (isJoker ? ' joker-card' : '');
+                    let symbol = isJoker ? '🃏' : (card.suit + ' ' + card.rank);
+                    let suitAttr = card.suit || '⭐';
+                    html += `<div class="${classes}" data-index="${idx}" data-player="${i}" data-rank="${card.rank}" data-suit="${suitAttr}" draggable="false">${symbol}</div>`;
+                });
+                playerHands[i].innerHTML = html;
+            }
+            // active class
+            playerZones.forEach((z, idx) => {
+                if (idx === currentPlayer && !players[idx].eliminated) {
+                    z.classList.add('player-active');
+                } else {
+                    z.classList.remove('player-active');
+                }
+            });
+            turnDisplay.innerText = `Radha: ${players[currentPlayer].name} ◀`;
+            // nqs lojtari aktual eliminohet, kalo te tjeri (thjesht per demo)
+        }
+
+        // Aktivizo / çaktivizo butonin në bazë kombinimi
+        function checkClosePossibility() {
+            const player = players[currentPlayer];
+            if (!player || player.eliminated) { closeBtn.disabled = true; closeBtn.classList.remove('glow-green'); return; }
+
+            // Simulojmë nëse lojtari ka 10 letra (9+ xhoker) dhe kombinim të mundshëm
+            // Për demo: nëse lojtari ka së paku 3 letra me ngjyrë të kuqe e bëjmë të mundur
+            const hasRed = player.hand.some(c => c.suit === '♥' || c.suit === '♦');
+            const handSize = player.hand.length;
+            if (handSize >= 3 && hasRed) {
+                closeBtn.disabled = false;
+                closeBtn.classList.add('glow-green');
+                closePossible = true;
+            } else {
+                closeBtn.disabled = true;
+                closeBtn.classList.remove('glow-green');
+                closePossible = false;
+            }
+        }
+
+        // Përditësim i jackpot-it (vetëm vizual)
+        function updateJackpot() {
+            if (currentPlayer === 0) { // nqs radha Ardit, ndizet
+                jackpotCardDiv.classList.add('jackpot-glow');
+            } else {
+                jackpotCardDiv.classList.remove('jackpot-glow');
+            }
+        }
+
+        // Hedh letër nga lojtari aktiv (thjesht simulim)
+        function discardFromActive(cardIndex) {
+            const player = players[currentPlayer];
+            if (!player || player.eliminated) return false;
+            if (cardIndex < 0 || cardIndex >= player.hand.length) return false;
+            const card = player.hand[cardIndex];
+            if (card.joker || card.rank === 'JOKER') {
+                alert('Xhokeri nuk hidhet!');
+                return false;
+            }
+            // hiq nga dora dhe shto tek discard
+            player.hand.splice(cardIndex, 1);
+            discardPile.push({...card, discardedBy: currentPlayer});
+            renderDiscard();
+            renderHands();
+
+            // pas hedhjes, kalo radhen (thjesht demo: tek tjetri)
+            nextPlayer();
+            return true;
+        }
+
+        // Merr letër nga stiva (për lojtarin aktiv)
+        function drawFromStack() {
+            const player = players[currentPlayer];
+            if (!player || player.eliminated) return;
+            // shtojmë një letër fake
+            const newCard = { rank: '5', suit: '♣', id: 'c5_' + Date.now() };
+            player.hand.push(newCard);
+            renderHands();
+            checkClosePossibility();
+            // në realitet nuk e kalon radhën menjëherë, por për demo po e kalojmë që të mos ngec
+            nextPlayer(); 
+        }
+
+        // Merr Jackpot (vetëm nëse do të kishte flush)
+        function takeJackpot() {
+            alert('Jackpot merret vetëm si letra e 10-të për flush (demo)');
+            // Në demo e shtojmë një kartë të artë
+            const player = players[currentPlayer];
+            if (player && !player.eliminated) {
+                player.hand.push({ rank: 'A', suit: '⭐', id: 'jp' }); // jackpot special
+                renderHands();
+                nextPlayer();
+            }
+        }
+
+        // Kalo te lojtari tjetër jo i eliminuar
+        function nextPlayer() {
+            if (!gameActive) return;
+            let next = (currentPlayer + 1) % players.length;
+            let tries = 0;
+            while (players[next].eliminated && tries < players.length) {
+                next = (next + 1) % players.length;
+                tries++;
+            }
+            if (players[next].eliminated) {
+                gameActive = false;
+                turnDisplay.innerText = 'LOJA Mbaroi!';
+                return;
+            }
+            currentPlayer = next;
+            renderHands();
+            updateJackpot();
+            checkClosePossibility();
+        }
+
+        // Render zonës së hedhjeve
+        function renderDiscard() {
+            let html = '';
+            discardPile.slice(-8).forEach((c, i) => {
+                let suit = c.suit || '♦';
+                html += `<div class="card discard-card" style="transform: rotate(${i*3-4}deg)">${suit} ${c.rank}</div>`;
+            });
+            discardDiv.innerHTML = html || '<span style="color:#5f734b;">… letrat e hedhura …</span>';
+        }
+
+        // Eventet e klikimit ne letra (per marrje stive/hedhje)
+        function attachCardEvents() {
+            document.querySelectorAll('.card').forEach(cardDiv => {
+                cardDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const playerIdx = parseInt(cardDiv.dataset.player);
+                    const cardIndex = parseInt(cardDiv.dataset.index);
+                    if (isNaN(playerIdx) || isNaN(cardIndex)) return;
+
+                    // vetëm lojtari aktiv mund të veprojë
+                    if (playerIdx !== currentPlayer) {
+                        alert('Prit radhën tënde!');
+                        return;
+                    }
+                    if (players[playerIdx].eliminated) return;
+
+                    // nëse është lojtari aktiv: klikimi në letër do të thotë hedhje
+                    discardFromActive(cardIndex);
+                });
+            });
+        }
+
+        // inicializim
+        function initGame() {
+            renderHands();
+            renderDiscard();
+            updateJackpot();
+            checkClosePossibility();
+
+            // klikim në stivë (marrje letre)
+            document.querySelector('.stack').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!gameActive) return;
+                drawFromStack();
+            });
+
+            // klikim në jackpot
+            jackpotCardDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!gameActive) return;
+                if (currentPlayer === 0) { // vetëm Ardi (për demo) mund të marr jackpot
+                    takeJackpot();
+                } else {
+                    alert('Jackpot mund të merret vetëm kur je në radhë dhe ke 9 letra.');
+                }
+            });
+
+            // butoni mbyll
+            closeBtn.addEventListener('click', () => {
+                if (!closePossible || closeBtn.disabled) {
+                    alert('Nuk mund të mbyllësh tani.');
+                    return;
+                }
+                alert('DORA U MBYLL! ' + players[currentPlayer].name + ' fitoi këtë raund (X)');
+                // thjesht shënojmë dhe kalojmë te tjetri
+                players[currentPlayer].closedThisRound = true;
+                nextPlayer(); // kalon radhën
+                closeBtn.disabled = true;
+                closeBtn.classList.remove('glow-green');
+            });
+
+            // rifresko kur ndryshon dora
+            const observer = new MutationObserver(() => {
+                attachCardEvents();
+            });
+            playerHands.forEach(hand => observer.observe(hand, { childList: true, subtree: true }));
+            attachCardEvents();
+        }
+
+        initGame();
+    })();
+</script>
 </body>
 </html>
