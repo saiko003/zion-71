@@ -1,766 +1,833 @@
-/* ==========================================
-   ZION 71 - STILI I PLOTĒ SI MODELI
-   ========================================== */
-
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    margin: 0;
-    padding: 0;
-}
-
-html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: white;
-}
-
-/* ==========================================
-   LOBBY
-   ========================================== */
-#lobby-controls {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 2000;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    gap: 20px;
-}
-
-#lobby-controls h1 {
-    font-size: 3rem;
-    color: #f1c40f;
-    text-shadow: 0 0 20px gold;
-}
-
-#btn-start {
-    padding: 15px 40px;
-    font-size: 1.5rem;
-    background: #e67e22;
-    border: none;
-    border-radius: 30px;
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-/* ==========================================
-   GAME TABLE
-   ========================================== */
-#game-table {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-}
-
-/* ==========================================
-   HEADER - POINTS DHE ROUND
-   ========================================== */
-.game-header {
-    position: absolute;
-    top: 8px;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 15px;
-    z-index: 100;
-    pointer-events: none;
-}
-
-.points-box, .round-box {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(5px);
-    padding: 8px 22px;
-    border-radius: 30px;
-    font-size: 18px;
-    font-weight: bold;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    border: 2px solid;
-    letter-spacing: 0.5px;
-}
-
-.points-box {
-    border-color: #f1c40f;
-    color: #f1c40f;
-}
-
-.round-box {
-    border-color: #2ecc71;
-    color: #2ecc71;
-}
-
-/* ==========================================
-   LAYOUT 3 KOLONA
-   ========================================== */
-.landscape-container {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    padding: 60px 10px 90px 10px;
-    gap: 15px;
-    background: transparent;
-}
-
-/* ==========================================
-   KOLONA 1 - LOJTARËT
-   ========================================== */
-.players-column {
-    flex: 0 0 180px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 5px;
-    background: transparent;
-    overflow-y: auto;
-}
-
-.player-card {
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    border-radius: 12px;
-    padding: 12px 15px;
-    border-left: 5px solid #f1c40f;
-    position: relative;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-}
-
-.player-card.you {
-    border-left: 5px solid #2ecc71;
-    background: rgba(46, 204, 113, 0.2);
-}
-
-.player-name {
-    font-size: 18px;
-    font-weight: bold;
-    color: #f1c40f;
-    margin-bottom: 5px;
-}
-
-.player-card.you .player-name {
-    color: #2ecc71;
-}
-
-.player-stats {
-    font-size: 16px;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-}
-
-.player-turn-indicator {
-    position: absolute;
-    top: -10px;
-    right: 15px;
-    background: #2ecc71;
-    color: black;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 4px 15px;
-    border-radius: 20px;
-    animation: turnPulse 1.2s infinite;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    text-transform: uppercase;
-}
-
-.player-waiting-indicator {
-    position: absolute;
-    top: -10px;
-    right: 15px;
-    background: #f1c40f;
-    color: black;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 4px 15px;
-    border-radius: 20px;
-    opacity: 0.9;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    text-transform: uppercase;
-}
-
-@keyframes turnPulse {
-    0% { transform: scale(1); background: #2ecc71; }
-    50% { transform: scale(1.08); background: #27ae60; box-shadow: 0 0 15px #2ecc71; }
-    100% { transform: scale(1); background: #2ecc71; }
-}
-
-/* ==========================================
-   KOLONA 2 - QENDRA (TAVOLINA)
-   ========================================== */
-.center-column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    background: transparent;
-    justify-content: flex-start;
-}
-
-.table-area {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px);
-    padding: 15px 25px;
-    border-radius: 30px;
-    border: 1px solid rgba(241, 196, 15, 0.3);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-
-.deck-wrapper, #jackpot, #discard-pile {
-    width: 80px;
-    height: 115px;
-}
-
-.card-stack {
-    width: 80px;
-    height: 115px;
-    background: linear-gradient(135deg, #2c3e50, #1a2632);
-    border: 3px solid #95a5a6;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.6);
-    text-transform: uppercase;
-}
-
-#jackpot {
-    background: linear-gradient(135deg, #f1c40f, #e67e22);
-    border: 3px solid white;
-    box-shadow: 0 0 25px gold;
-    color: black;
-    font-size: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.jp-text {
-    display: block;
-    font-weight: bold;
-}
-
-#discard-pile {
-    background: rgba(255,255,255,0.1);
-    border: 3px dashed rgba(255,255,255,0.4);
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: rgba(255,255,255,0.6);
-    font-size: 14px;
-    font-weight: bold;
-}
-
-/* LETRAT E HEDHURA (mini) */
-.discard-cards {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.discard-cards .card-mini {
-    position: absolute;
-    width: 90%;
-    height: 90%;
-    background: white;
-    border-radius: 6px;
-    border: 2px solid #555;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 16px;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-}
-
-.discard-cards .card-mini:nth-child(1) { transform: rotate(-5deg) translate(-3px, -3px); z-index: 3; }
-.discard-cards .card-mini:nth-child(2) { transform: rotate(4deg) translate(4px, 2px); z-index: 2; opacity: 0.9; }
-.discard-cards .card-mini:nth-child(3) { transform: rotate(-3deg) translate(1px, 4px); z-index: 1; opacity: 0.8; }
-.discard-cards .card-mini:nth-child(4) { transform: rotate(5deg) translate(-2px, 1px); z-index: 0; opacity: 0.7; }
-.discard-cards .card-mini:nth-child(5) { transform: rotate(-4deg) translate(3px, -1px); z-index: -1; opacity: 0.6; }
-
-.discard-cards .card-mini.red { color: #e74c3c; }
-.discard-cards .card-mini.joker { background: linear-gradient(135deg, #2c3e50, #000); color: #f1c40f; }
-
-/* ==========================================
-   TABELA E REZULTATIT - 3 KOLONA SI MODEL
-   ========================================== */
-.results-table {
-    width: 100%;
-    max-width: 320px;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(5px);
-    border-radius: 15px;
-    padding: 12px 15px;
-    border: 2px solid #f1c40f;
-    margin-top: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.4);
-}
-
-.results-table:active {
-    transform: scale(0.98);
-    opacity: 0.9;
-}
-
-.results-table h3 {
-    color: #f1c40f;
-    font-size: 16px;
-    text-align: center;
-    margin: 0 0 12px 0;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.results-table table {
-    width: 100%;
-    font-size: 14px;
-    color: white;
-    border-collapse: collapse;
-}
-
-.results-table th {
-    color: #f1c40f;
-    padding: 8px 5px;
-    font-size: 13px;
-    font-weight: bold;
-    border-bottom: 2px solid #f1c40f;
-}
-
-.results-table td {
-    padding: 6px 5px;
-    text-align: center;
-    border-bottom: 1px solid #444;
-    font-size: 13px;
-}
-
-.results-table tr:last-child td {
-    border-bottom: none;
-}
-
-/* ==========================================
-   KOLONA 3 - CHAT
-   ========================================== */
-.chat-column {
-    flex: 0 0 200px;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    border-radius: 15px;
-    padding: 12px 10px;
-    border: 2px solid #f1c40f;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.4);
-}
-
-.chat-header {
-    color: #f1c40f;
-    font-size: 16px;
-    font-weight: bold;
-    text-align: center;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #f1c40f;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    font-size: 12px;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding-right: 5px;
-    margin-bottom: 10px;
-}
-
-.chat-message {
-    padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    word-break: break-word;
-    border-left: 3px solid #f1c40f;
-}
-
-.chat-username {
-    color: #f1c40f;
-    font-weight: bold;
-    margin-right: 6px;
-    font-size: 11px;
-}
-
-.chat-text {
-    font-size: 11px;
-}
-
-.chat-input-area {
-    display: flex;
-    gap: 5px;
-    margin-top: 5px;
-}
-
-.chat-input {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid #f1c40f;
-    border-radius: 25px;
-    padding: 8px 15px;
-    color: white;
-    font-size: 12px;
-    outline: none;
-}
-
-.chat-input::placeholder {
-    color: rgba(255,255,255,0.5);
-}
-
-.chat-send {
-    background: #f1c40f;
-    border: none;
-    border-radius: 25px;
-    padding: 8px 18px;
-    color: black;
-    font-weight: bold;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.chat-send:active {
-    transform: scale(0.95);
-    background: #e67e22;
-}
-
-/* ==========================================
-   ASISTENTI DHE BUTONI
-   ========================================== */
-.action-area {
-    position: fixed;
-    bottom: 95px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 25px;
-    z-index: 2500;
-    pointer-events: none;
-}
-
-#asistenti-container {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(10px);
-    padding: 8px 20px;
-    border-radius: 40px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border: 2px solid #f1c40f;
-    pointer-events: auto;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-}
-
-.led-red, .led-green, .led-yellow, .led-orange {
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.led-red { background: #ff4d4d; box-shadow: 0 0 12px #ff4d4d; }
-.led-green { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; animation: pulse 1.2s infinite; }
-.led-yellow { background: #f1c40f; box-shadow: 0 0 12px #f1c40f; }
-.led-orange { background: #ffa500; box-shadow: 0 0 12px #ffa500; }
-
-@keyframes pulse {
-    0% { opacity: 0.7; }
-    50% { opacity: 1; transform: scale(1.1); }
-    100% { opacity: 0.7; }
-}
-
-#status-teksti {
-    font-size: 14px;
-    color: white;
-    font-weight: bold;
-}
-
-#btn-mbyll {
-    background: #27ae60;
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 40px;
-    font-weight: bold;
-    font-size: 16px;
-    cursor: pointer;
-    animation: bounce 1.2s infinite;
-    border: 2px solid #f1c40f;
-    pointer-events: auto;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
-}
-
-/* ==========================================
-   DORA E LOJTARIT - LETRA TË MËDHA SI MODEL
-   ========================================== */
-.hand-section {
-    position: fixed;
-    bottom: 5px;
-    left: 0;
-    width: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(10px);
-    padding: 8px 0;
-    border-top: 3px solid #f1c40f;
-    z-index: 2000;
-    height: 120px;
-}
-
-#player-hand {
-    display: flex;
-    justify-content: center;
-    gap: 2px;
-    overflow-x: auto;
-    padding: 5px 15px;
-    height: 100%;
-    align-items: center;
-    scrollbar-width: none;
-}
-
-#player-hand::-webkit-scrollbar {
-    display: none;
-}
-
-/* ==========================================
-   LETRAT - RREGULLIMI I KAPJES (FIX)
-   ========================================== */
-
-#player-hand .card {
-    flex: 0 0 auto;
-    width: 75px;
-    height: 105px;
-    background: white;
-    border-radius: 10px;
-    border: 2px solid #333;
-    
-    /* NDRYSHIMET PËR KAPJE MË TË LEHTË */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 0 !important;
-    margin-right: -18px;
-    font-size: 24px;
-    font-weight: bold;
-    
-    /* Efektet ekzistuese */
-    box-shadow: -5px 0 12px rgba(0,0,0,0.5);
-    color: black;
-    cursor: pointer;
-    transition: transform 0.15s ease;
-    position: relative;
-    
-    /* Për touch devices */
-    touch-action: manipulation;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-appearance: none;
-}
-
-/* Bëj që elementet brenda të mos ndërhyjnë në klikim */
-#player-hand .card * {
-    pointer-events: none;
-}
-
-/* Efekti kur klikohet */
-#player-hand .card:active {
-    transform: translateY(-25px) scale(1.15);
-    z-index: 100;
-    transition: transform 0.1s ease;
-    outline: none;
-    box-shadow: 0 15px 25px rgba(0,0,0,0.6);
-}
-
-#player-hand .card:first-child {
-    margin-left: 5px;
-}
-
-/* Rregullimi për Xhoker */
-#player-hand .card.joker {
-    background: linear-gradient(135deg, #2c3e50, #000);
-    color: #f1c40f !important;
-    border: 3px solid #f1c40f;
-    font-size: 32px;
-}
-
-/* Sigurohu që placeholder-i nuk bllokon */
-.card-placeholder {
-    pointer-events: none;
-}
-
-/* Për drag & drop */
-#player-hand .card.dragging {
-    opacity: 0.9;
-    transform: scale(1.2) rotate(5deg) !important;
-    z-index: 9999 !important;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.8);
-    transition: none !important;
-    position: fixed !important;
-    margin: 0 !important;
-}
-
-/* ==========================================
-   MODALET
-   ========================================== */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-.modal-content {
-    background: #1a1a1a;
-    padding: 25px;
-    border-radius: 20px;
-    border: 3px solid #f1c40f;
-    max-width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    color: white;
-    box-shadow: 0 0 30px rgba(241,196,15,0.3);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #f1c40f;
-    padding-bottom: 10px;
-}
-
-.close-button {
-    font-size: 30px;
-    cursor: pointer;
-    color: #f1c40f;
-}
-
-.winner-cards-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 10000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-.winner-cards-content h2 {
-    color: gold;
-    font-size: 2rem;
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-/* ==========================================
-   PORTRAIT - MESAZH RROTULLIMI
-   ========================================== */
-@media screen and (orientation: portrait) {
-    #lobby-controls, #game-table {
-        display: none !important;
-    }
-
-    .rotate-message {
-        display: flex !important;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        text-align: center;
-        z-index: 999999;
-    }
-
-    .rotate-message .icon {
-        font-size: 100px;
-        margin-bottom: 20px;
-        animation: rotatePhone 2s infinite;
-    }
-
-    .rotate-message h2 {
-        font-size: 32px;
-        color: #f1c40f;
-        margin-bottom: 15px;
-    }
-
-    .rotate-message p {
-        font-size: 20px;
-        color: white;
-        max-width: 80%;
-    }
-
-    @keyframes rotatePhone {
-        0% { transform: rotate(0deg); }
-        50% { transform: rotate(90deg); }
-        100% { transform: rotate(90deg); }
-    }
-}
-
-.rotate-message {
-    display: none;
-}
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZION 71 - Tabela e Lojës</title>
+    <style>
+        /* ==========================================
+           ZION 71 - STILI I PLOTË SI MODELI
+           ========================================== */
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        /* ==========================================
+           GAME TABLE
+           ========================================== */
+        #game-table {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+
+        /* ==========================================
+           HEADER - POINTS DHE ROUND
+           ========================================== */
+        .game-header {
+            position: absolute;
+            top: 8px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .points-box, .round-box {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            padding: 8px 22px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 2px solid;
+            letter-spacing: 0.5px;
+        }
+
+        .points-box {
+            border-color: #f1c40f;
+            color: #f1c40f;
+        }
+
+        .round-box {
+            border-color: #2ecc71;
+            color: #2ecc71;
+        }
+
+        /* ==========================================
+           LAYOUT 3 KOLONA
+           ========================================== */
+        .landscape-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            padding: 60px 10px 90px 10px;
+            gap: 15px;
+            background: transparent;
+        }
+
+        /* ==========================================
+           KOLONA 1 - LOJTARËT
+           ========================================== */
+        .players-column {
+            flex: 0 0 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 5px;
+            background: transparent;
+            overflow-y: auto;
+        }
+
+        .player-card {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 12px;
+            padding: 12px 15px;
+            border-left: 5px solid #f1c40f;
+            position: relative;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .player-card.you {
+            border-left: 5px solid #2ecc71;
+            background: rgba(46, 204, 113, 0.2);
+        }
+
+        .player-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 5px;
+        }
+
+        .player-card.you .player-name {
+            color: #2ecc71;
+        }
+
+        .player-stats {
+            font-size: 16px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .player-turn-indicator {
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            background: #2ecc71;
+            color: black;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 15px;
+            border-radius: 20px;
+            animation: turnPulse 1.2s infinite;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+        }
+
+        .player-waiting-indicator {
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            background: #f1c40f;
+            color: black;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 15px;
+            border-radius: 20px;
+            opacity: 0.9;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+        }
+
+        @keyframes turnPulse {
+            0% { transform: scale(1); background: #2ecc71; }
+            50% { transform: scale(1.08); background: #27ae60; box-shadow: 0 0 15px #2ecc71; }
+            100% { transform: scale(1); background: #2ecc71; }
+        }
+
+        /* ==========================================
+           KOLONA 2 - QENDRA (TAVOLINA)
+           ========================================== */
+        .center-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background: transparent;
+            justify-content: flex-start;
+        }
+
+        .table-area {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            padding: 15px 25px;
+            border-radius: 30px;
+            border: 1px solid rgba(241, 196, 15, 0.3);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .deck-wrapper, #jackpot, #discard-pile {
+            width: 80px;
+            height: 115px;
+        }
+
+        .card-stack {
+            width: 80px;
+            height: 115px;
+            background: linear-gradient(135deg, #2c3e50, #1a2632);
+            border: 3px solid #95a5a6;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.6);
+            text-transform: uppercase;
+        }
+
+        #jackpot {
+            background: linear-gradient(135deg, #f1c40f, #e67e22);
+            border: 3px solid white;
+            box-shadow: 0 0 25px gold;
+            color: black;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .jp-text {
+            display: block;
+            font-weight: bold;
+        }
+
+        #discard-pile {
+            background: rgba(255,255,255,0.1);
+            border: 3px dashed rgba(255,255,255,0.4);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* LETRAT E HEDHURA */
+        .discard-cards {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .discard-cards .card-mini {
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            background: white;
+            border-radius: 6px;
+            border: 2px solid #555;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .discard-cards .card-mini:nth-child(1) { transform: rotate(-5deg) translate(-3px, -3px); z-index: 3; }
+        .discard-cards .card-mini:nth-child(2) { transform: rotate(4deg) translate(4px, 2px); z-index: 2; opacity: 0.9; }
+        .discard-cards .card-mini:nth-child(3) { transform: rotate(-3deg) translate(1px, 4px); z-index: 1; opacity: 0.8; }
+
+        .discard-cards .card-mini.red { color: #e74c3c; }
+        .discard-cards .card-mini.joker { background: linear-gradient(135deg, #2c3e50, #000); color: #f1c40f; }
+
+        /* ==========================================
+           TABELA E PIKËVE - 3 KOLONA SI MODEL
+           ========================================== */
+        .results-table {
+            width: 100%;
+            max-width: 320px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            padding: 12px 15px;
+            border: 2px solid #f1c40f;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+        }
+
+        .results-table:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .results-table h3 {
+            color: #f1c40f;
+            font-size: 16px;
+            text-align: center;
+            margin: 0 0 12px 0;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .results-table table {
+            width: 100%;
+            font-size: 14px;
+            color: white;
+            border-collapse: collapse;
+        }
+
+        .results-table th {
+            color: #f1c40f;
+            padding: 8px 5px;
+            font-size: 13px;
+            font-weight: bold;
+            border-bottom: 2px solid #f1c40f;
+        }
+
+        .results-table td {
+            padding: 6px 5px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+            font-size: 13px;
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ==========================================
+           KOLONA 3 - CHAT
+           ========================================== */
+        .chat-column {
+            flex: 0 0 200px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 15px;
+            padding: 12px 10px;
+            border: 2px solid #f1c40f;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+        }
+
+        .chat-header {
+            color: #f1c40f;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f1c40f;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 12px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 5px;
+            margin-bottom: 10px;
+        }
+
+        .chat-message {
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            word-break: break-word;
+            border-left: 3px solid #f1c40f;
+        }
+
+        .chat-username {
+            color: #f1c40f;
+            font-weight: bold;
+            margin-right: 6px;
+            font-size: 11px;
+        }
+
+        .chat-text {
+            font-size: 11px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid #f1c40f;
+            border-radius: 25px;
+            padding: 8px 15px;
+            color: white;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .chat-input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .chat-send {
+            background: #f1c40f;
+            border: none;
+            border-radius: 25px;
+            padding: 8px 18px;
+            color: black;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-send:active {
+            transform: scale(0.95);
+            background: #e67e22;
+        }
+
+        /* ==========================================
+           ASISTENTI DHE BUTONI
+           ========================================== */
+        .action-area {
+            position: fixed;
+            bottom: 95px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            z-index: 2500;
+            pointer-events: none;
+        }
+
+        #asistenti-container {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 8px 20px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid #f1c40f;
+            pointer-events: auto;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+
+        .led-red, .led-green, .led-yellow, .led-orange {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .led-red { background: #ff4d4d; box-shadow: 0 0 12px #ff4d4d; }
+        .led-green { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; animation: pulse 1.2s infinite; }
+        .led-yellow { background: #f1c40f; box-shadow: 0 0 12px #f1c40f; }
+        .led-orange { background: #ffa500; box-shadow: 0 0 12px #ffa500; }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0.7; }
+        }
+
+        #status-teksti {
+            font-size: 14px;
+            color: white;
+            font-weight: bold;
+        }
+
+        #btn-mbyll {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            animation: bounce 1.2s infinite;
+            border: 2px solid #f1c40f;
+            pointer-events: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        /* ==========================================
+           DORA E LOJTARIT
+           ========================================== */
+        .hand-section {
+            position: fixed;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 8px 0;
+            border-top: 3px solid #f1c40f;
+            z-index: 2000;
+            height: 120px;
+        }
+
+        #player-hand {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            overflow-x: auto;
+            padding: 5px 15px;
+            height: 100%;
+            align-items: center;
+            scrollbar-width: none;
+        }
+
+        #player-hand::-webkit-scrollbar {
+            display: none;
+        }
+
+        #player-hand .card {
+            flex: 0 0 auto;
+            width: 75px;
+            height: 105px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0;
+            margin-right: -18px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: -5px 0 12px rgba(0,0,0,0.5);
+            color: black;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        #player-hand .card:active {
+            transform: translateY(-25px) scale(1.15);
+            z-index: 100;
+            transition: transform 0.1s ease;
+        }
+
+        #player-hand .card.joker {
+            background: linear-gradient(135deg, #2c3e50, #000);
+            color: #f1c40f !important;
+            border: 3px solid #f1c40f;
+            font-size: 32px;
+        }
+
+        /* ==========================================
+           PORTRAIT - MESAZH RROTULLIMI
+           ========================================== */
+        @media screen and (orientation: portrait) {
+            #game-table {
+                display: none !important;
+            }
+
+            .rotate-message {
+                display: flex !important;
+            }
+        }
+
+        .rotate-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 999999;
+        }
+
+        .rotate-message .icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            animation: rotatePhone 2s infinite;
+        }
+
+        .rotate-message h2 {
+            font-size: 32px;
+            color: #f1c40f;
+            margin-bottom: 15px;
+        }
+
+        .rotate-message p {
+            font-size: 20px;
+            color: white;
+            max-width: 80%;
+        }
+
+        @keyframes rotatePhone {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+            100% { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mesazhi për portrait mode -->
+    <div class="rotate-message">
+        <div class="icon">🔄</div>
+        <h2>Rrotullo telefonin</h2>
+        <p>Kjo lojë funksionon vetëm në pozicion horizontal (landscape)</p>
+    </div>
+
+    <!-- Tabela e lojës -->
+    <div id="game-table">
+        <!-- Header me pikë dhe round -->
+        <div class="game-header">
+            <div class="points-box">PIKET AKTUALE: 1,450</div>
+            <div class="round-box">ROUND: 4/10</div>
+        </div>
+
+        <!-- 3 kolonat kryesore -->
+        <div class="landscape-container">
+            <!-- Kolona 1: Lojtarët -->
+            <div class="players-column">
+                <!-- Player 1 -->
+                <div class="player-card">
+                    <div class="player-turn-indicator">YOUR TURN</div>
+                    <div class="player-name">PLAYER1</div>
+                    <div class="player-stats">
+                        <span>1,200</span>
+                        <span>🏆 3</span>
+                    </div>
+                </div>
+                
+                <!-- Player 2 -->
+                <div class="player-card">
+                    <div class="player-name">PLAYER2</div>
+                    <div class="player-stats">
+                        <span>980</span>
+                        <span>🏆 1</span>
+                    </div>
+                </div>
+                
+                <!-- Player 3 - ti -->
+                <div class="player-card you">
+                    <div class="player-waiting-indicator">WAITING</div>
+                    <div class="player-name">PLAYER3 (TI)</div>
+                    <div class="player-stats">
+                        <span>1,450</span>
+                        <span>🏆 2</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kolona 2: Qendra (Tavolina) -->
+            <div class="center-column">
+                <div class="table-area">
+                    <!-- Kuverta -->
+                    <div class="deck-wrapper">
+                        <div class="card-stack">DECK</div>
+                    </div>
+                    
+                    <!-- Jackpot -->
+                    <div id="jackpot" class="card-stack">
+                        <span class="jp-text">JACKPOT</span>
+                        <span class="jp-text">🎰</span>
+                    </div>
+                    
+                    <!-- Grumbulli i hedhur -->
+                    <div id="discard-pile">
+                        DISCARD
+                        <div class="discard-cards">
+                            <div class="card-mini">K♠</div>
+                            <div class="card-mini red">Q♥</div>
+                            <div class="card-mini">A♣</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela e pikëve (si në screenshot) -->
+                <div class="results-table">
+                    <h3>PIKET AKTUALE</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>PLAYER</th>
+                                <th>PIKËT</th>
+                                <th>RR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>PLAYER1</td>
+                                <td>1,200</td>
+                                <td>3</td>
+                            </tr>
+                            <tr>
+                                <td>PLAYER2</td>
+                                <td>980</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>PLAYER3</td>
+                                <td>1,450</td>
+                                <td>2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Kolona 3: Chat -->
+            <div class="chat-column">
+                <div class="chat-header">CHAT</div>
+                <div class="chat-messages">
+                    <div class="chat-message">
+                        <span class="chat-username">User123:</span>
+                        <span class="chat-text">Nice hand!</span>
+                    </div>
+                    <div class="chat-message">
+                        <span class="chat-username">User456:</span>
+                        <span class="chat-text">GG</span>
+                    </div>
+                    <div class="chat-message">
+                        <span class="chat-username">User123:</span>
+                        <span class="chat-text">Youguets treatonhand?</span>
+                    </div>
+                    <div class="chat-message">
+                        <span class="chat-username">User156:</span>
+                        <span class="chat-text">Wereat game.</span>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" placeholder="Shkruaj...">
+                    <button class="chat-send">→</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Asistenti dhe butoni -->
+        <div class="action-area">
+            <div id="asistenti-container">
+                <div class="led-green"></div>
+                <span id="status-teksti">ASISTENTI: Zgjidh letrën</span>
+            </div>
+            <button id="btn-mbyll">MBYLL</button>
+        </div>
+
+        <!-- Dora e lojtarit -->
+        <div class="hand-section">
+            <div id="player-hand">
+                <div class="card">10♠</div>
+                <div class="card">J♦</div>
+                <div class="card">Q♥</div>
+                <div class="card">K♣</div>
+                <div class="card">A♠</div>
+                <div class="card">8♦</div>
+                <div class="card">3♠</div>
+                <div class="card">J♣</div>
+                <div class="card">J♠</div>
+                <div class="card">K♥</div>
+                <div class="card">A♣</div>
+                <div class="card">10♦</div>
+                <div class="card">3♠</div>
+                <div class="card">J♦</div>
+                <div class="card joker">🃏</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Për t'i bërë letrat klikueshe dhe për të simuluar efektin
+        document.querySelectorAll('#player-hand .card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.transform = 'translateY(-25px) scale(1.15)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
+            });
+        });
+
+        // Për butonin e dërgimit në chat
+        document.querySelector('.chat-send').addEventListener('click', function() {
+            const input = document.querySelector('.chat-input');
+            if (input.value.trim() !== '') {
+                const messagesDiv = document.querySelector('.chat-messages');
+                const newMessage = document.createElement('div');
+                newMessage.className = 'chat-message';
+                newMessage.innerHTML = `<span class="chat-username">Ti:</span> <span class="chat-text">${input.value}</span>`;
+                messagesDiv.appendChild(newMessage);
+                input.value = '';
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        });
+
+        // Enter për dërgim në chat
+        document.querySelector('.chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.querySelector('.chat-send').click();
+            }
+        });
+    </script>
+</body>
+</html>
