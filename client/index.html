@@ -31,7 +31,35 @@
     <div class="landscape-container">
         
         <!-- KOLONA 1 - LOJTARËT -->
-        <div class="players-column" id="players-column"></div>
+        <div class="players-column" id="players-column">
+            <!-- Player 1 - Ka radhën -->
+            <div class="player-card turn" id="player-1">
+                <div class="turn-indicator">🔴 RADHA E PLAYER1</div>
+                <div class="player-name">PLAYER1</div>
+                <div class="player-stats">
+                    <span>1,200</span>
+                    <span>🏆 3</span>
+                </div>
+            </div>
+            
+            <!-- Player 2 -->
+            <div class="player-card" id="player-2">
+                <div class="player-name">PLAYER2</div>
+                <div class="player-stats">
+                    <span>980</span>
+                    <span>🏆 1</span>
+                </div>
+            </div>
+            
+            <!-- Player 3 - Ti -->
+            <div class="player-card you" id="player-3">
+                <div class="player-name">PLAYER3 (TI)</div>
+                <div class="player-stats">
+                    <span>1,450</span>
+                    <span>🏆 2</span>
+                </div>
+            </div>
+        </div>
 
         <!-- KOLONA 2 - QENDRA (TAVOLINA) -->
         <div class="center-column">
@@ -42,7 +70,7 @@
                 </div>
                 
                 <!-- JACKPOT -->
-                <div id="jackpot" class="card-stack jackpot-card" style="display: none;">
+                <div id="jackpot" class="card-stack jackpot-card" style="display: block;">
                     <span class="jp-text">JACK</span>
                     <span class="jp-text">POT</span>
                 </div>
@@ -50,7 +78,11 @@
                 <!-- DISCARD - HEDHJE -->
                 <div id="discard-pile" class="drop-zone">
                     <span class="label">DISCARD</span>
-                    <div id="discard-cards-container" class="discard-cards"></div>
+                    <div id="discard-cards-container" class="discard-cards">
+                        <div class="card-mini">K♠</div>
+                        <div class="card-mini red">Q♥</div>
+                        <div class="card-mini">A♣</div>
+                    </div>
                 </div>
             </div>
 
@@ -61,11 +93,27 @@
                     <thead>
                         <tr>
                             <th>Lojtari</th>
-                            <th>Raundi Piket</th>
+                            <th>Raundi</th>
                             <th>Totali</th>
                         </tr>
                     </thead>
-                    <tbody id="landscape-score-body"></tbody>
+                    <tbody id="landscape-score-body">
+                        <tr>
+                            <td>PLAYER1</td>
+                            <td>1,200</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td>PLAYER2</td>
+                            <td>980</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td>PLAYER3</td>
+                            <td>1,450</td>
+                            <td>2</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -73,7 +121,20 @@
         <!-- KOLONA 3 - CHAT -->
         <div class="chat-column">
             <div class="chat-header">CHAT</div>
-            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-message">
+                    <span class="chat-username">User123:</span>
+                    <span class="chat-text">Nice hand!</span>
+                </div>
+                <div class="chat-message">
+                    <span class="chat-username">User456:</span>
+                    <span class="chat-text">GG</span>
+                </div>
+                <div class="chat-message">
+                    <span class="chat-username">User123:</span>
+                    <span class="chat-text">Po luajm?</span>
+                </div>
+            </div>
             <div class="chat-input-area">
                 <input type="text" class="chat-input" id="chat-input" placeholder="Shkruaj...">
                 <button class="chat-send" id="chat-send">Dërgo</button>
@@ -84,15 +145,31 @@
     <!-- ASISTENTI DHE BUTONI -->
     <div class="action-area">
         <div id="asistenti-container">
-            <div id="status-drita" class="led-red"></div>
-            <span id="status-teksti">Duke pritur...</span>
+            <div id="status-drita" class="led-green"></div>
+            <span id="status-teksti">ASISTENTI: Zgjidh letrën</span>
         </div>
         <button id="btn-mbyll" style="display: none;">MBYLL LOJËN</button>
     </div>
 
     <!-- DORA E LOJTARIT -->
     <div class="hand-section">
-        <div id="player-hand" class="hand-area"></div>
+        <div id="player-hand" class="hand-area">
+            <div class="card">10♠</div>
+            <div class="card">J♦</div>
+            <div class="card">Q♥</div>
+            <div class="card">K♣</div>
+            <div class="card">A♠</div>
+            <div class="card">8♦</div>
+            <div class="card">3♠</div>
+            <div class="card">J♣</div>
+            <div class="card">J♠</div>
+            <div class="card">K♥</div>
+            <div class="card">A♣</div>
+            <div class="card">10♦</div>
+            <div class="card">3♠</div>
+            <div class="card">J♦</div>
+            <div class="card joker">🃏</div>
+        </div>
     </div>
 
     <!-- MODAL I MADH PËR TABELËN -->
@@ -102,7 +179,14 @@
                 <h2>📊 Historiku i Pikëve</h2>
                 <span class="close-button" onclick="toggleScoreboard()">&times;</span>
             </div>
-            <div id="modal-score-table-container"></div>
+            <div id="modal-score-table-container">
+                <table style="width:100%; color:white;">
+                    <tr><th>Raundi</th><th>PLAYER1</th><th>PLAYER2</th><th>PLAYER3</th></tr>
+                    <tr><td>1</td><td>400</td><td>350</td><td>450</td></tr>
+                    <tr><td>2</td><td>380</td><td>300</td><td>500</td></tr>
+                    <tr><td>3</td><td>420</td><td>330</td><td>500</td></tr>
+                </table>
+            </div>
             <button onclick="toggleScoreboard()" style="margin-top: 20px; padding: 10px 20px; background: #f1c40f; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Mbyll</button>
         </div>
     </div>
@@ -120,7 +204,11 @@
                         <th>Statusi</th>
                     </tr>
                 </thead>
-                <tbody id="score-body"></tbody>
+                <tbody id="score-body">
+                    <tr><td>PLAYER1</td><td>400</td><td>1,200</td><td>✅</td></tr>
+                    <tr><td>PLAYER2</td><td>330</td><td>980</td><td>✅</td></tr>
+                    <tr><td>PLAYER3</td><td>500</td><td>1,450</td><td>🏆</td></tr>
+                </tbody>
             </table>
             <div class="modal-footer">
                 <p id="next-round-timer">Raundi i ri nis pas pak...</p>
@@ -132,7 +220,12 @@
     <div id="winner-cards-display" class="winner-cards-overlay" style="display: none;">
         <div class="winner-cards-content">
             <h2>🏆 LETRAT FITUESE 🏆</h2>
-            <div id="winner-cards-container" class="hand-area"></div>
+            <div id="winner-cards-container" class="hand-area">
+                <div class="card">A♠</div>
+                <div class="card">K♥</div>
+                <div class="card">Q♦</div>
+                <div class="card joker">🃏</div>
+            </div>
             <p>Raundi i ri fillon pas 5 sekondash...</p>
         </div>
     </div>
@@ -145,8 +238,53 @@
     <p>Kjo lojë luhet vetëm në pozicion horizontal (landscape)</p>
 </div>
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script src="script.js"></script>
+<script>
+    // Funksione të thjeshta për demo
+    function toggleScoreboard() {
+        const modal = document.getElementById('score-modal');
+        modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    // Për klikim në tabelë
+    document.getElementById('results-table-clickable').addEventListener('click', toggleScoreboard);
+
+    // Për dërgim në chat
+    document.getElementById('chat-send').addEventListener('click', function() {
+        const input = document.getElementById('chat-input');
+        if (input.value.trim() !== '') {
+            const messages = document.getElementById('chat-messages');
+            const newMsg = document.createElement('div');
+            newMsg.className = 'chat-message';
+            newMsg.innerHTML = `<span class="chat-username">Ti:</span> <span class="chat-text">${input.value}</span>`;
+            messages.appendChild(newMsg);
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+        }
+    });
+
+    // Enter për dërgim
+    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('chat-send').click();
+        }
+    });
+
+    // Për klikim në letra
+    document.querySelectorAll('.hand-area .card').forEach(card => {
+        card.addEventListener('click', function() {
+            this.style.transform = 'translateY(-25px) scale(1.15)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 200);
+        });
+    });
+
+    // Për butonin start (thjesht për demo)
+    document.getElementById('btn-start').addEventListener('click', function() {
+        document.getElementById('lobby-controls').style.display = 'none';
+        document.getElementById('game-table').style.display = 'block';
+    });
+</script>
+
 </body>
 </html>
