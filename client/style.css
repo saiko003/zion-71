@@ -1,762 +1,1349 @@
-/* ==========================================
-   ZION 71 - STILI I PLOTË
-   ========================================== */
-
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    margin: 0;
-    padding: 0;
-}
-
-html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: white;
-}
-
-/* ==========================================
-   LOBBY
-   ========================================== */
-#lobby-controls {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    z-index: 10000;
-    background: rgba(0, 0, 0, 0.9);
-    padding: 30px 40px;
-    border-radius: 20px;
-    border: 3px solid #f1c40f;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    min-width: 300px;
-}
-
-#lobby-controls h1 {
-    color: #f1c40f;
-    font-size: 42px;
-    margin-bottom: 20px;
-    text-shadow: 0 0 20px gold;
-}
-
-#btn-start {
-    background: #2ecc71;
-    color: black;
-    border: none;
-    padding: 15px 40px;
-    border-radius: 50px;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    border: 2px solid #f1c40f;
-    animation: pulse 1.5s infinite;
-}
-
-#lobby-text {
-    margin-top: 20px;
-    color: white;
-    font-size: 18px;
-}
-
-/* ==========================================
-   GAME TABLE
-   ========================================== */
-#game-table {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-}
-
-/* ==========================================
-   HEADER - POINTS DHE ROUND
-   ========================================== */
-.game-header {
-    position: absolute;
-    top: 8px;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 15px;
-    z-index: 100;
-    pointer-events: none;
-}
-
-.points-box, .round-box {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(5px);
-    padding: 8px 22px;
-    border-radius: 30px;
-    font-size: 18px;
-    font-weight: bold;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    border: 2px solid;
-    letter-spacing: 0.5px;
-}
-
-.points-box {
-    border-color: #f1c40f;
-    color: #f1c40f;
-}
-
-.round-box {
-    border-color: #2ecc71;
-    color: #2ecc71;
-}
-
-/* ==========================================
-   LAYOUT 3 KOLONA
-   ========================================== */
-.landscape-container {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    padding: 60px 10px 90px 10px;
-    gap: 15px;
-    background: transparent;
-}
-
-/* ==========================================
-   KOLONA 1 - LOJTARËT
-   ========================================== */
-.players-column {
-    flex: 0 0 180px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 5px;
-    background: transparent;
-    overflow-y: auto;
-}
-
-.player-card {
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    border-radius: 12px;
-    padding: 12px 15px;
-    border-left: 5px solid #f1c40f;
-    position: relative;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-}
-
-.player-card.you {
-    border-left: 5px solid #2ecc71;
-    background: rgba(46, 204, 113, 0.2);
-}
-
-.player-card.turn {
-    border-left: 5px solid #2ecc71;
-    box-shadow: 0 0 20px #2ecc71;
-    animation: borderPulse 1.2s infinite;
-}
-
-@keyframes borderPulse {
-    0% { border-left-color: #2ecc71; }
-    50% { border-left-color: #f1c40f; box-shadow: 0 0 30px #f1c40f; }
-    100% { border-left-color: #2ecc71; }
-}
-
-.player-name {
-    font-size: 18px;
-    font-weight: bold;
-    color: #f1c40f;
-    margin-bottom: 5px;
-}
-
-.player-card.you .player-name {
-    color: #2ecc71;
-}
-
-.player-stats {
-    font-size: 16px;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-}
-
-/* NJË RUBRIKË E VETME PËR RADHËN - LART MBI STIVË */
-.turn-indicator {
-    position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #2ecc71;
-    color: black;
-    font-size: 12px;
-    font-weight: bold;
-    padding: 6px 20px;
-    border-radius: 30px;
-    animation: turnPulse 1.2s infinite;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    white-space: nowrap;
-    border: 2px solid #f1c40f;
-    z-index: 10;
-}
-
-@keyframes turnPulse {
-    0% { transform: translateX(-50%) scale(1); background: #2ecc71; }
-    50% { transform: translateX(-50%) scale(1.1); background: #27ae60; box-shadow: 0 0 25px #2ecc71; }
-    100% { transform: translateX(-50%) scale(1); background: #2ecc71; }
-}
-
-/* ==========================================
-   KOLONA 2 - QENDRA (TAVOLINA)
-   ========================================== */
-.center-column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    background: transparent;
-    justify-content: flex-start;
-}
-
-.table-area {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px);
-    padding: 15px 25px;
-    border-radius: 30px;
-    border: 1px solid rgba(241, 196, 15, 0.3);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-
-.deck-wrapper, #jackpot, #discard-pile {
-    width: 80px;
-    height: 115px;
-}
-
-.card-stack {
-    width: 80px;
-    height: 115px;
-    background: linear-gradient(135deg, #2c3e50, #1a2632);
-    border: 3px solid #95a5a6;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.6);
-    text-transform: uppercase;
-}
-
-#jackpot {
-    background: linear-gradient(135deg, #f1c40f, #e67e22);
-    border: 3px solid white;
-    box-shadow: 0 0 25px gold;
-    color: black;
-    font-size: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.jackpot-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.jp-text {
-    display: block;
-    font-weight: bold;
-}
-
-#discard-pile {
-    background: rgba(255,255,255,0.1);
-    border: 3px dashed rgba(255,255,255,0.4);
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: rgba(255,255,255,0.6);
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.label {
-    z-index: 1;
-}
-
-/* LETRAT E HEDHURA */
-.discard-cards {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.discard-cards .card-mini {
-    position: absolute;
-    width: 90%;
-    height: 90%;
-    background: white;
-    border-radius: 6px;
-    border: 2px solid #555;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 16px;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-}
-
-.discard-cards .card-mini:nth-child(1) { transform: rotate(-5deg) translate(-3px, -3px); z-index: 3; }
-.discard-cards .card-mini:nth-child(2) { transform: rotate(4deg) translate(4px, 2px); z-index: 2; opacity: 0.9; }
-.discard-cards .card-mini:nth-child(3) { transform: rotate(-3deg) translate(1px, 4px); z-index: 1; opacity: 0.8; }
-
-.discard-cards .card-mini.red { color: #e74c3c; }
-.discard-cards .card-mini.joker { background: linear-gradient(135deg, #2c3e50, #000); color: #f1c40f; }
-
-/* ==========================================
-   TABELA E PIKËVE - 3 KOLONA
-   ========================================== */
-.results-table {
-    width: 100%;
-    max-width: 320px;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(5px);
-    border-radius: 15px;
-    padding: 12px 15px;
-    border: 2px solid #f1c40f;
-    margin-top: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.4);
-}
-
-.results-table:active {
-    transform: scale(0.98);
-    opacity: 0.9;
-}
-
-.results-table h3 {
-    color: #f1c40f;
-    font-size: 16px;
-    text-align: center;
-    margin: 0 0 12px 0;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.results-table table {
-    width: 100%;
-    font-size: 14px;
-    color: white;
-    border-collapse: collapse;
-}
-
-.results-table th {
-    color: #f1c40f;
-    padding: 8px 5px;
-    font-size: 13px;
-    font-weight: bold;
-    border-bottom: 2px solid #f1c40f;
-}
-
-.results-table td {
-    padding: 6px 5px;
-    text-align: center;
-    border-bottom: 1px solid #444;
-    font-size: 13px;
-}
-
-.results-table tr:last-child td {
-    border-bottom: none;
-}
-
-/* ==========================================
-   KOLONA 3 - CHAT
-   ========================================== */
-.chat-column {
-    flex: 0 0 200px;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    border-radius: 15px;
-    padding: 12px 10px;
-    border: 2px solid #f1c40f;
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    max-height: 100%;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.4);
-}
-
-.chat-header {
-    color: #f1c40f;
-    font-size: 16px;
-    font-weight: bold;
-    text-align: center;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #f1c40f;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    font-size: 12px;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding-right: 5px;
-    margin-bottom: 10px;
-    min-height: 100px;
-    max-height: 200px;
-}
-
-.chat-message {
-    padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    word-break: break-word;
-    border-left: 3px solid #f1c40f;
-}
-
-.chat-username {
-    color: #f1c40f;
-    font-weight: bold;
-    margin-right: 6px;
-    font-size: 11px;
-}
-
-.chat-text {
-    font-size: 11px;
-}
-
-.chat-input-area {
-    display: flex;
-    gap: 5px;
-    margin-top: 5px;
-}
-
-.chat-input {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid #f1c40f;
-    border-radius: 25px;
-    padding: 8px 15px;
-    color: white;
-    font-size: 12px;
-    outline: none;
-}
-
-.chat-input::placeholder {
-    color: rgba(255,255,255,0.5);
-}
-
-.chat-send {
-    background: #f1c40f;
-    border: none;
-    border-radius: 25px;
-    padding: 8px 18px;
-    color: black;
-    font-weight: bold;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.chat-send:active {
-    transform: scale(0.95);
-    background: #e67e22;
-}
-
-/* ==========================================
-   ASISTENTI DHE BUTONI
-   ========================================== */
-.action-area {
-    position: fixed;
-    bottom: 95px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 25px;
-    z-index: 2500;
-    pointer-events: none;
-}
-
-#asistenti-container {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(10px);
-    padding: 8px 20px;
-    border-radius: 40px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border: 2px solid #f1c40f;
-    pointer-events: auto;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-}
-
-.led-red, .led-green, .led-yellow, .led-orange {
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.led-red { background: #ff4d4d; box-shadow: 0 0 12px #ff4d4d; }
-.led-green { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; animation: pulse 1.2s infinite; }
-.led-yellow { background: #f1c40f; box-shadow: 0 0 12px #f1c40f; }
-.led-orange { background: #ffa500; box-shadow: 0 0 12px #ffa500; }
-
-@keyframes pulse {
-    0% { opacity: 0.7; }
-    50% { opacity: 1; transform: scale(1.1); }
-    100% { opacity: 0.7; }
-}
-
-#status-teksti {
-    font-size: 14px;
-    color: white;
-    font-weight: bold;
-}
-
-#btn-mbyll {
-    background: #27ae60;
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 40px;
-    font-weight: bold;
-    font-size: 16px;
-    cursor: pointer;
-    animation: bounce 1.2s infinite;
-    border: 2px solid #f1c40f;
-    pointer-events: auto;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
-}
-
-/* ==========================================
-   DORA E LOJTARIT
-   ========================================== */
-.hand-section {
-    position: fixed;
-    bottom: 5px;
-    left: 0;
-    width: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(10px);
-    padding: 8px 0;
-    border-top: 3px solid #f1c40f;
-    z-index: 2000;
-    height: 120px;
-}
-
-.hand-area {
-    display: flex;
-    justify-content: center;
-    gap: 2px;
-    overflow-x: auto;
-    padding: 5px 15px;
-    height: 100%;
-    align-items: center;
-    scrollbar-width: none;
-}
-
-.hand-area::-webkit-scrollbar {
-    display: none;
-}
-
-.hand-area .card {
-    flex: 0 0 auto;
-    width: 75px;
-    height: 105px;
-    background: white;
-    border-radius: 10px;
-    border: 2px solid #333;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 0;
-    margin-right: -18px;
-    font-size: 24px;
-    font-weight: bold;
-    box-shadow: -5px 0 12px rgba(0,0,0,0.5);
-    color: black;
-    cursor: pointer;
-    transition: transform 0.15s ease;
-    position: relative;
-    touch-action: manipulation;
-}
-
-.hand-area .card:active {
-    transform: translateY(-25px) scale(1.15);
-    z-index: 100;
-    transition: transform 0.1s ease;
-}
-
-.hand-area .card.joker {
-    background: linear-gradient(135deg, #2c3e50, #000);
-    color: #f1c40f !important;
-    border: 3px solid #f1c40f;
-    font-size: 32px;
-}
-
-/* ==========================================
-   MODALET
-   ========================================== */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(10px);
-    z-index: 10000;
-    display: none;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: #1a4a1a;
-    padding: 30px;
-    border-radius: 20px;
-    border: 3px solid #f1c40f;
-    max-width: 90%;
-    max-height: 90%;
-    overflow-y: auto;
-    position: relative;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.modal-header h2 {
-    color: #f1c40f;
-    margin: 0;
-}
-
-.close-button {
-    color: #f1c40f;
-    font-size: 30px;
-    cursor: pointer;
-}
-
-/* WINNER CARDS OVERLAY */
-.winner-cards-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 15000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.winner-cards-content {
-    text-align: center;
-    color: #f1c40f;
-}
-
-.winner-cards-content h2 {
-    font-size: 32px;
-    margin-bottom: 30px;
-    animation: glow 1s infinite;
-}
-
-@keyframes glow {
-    0% { text-shadow: 0 0 10px gold; }
-    50% { text-shadow: 0 0 30px gold; }
-    100% { text-shadow: 0 0 10px gold; }
-}
-
-/* ==========================================
-   PORTRAIT - MESAZH RROTULLIMI
-   ========================================== */
-@media screen and (orientation: portrait) {
-    #game-table, #lobby-controls {
-        display: none !important;
+const socket = io('https://zion-71.onrender.com', {
+    transports: ['websocket', 'polling']
+});
+
+let myName = sessionStorage.getItem('zion_player_name');
+
+if (!myName) {
+    let person = prompt("Ju lutem shkruani emrin tuaj:", "");
+    
+    if (person == null || person == "") {
+        myName = "Lojtar-" + Math.floor(Math.random() * 1000);
+    } else {
+        myName = person.substring(0, 12);
+    }
+    sessionStorage.setItem('zion_player_name', myName);
+}
+
+socket.on('connect', () => {
+    console.log("U lidha si:", myName);
+    socket.emit('joinGame', myName);
+});
+
+const handContainer = document.getElementById('player-hand');
+const jackpotElement = document.getElementById('jackpot');
+const discardPile = document.getElementById('discard-pile');
+const btnMbyll = document.getElementById('btn-mbyll');
+const statusDrita = document.getElementById('status-drita');
+const statusTeksti = document.getElementById('status-teksti');
+const lobbyControls = document.getElementById('lobby-controls');
+const gameTable = document.getElementById('game-table');
+const deckElement = document.getElementById('deck-zion') || document.getElementById('deck');
+let gameStarted = false;
+let isMyTurn = false;
+let doraImeData = [];
+let isDraggingCard = false; 
+let tookJackpotThisTurn = false;
+let placeholder = null;
+
+socket.on('lobbyMessage', (msg) => {
+    const lobbyText = document.getElementById('lobby-text');
+    if (lobbyText) lobbyText.innerText = msg;
+});
+
+const cardOrder = {
+    'A': 1,
+    '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+    'J': 11, 'Q': 12, 'K': 13
+};
+
+function getVal(card, highAce = false) {
+    const v = card.v;
+    
+    if (['★', 'Jokeri', 'Xhoker'].includes(v)) return 0;
+
+    if (v === 'A') return highAce ? 14 : 1; 
+    if (v === 'J') return 11;
+    if (v === 'Q') return 12;
+    if (v === 'K') return 13;
+    
+    return parseInt(v) || 0;
+}
+
+function calculateScore(cards) {
+    if (!cards || cards.length === 0) return 0;
+
+    let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker', 'joker'].includes(c.v)).length;
+    let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker', 'joker'].includes(c.v));
+
+    normalCards.sort((a, b) => getVal(a) - getVal(b));
+
+    function solve(remaining, jks) {
+        if (remaining.length === 0) return 0;
+
+        let first = remaining[0];
+        
+        let firstVal = (['A', 'K', 'Q', 'J', '10'].includes(first.v)) ? 10 : (parseInt(first.v) || 0);
+
+        let best = firstVal + solve(remaining.slice(1), jks);
+
+        let sameValue = remaining.filter(c => c.v === first.v);
+        for (let size of [3, 4]) {
+            for (let n = 1; n <= Math.min(sameValue.length, size); n++) {
+                let jNeeded = size - n;
+                if (jNeeded <= jks) {
+                    let count = 0;
+                    let filtered = remaining.filter(c => {
+                        if (count < n && c.v === first.v) { count++; return false; }
+                        return true;
+                    });
+                    best = Math.min(best, solve(filtered, jks - jNeeded));
+                }
+            }
+        }
+
+        for (let size of [3, 4, 5]) {
+            let currentJks = jks;
+            let firstValReal = getVal(first);
+            let suit = first.s;
+            let tempRemaining = remaining.slice(1);
+            let possible = true;
+
+            for (let i = 1; i < size; i++) {
+                let target = firstValReal + i;
+                let idx = tempRemaining.findIndex(c => getVal(c) === target && c.s === suit);
+                if (idx !== -1) {
+                    tempRemaining.splice(idx, 1);
+                } else if (currentJks > 0) {
+                    currentJks--;
+                } else {
+                    possible = false;
+                    break;
+                }
+            }
+            if (possible) {
+                best = Math.min(best, solve(tempRemaining, currentJks));
+            }
+        }
+
+        return best;
     }
 
-    .rotate-message {
-        display: flex !important;
+    return solve(normalCards, jokers);
+}
+
+function toggleScoreboard() {
+    console.log("U klikua tabela!"); 
+
+    const mainModal = document.getElementById('score-modal'); 
+    const sideTable = document.getElementById('side-score-table');
+    const modalContainer = document.getElementById('modal-score-table-container');
+
+    if (!mainModal) {
+        console.error("Gabim: Nuk u gjet #score-modal");
+        return;
+    }
+
+    const isHidden = window.getComputedStyle(mainModal).display === "none";
+
+    if (isHidden) {
+        if (sideTable && modalContainer) {
+            modalContainer.innerHTML = `
+                <table id="modal-table-version" style="width: 100%; border-collapse: collapse;">
+                    <thead>${sideTable.querySelector('thead').innerHTML}</thead>
+                    <tbody id="modal-table-body-version">${sideTable.querySelector('tbody').innerHTML}</tbody>
+                </table>
+            `;
+
+            const allCells = modalContainer.querySelectorAll('td, th');
+            allCells.forEach(el => {
+                el.style.setProperty('display', 'table-cell', 'important');
+                el.style.padding = "10px";
+                el.style.textAlign = "center";
+                el.style.borderBottom = "1px solid #444";
+            });
+        }
+
+        mainModal.style.setProperty('display', 'flex', 'important');
+        console.log("Modali u hap me sukses!");
+    } else {
+        mainModal.style.display = "none";
+        console.log("Modali u mbyll!");
     }
 }
 
-.rotate-message {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, #1a4a1a 0%, #0d2a0d 100%);
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    text-align: center;
-    z-index: 999999;
+const btnstart = document.getElementById('btn-start');
+
+if (btnstart) {
+    btnstart.onclick = () => {
+        console.log("🚀 Po nis lojën...");
+        socket.emit('startGame');
+    };
 }
 
-.rotate-message .icon {
-    font-size: 100px;
-    margin-bottom: 20px;
-    animation: rotatePhone 2s infinite;
+const deckZion = document.getElementById('deck-zion') || document.getElementById('deck-pile');
+
+if (deckZion) {
+    deckZion.onclick = () => {
+        console.log("Klikuar mbi dekun...");
+
+        if (isMyTurn && doraImeData.length === 10) {
+            socket.emit('drawCard');
+            console.log("✅ Kërkesa u dërgua: drawCard");
+            
+            deckZion.classList.remove('active-deck');
+        } 
+        else if (isMyTurn && doraImeData.length === 11) {
+            alert("Ti e ke marrë letrën! Tani duhet të hedhësh një në tokë.");
+        }
+        else if (!isMyTurn) {
+            console.warn("Prit radhën tënde!");
+        }
+    };
 }
 
-.rotate-message h2 {
-    font-size: 32px;
-    color: #f1c40f;
-    margin-bottom: 15px;
+function tregoNjoftiminRaundit(sekonda) {
+    const roundModal = document.getElementById('round-modal');
+    const timerText = document.getElementById('next-round-timer');
+    
+    if (!roundModal || !timerText) return;
+
+    roundModal.style.display = 'flex';
+    let koha = sekonda;
+
+    const interval = setInterval(() => {
+        koha--;
+        timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
+        
+        if (koha <= 0) {
+            clearInterval(interval);
+            roundModal.style.display = 'none';
+        }
+    }, 1000);
 }
 
-.rotate-message p {
-    font-size: 20px;
-    color: white;
-    max-width: 80%;
+socket.on('updateGameState', (data) => {
+    console.log("Mora statusin e ri:", data);
+    updateGameFlow(data);
+});
+
+socket.on('yourCards', (cards) => {
+    console.log("Letrat erdhën:", cards);
+    doraImeData = cards;
+    
+    updateGameFlow({ myCards: cards }); 
+}); 
+
+function updateScoreboard(players, activeId) {
+    window.playersData = players;
+    const scoreBody = document.getElementById('side-score-body'); 
+    const scoreTable = document.getElementById('side-score-table');
+    if (!scoreBody || !scoreTable) return;
+   
+    const scoreHeader = scoreTable.querySelector('thead tr');
+    if (!scoreHeader) return;
+
+    let maxRounds = players.reduce((max, p) => {
+        const historyLen = (p.history && Array.isArray(p.history)) ? p.history.length : 0;
+        return Math.max(max, historyLen);
+    }, 0);
+
+    let headerHTML = `<th>Lojtari</th>`;
+    for (let i = 1; i <= maxRounds; i++) {
+        headerHTML += `<th>R${i}</th>`;
+    }
+    headerHTML += `<th>Total</th>`;
+    scoreHeader.innerHTML = headerHTML;
+
+    scoreBody.innerHTML = '';
+    players.forEach(player => {
+        const row = document.createElement('tr');
+
+        if (player.id === activeId) row.classList.add('active-row');
+        if (player.isOut || player.score >= 71) row.classList.add('eliminated'); 
+
+        let nameCell = `<td>${player.name} ${player.id === (typeof socket !== 'undefined' ? socket.id : null) ? '<small>(Ti)</small>' : ''}</td>`;
+        
+        let historyCells = '';
+        for (let i = 0; i < maxRounds; i++) {
+            let pikaRaundi = (player.history && player.history[i] !== undefined) ? player.history[i] : '-';
+            
+            let cellStyle = "";
+            if (pikaRaundi === "X") {
+                cellStyle = 'class="winner-cell" style="color: #2ecc71; font-weight: bold;"';
+            } else if (typeof pikaRaundi === "string" && pikaRaundi.includes("!")) {
+                cellStyle = 'class="jackpot-cell" style="color: #e74c3c; font-weight: bold;"';
+            }
+
+            historyCells += `<td ${cellStyle}>${pikaRaundi}</td>`;
+        }
+        
+        let totalCell = `<td><strong>${player.score}</strong></td>`;
+        
+        row.innerHTML = nameCell + historyCells + totalCell;
+        row.style.cursor = 'pointer';
+
+        row.onclick = (e) => { 
+            console.log("Klikimi u regjistrua për " + player.name);
+            if (e) e.stopPropagation();
+            if (typeof toggleScoreboard === "function") {
+                toggleScoreboard();
+            }
+        };
+
+        scoreBody.appendChild(row);
+    });
+    
+    const modalTableBody = document.querySelector('#modal-table-version tbody');
+    const modalTableHeader = document.querySelector('#modal-table-version thead tr');
+
+    if (modalTableBody) {
+        modalTableBody.innerHTML = scoreBody.innerHTML;
+    }
+    
+    if (modalTableHeader) {
+        modalTableHeader.innerHTML = scoreHeader.innerHTML;
+    }
 }
 
-@keyframes rotatePhone {
-    0% { transform: rotate(0deg); }
-    50% { transform: rotate(90deg); }
-    100% { transform: rotate(90deg); }
+socket.on('updateGameState', (data) => {
+    console.log("Mora gjendjen e re të lojës:", data);
+    
+    updateGameFlow(data);
+    
+    if (data.players) {
+        updateScoreboard(data.players, data.activePlayerId);
+    }
+});
+
+function updateGameFlow(data) {
+    if (!data) data = {};
+
+    if (data.myCards && Array.isArray(data.myCards)) {
+        
+        if (isDraggingCard) return; 
+
+        if (doraImeData.length === data.myCards.length) return;
+
+        if (data.myCards.length > doraImeData.length && doraImeData.length > 0) {
+            
+            const letraTeReja = data.myCards.filter(serverCard => 
+                !doraImeData.some(localCard => localCard.id === serverCard.id)
+            );
+
+            if (letraTeReja.length > 0) {
+                console.log("Letra e re u gjet dhe po shtohet në fund:", letraTeReja);
+                doraImeData.push(...letraTeReja);
+                renderHand();
+                return;
+            }
+        }
+
+        if (doraImeData.length === 0 || Math.abs(doraImeData.length - data.myCards.length) > 1) {
+            doraImeData = data.myCards;
+            renderHand();
+        }
+    }
+
+    if (data.activePlayerId) {
+        isMyTurn = (data.activePlayerId === socket.id);
+    } 
+
+    if (doraImeData.length === 11) {
+        isMyTurn = true;
+    }
+    
+    document.body.classList.toggle('my-turn-glow', isMyTurn);
+    
+    const deck = document.getElementById('deck-zion') || document.getElementById('deck');
+    if (deck) {
+        const duhetTeTerheq = isMyTurn && doraImeData.length === 10;
+        
+        if (duhetTeTerheq) {
+            deck.classList.add('active-deck');
+            deck.style.pointerEvents = "auto";
+            deck.style.cursor = "pointer";
+        } else {
+            deck.classList.remove('active-deck');
+            deck.style.pointerEvents = "none";
+            deck.style.cursor = "default";
+        }
+    }
+
+    const jackpot = document.getElementById('jackpot');
+    if (jackpot && data.jackpotCard) {
+        const isRed = ['♥', '♦'].includes(data.jackpotCard.s);
+        jackpot.innerHTML = `
+            <div class="v">${data.jackpotCard.v}</div>
+            <div class="s">${data.jackpotCard.s}</div>
+        `;
+        jackpot.style.color = isRed ? '#e74c3c' : '#2c3e50';
+        jackpot.style.display = 'flex';
+    }
+
+    const statusMsg = document.getElementById('status-message') || document.getElementById('status-teksti');
+    if (statusMsg) {
+        if (isMyTurn) {
+            statusMsg.innerText = (doraImeData.length === 10) ? "Tërhiq një letër!" : "Hidh një letër!";
+            statusMsg.style.color = "#2ecc71";
+        } else {
+            statusMsg.innerText = "Pret radhën...";
+            statusMsg.style.color = "#bdc3c7";
+        }
+    }
+
+    if (typeof renderHand === "function" && doraImeData.length > 0) {
+        renderHand();
+    }
 }
+
+socket.on('cardDrawn', (newCard) => {
+    console.log("=== EVENT: cardDrawn ===");
+    
+    const exists = doraImeData.some(c => c.id === newCard.id);
+    
+    if (!exists) {
+        pickCardFromDeck(newCard); 
+        console.log("Letra e re u dërgua te animacioni.");
+    } else {
+        console.warn("Kujdes: Kjo letër ekziston një herë në dorë!");
+    }
+
+    setTimeout(() => {
+        if (typeof checkZionCondition === "function") {
+            checkZionCondition();
+        }
+    }, 700);
+});
+
+function checkZionCondition() {
+    const btnMbyll = document.getElementById('btn-mbyll');
+    const statusDrita = document.getElementById('status-drita');
+    const statusTeksti = document.getElementById('status-teksti');
+
+    if (!btnMbyll) return;
+
+    if (isMyTurn && doraImeData.length === 11) {
+        document.body.classList.add('my-turn-glow'); 
+        
+        let mundTeMbyllet = false;
+
+        for (let i = 0; i < doraImeData.length; i++) {
+            let testHand = [...doraImeData];
+            let removedCard = testHand.splice(i, 1)[0];
+
+            if (['★', 'Jokeri', 'Xhoker'].includes(removedCard.v)) continue;
+
+            if (isDoraValid(testHand)) {
+                mundTeMbyllet = true;
+                break; 
+            }
+        }
+
+        if (mundTeMbyllet) {
+            btnMbyll.style.display = 'inline-block';
+            btnMbyll.style.background = "#2ecc71";
+            btnMbyll.innerHTML = "MBYLL LOJËN (ZION)";
+            
+            if (statusDrita) statusDrita.className = 'led-green';
+            if (statusTeksti) {
+                statusTeksti.innerText = (typeof tookJackpotThisTurn !== 'undefined' && tookJackpotThisTurn) 
+                    ? "ZION (X2)! Mbyllu." 
+                    : "ZION! Mund të mbyllesh.";
+            }
+        } else {
+            btnMbyll.style.display = 'none';
+            if (statusDrita) statusDrita.className = 'led-orange'; 
+            if (statusTeksti) statusTeksti.innerText = "Rregullo grupet (3 ose 4 letra)...";
+        }
+
+    } else {
+        document.body.classList.remove('my-turn-glow'); 
+        btnMbyll.style.display = 'none';
+
+        if (statusDrita) {
+            statusDrita.className = isMyTurn ? 'led-yellow' : 'led-red';
+        }
+        
+        if (statusTeksti) {
+            statusTeksti.innerText = isMyTurn ? "Tërhiq një letër..." : "Prit radhën...";
+        }
+    }
+} 
+
+let dragElement = null;
+
+function renderHand() {
+    if (typeof isDraggingCard !== 'undefined' && isDraggingCard) return;
+
+    console.log("--- DEBUG: renderHand nisi ---");
+    const handContainer = document.getElementById('player-hand');
+    
+    if (!handContainer) {
+        console.error("GABIM: Nuk u gjet elementi me ID 'player-hand' në HTML!");
+        return;
+    }
+
+    if (!doraImeData || doraImeData.length === 0) {
+        console.warn("KUJDES: doraImeData është bosh. Nuk kam çfarë të vizatoj.");
+        handContainer.innerHTML = ""; 
+        return;
+    }
+
+    console.log("Duke vizatuar", doraImeData.length, "letra...");
+
+    const ghostCards = document.querySelectorAll('body > .card.dragging');
+    ghostCards.forEach(card => card.remove());
+
+    handContainer.innerHTML = '';
+
+    doraImeData.forEach((card, index) => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        
+        div.dataset.index = index;
+        div.dataset.v = card.v;
+        div.dataset.s = card.s;
+        div.dataset.id = card.id || `card-${card.v}-${card.s}-${index}`;
+
+        if (card.v === '★' || card.v === 'Xhoker') {
+            div.classList.add('joker');
+            div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
+        } else {
+            div.innerHTML = `${card.v}<br>${card.s}`;
+            if (['♥', '♦'].includes(card.s)) {
+                div.style.color = 'red';
+            }
+        }
+        
+        Object.assign(div.style, {
+            position: '', left: '', top: '', zIndex: ''
+        });
+         
+        div.onmousedown = onDragStart;
+        div.ontouchstart = (e) => onDragStart(e);
+
+        handContainer.appendChild(div);
+    });
+
+    console.log("--- DEBUG: renderHand përfundoi ---");
+    
+    if (typeof calculateScore === "function") {
+        let piketAktuale = calculateScore(doraImeData);
+        const elPiket = document.getElementById('display-piket');
+        if (elPiket) {
+            elPiket.innerText = "Pikët në dorë: " + piketAktuale;
+            
+            if (piketAktuale > 50) {
+                elPiket.style.color = "orange";
+            } else {
+                elPiket.style.color = "white";
+            }
+        }
+    }
+    
+    if (typeof checkZionCondition === "function") {
+        checkZionCondition();
+    }
+}
+
+function onDragStart(e) {
+    if (dragElement) return;
+    
+    isDraggingCard = true;
+    
+    const isTouch = e.type === 'touchstart';
+    const t = isTouch ? e.touches[0] : e;
+    const div = e.currentTarget;
+    const rect = div.getBoundingClientRect();
+
+    div.dataset.offsetX = t.clientX - rect.left;
+    div.dataset.offsetY = t.clientY - rect.top;
+
+    dragElement = div;
+
+    placeholder = document.createElement('div');
+    placeholder.className = 'card-placeholder';
+    placeholder.style.width = rect.width + 'px';
+    placeholder.style.height = rect.height + 'px';
+    placeholder.style.visibility = 'hidden';
+
+    div.parentNode.insertBefore(placeholder, div);
+
+    document.body.appendChild(div);
+
+    Object.assign(div.style, {
+        position: 'fixed',
+        zIndex: '10000',
+        pointerEvents: 'none',
+        width: rect.width + 'px',
+        height: rect.height + 'px',
+        left: rect.left + 'px',
+        top: rect.top + 'px',
+        margin: '0',
+        transform: 'none',
+        transition: 'none'
+    });
+
+    div.classList.add('dragging');
+
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('touchmove', onDragMove, { passive: false });
+    document.addEventListener('mouseup', onDragEnd);
+    document.addEventListener('touchend', onDragEnd);
+}
+
+function onDragMove(e) {
+    if (!dragElement || !placeholder) return;
+    if (e.cancelable) e.preventDefault();
+
+    const t = e.type.includes('touch') ? e.touches[0] : e;
+    
+    let x = t.clientX - parseFloat(dragElement.dataset.offsetX);
+    let y = t.clientY - parseFloat(dragElement.dataset.offsetY);
+
+    const isJoker = dragElement.dataset.v === '★' || dragElement.classList.contains('joker');
+    
+    if (isJoker) {
+        const handContainer = document.getElementById('player-hand');
+        const handRect = handContainer.getBoundingClientRect();
+        
+        const limitTop = handRect.top - 70; 
+        if (y < limitTop) y = limitTop;
+    }
+
+    dragElement.style.left = x + 'px';
+    dragElement.style.top = y + 'px';
+
+    const handContainer = document.getElementById('player-hand');
+    const siblings = [...handContainer.querySelectorAll('.card:not(.dragging)')];
+    
+    const nextSibling = siblings.find(sibling => {
+        const r = sibling.getBoundingClientRect();
+        return t.clientX <= r.left + r.width / 2;
+    });
+
+    if (nextSibling) handContainer.insertBefore(placeholder, nextSibling);
+    else handContainer.appendChild(placeholder);
+
+    updateZonesFeedback(t.clientX, t.clientY);
+}
+
+function updateZonesFeedback(x, y) {
+    const pile = document.getElementById('discard-pile');
+    const victoryZone = document.getElementById('victory-drop-zone');
+
+    if (pile) {
+        const r = pile.getBoundingClientRect();
+        const over = x > r.left && x < r.right && y > r.top && y < r.bottom;
+        pile.classList.toggle('over', over);
+    }
+
+    if (victoryZone) {
+        if (typeof isMyTurn !== 'undefined' && isMyTurn && doraImeData.length === 11) {
+            victoryZone.style.display = 'flex';
+            const r = victoryZone.getBoundingClientRect();
+            const overV = x > r.left && x < r.right && y > r.top && y < r.bottom;
+            victoryZone.classList.toggle('over', overV);
+        } else {
+            victoryZone.style.display = 'none';
+        }
+    }
+}
+
+function onDragEnd(e) {
+    if (!dragElement) return;
+
+    const t = e.type.includes('touch') ? 
+              (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e.touches[0]) : 
+              e;
+
+    const pile = document.getElementById('discard-pile');
+    if (pile) pile.classList.remove('drag-over');
+
+    const victoryZone = document.getElementById('victory-drop-zone');
+    const handContainer = document.getElementById('player-hand');
+    const tolerance = 60; 
+
+    document.removeEventListener('mousemove', onDragMove);
+    document.removeEventListener('touchmove', onDragMove);
+    document.removeEventListener('mouseup', onDragEnd);
+    document.removeEventListener('touchend', onDragEnd);
+
+    dragElement.style.pointerEvents = 'auto'; 
+    dragElement.classList.remove('dragging');
+
+    let isOverPile = false;
+    let isOverVictory = false;
+
+    if (pile && t) {
+        const r = pile.getBoundingClientRect();
+        isOverPile = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
+                     t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
+    }
+
+    if (victoryZone && victoryZone.style.display !== 'none' && t) {
+        const r = victoryZone.getBoundingClientRect();
+        isOverVictory = t.clientX > r.left - tolerance && t.clientX < r.right + tolerance && 
+                        t.clientY > r.top - tolerance && t.clientY < r.bottom + tolerance;
+    }
+
+    if (isOverVictory && isMyTurn && doraImeData.length === 11) {
+        if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
+            
+            socket.emit('declareZion', { 
+                isJackpotClosing: tookJackpotThisTurn || false
+            });
+
+            isMyTurn = false;
+            if (placeholder) placeholder.remove();
+            
+            if (dragElement && dragElement.parentNode) {
+                dragElement.parentNode.removeChild(dragElement);
+            }
+            
+            finalizeCleanup();
+            dragElement = null;
+            placeholder = null;
+            return; 
+        }
+    }
+
+    if (isOverPile && isMyTurn && doraImeData.length === 11) {
+        if (placeholder) placeholder.remove();
+        
+        dragElement.style.position = '';
+        processDiscard(dragElement); 
+        
+    } else {
+        if (placeholder && placeholder.parentNode) {
+            placeholder.parentNode.insertBefore(dragElement, placeholder);
+        } else if (dragElement.parentNode !== handContainer) {
+            handContainer.appendChild(dragElement);
+        }
+
+        if (placeholder) placeholder.remove();
+
+        Object.assign(dragElement.style, {
+            position: '', zIndex: '', pointerEvents: 'auto', 
+            width: '', height: '', left: '', top: '',
+            margin: '', transform: '', transition: 'all 0.2s ease'
+        });
+
+        const currentCards = [...handContainer.querySelectorAll('.card')];
+        
+        doraImeData = currentCards.map(c => ({
+            v: c.dataset.v,
+            s: c.dataset.s,
+            id: c.dataset.id
+        }));
+
+        console.log("Renditja e re u ruajt lokalisht:", doraImeData.map(c => c.v));
+        if (typeof checkZionCondition === "function") checkZionCondition();
+        
+        const tempElement = dragElement; 
+        setTimeout(() => {
+            if (tempElement) tempElement.style.transition = '';
+        }, 200);
+    }
+    
+    isDraggingCard = false;
+    
+    dragElement = null; 
+    placeholder = null;
+    if (typeof finalizeCleanup === "function") finalizeCleanup();
+}
+
+function finalizeCleanup() {
+    if (dragElement) dragElement.classList.remove('dragging');
+    dragElement = null;
+    
+    const pile = document.getElementById('discard-pile');
+    const victoryZone = document.getElementById('victory-drop-zone');
+    
+    if (pile) pile.classList.remove('over');
+    if (victoryZone) {
+        victoryZone.classList.remove('over');
+        victoryZone.style.display = 'none';
+    }
+}
+
+function isDoraValid(cards) {
+    if (!cards || cards.length === 0) return true;
+
+    let jokers = cards.filter(c => ['★', 'Jokeri', 'Xhoker'].includes(c.v)).length;
+    let normalCards = cards.filter(c => !['★', 'Jokeri', 'Xhoker'].includes(c.v));
+
+    normalCards.sort((a, b) => {
+        if (a.s !== b.s) return a.s.localeCompare(b.s);
+        return getVal(a, false) - getVal(b, false);
+    });
+
+    function solve(remaining, jks) {
+        if (remaining.length === 0) return true;
+
+        let first = remaining[0];
+        console.log("Duke provuar grupin për:", first.v, first.s, "Xhokera mbetur:", jks);
+
+        let sameValue = remaining.filter(c => c.v === first.v);
+        for (let size of [4, 3]) {
+            let maxNormal = Math.min(sameValue.length, size);
+            for (let n = maxNormal; n >= 1; n--) {
+                let jNeeded = size - n;
+                if (jNeeded <= jks) {
+                    let nextCards = [...remaining];
+                    let removed = 0;
+                    let filtered = [];
+                    for (let c of nextCards) {
+                        if (removed < n && c.v === first.v) {
+                            removed++;
+                        } else {
+                            filtered.push(c);
+                        }
+                    }
+                    if (solve(filtered, jks - jNeeded)) return true;
+                }
+            }
+        }
+
+        for (let size = 3; size <= 5; size++) {
+            let currentJks = jks;
+            let tempRemaining = [...remaining];
+            let firstVal = getVal(first, false);
+            let suit = first.s;
+            
+            let possible = true;
+            tempRemaining.shift();
+
+            for (let i = 1; i < size; i++) {
+                let targetVal = firstVal + i;
+                
+                let idx = tempRemaining.findIndex(c => {
+                    let v = getVal(c, targetVal === 14); 
+                    return v === targetVal && c.s === suit;
+                });
+
+                if (idx !== -1) {
+                    tempRemaining.splice(idx, 1);
+                } else if (currentJks > 0) {
+                    currentJks--;
+                } else {
+                    possible = false;
+                    break;
+                }
+            }
+
+            if (possible && solve(tempRemaining, currentJks)) return true;
+        }
+
+        return false;
+    }
+
+    return solve(normalCards, jokers);
+}
+
+function pickCardFromDeck(newCardData) {
+    const deckElement = document.getElementById('deck-zion') || document.getElementById('deck-pile') || document.getElementById('deck'); 
+    const handContainer = document.getElementById('player-hand');
+    
+    if (deckElement) {
+        const myTurn = typeof isMyTurn !== 'undefined' ? isMyTurn : false;
+        if (myTurn && doraImeData.length === 10) {
+            deckElement.classList.add('deck-glow');
+        } else {
+            deckElement.classList.remove('deck-glow');
+        }
+    }
+
+    if (!deckElement || !handContainer) {
+        const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
+        if (!alreadyExists) {
+            doraImeData.push(newCardData);
+            renderHand();
+        }
+        return;
+    }
+
+    const tempCard = document.createElement('div');
+    tempCard.className = 'temp-animating'; 
+    
+    const deckRect = deckElement.getBoundingClientRect();
+    
+    Object.assign(tempCard.style, {
+        position: 'fixed',
+        left: deckRect.left + 'px',
+        top: deckRect.top + 'px',
+        width: '60px',
+        height: '90px',
+        zIndex: '5000',
+        backgroundColor: 'white',
+        borderRadius: '5px',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+        transition: 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+    });
+
+    document.body.appendChild(tempCard);
+
+    const handRect = handContainer.getBoundingClientRect();
+    const targetLeft = handRect.right - 40; 
+    const targetTop = handRect.top;
+
+    requestAnimationFrame(() => {
+        tempCard.style.left = targetLeft + 'px';
+        tempCard.style.top = targetTop + 'px';
+        tempCard.style.transform = 'rotate(15deg) scale(0.8)';
+        tempCard.style.opacity = '0.5';
+    });
+
+    setTimeout(() => {
+        if (tempCard.parentNode) tempCard.remove();
+        
+        const alreadyExists = doraImeData.some(c => c.id === newCardData.id);
+        
+        if (!alreadyExists) {
+            doraImeData.push(newCardData);
+            
+            renderHand();
+            
+            if (deckElement) {
+                deckElement.classList.remove('deck-glow');
+                deckElement.classList.remove('active-deck');
+            }
+
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
+        }
+    }, 600);
+}
+
+if (deckElement) {
+    deckElement.addEventListener('click', () => {
+        if (!isMyTurn) return;
+
+        if (doraImeData.length === 10) {
+            tookJackpotThisTurn = false;
+            socket.emit('drawCard');
+        } else {
+            alert("Ti i ke 11 letra, duhet të hedhësh një në tokë!");
+        }
+    });
+}
+
+function processDiscard(cardElement) {
+    if (!isMyTurn) return; 
+    isMyTurn = false; 
+
+    const cardId = cardElement.dataset.id; 
+    const cardIndex = doraImeData.findIndex(c => c.id === cardId);
+    
+    if (cardIndex !== -1) {
+        const letraObjekt = doraImeData[cardIndex]; 
+
+        doraImeData.splice(cardIndex, 1); 
+
+        socket.emit('discardCard', letraObjekt);
+
+        const discardZone = document.getElementById('discard-pile');
+        const rect = cardElement.getBoundingClientRect();
+        const targetRect = discardZone.getBoundingClientRect();
+
+        Object.assign(cardElement.style, {
+            position: 'fixed',
+            left: rect.left + 'px',
+            top: rect.top + 'px',
+            zIndex: '2000',
+            pointerEvents: 'none',
+            transition: "all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)"
+        });
+
+        requestAnimationFrame(() => {
+            cardElement.style.left = (targetRect.left + (targetRect.width / 2) - (rect.width / 2)) + 'px';
+            cardElement.style.top = (targetRect.top + (targetRect.height / 2) - (rect.height / 2)) + 'px';
+            cardElement.style.transform = "scale(0.3) rotate(30deg)";
+            cardElement.style.opacity = "0";
+        });
+        
+        setTimeout(() => {
+            const visualDiscard = document.createElement('div');
+            visualDiscard.className = 'card discarded-static';
+            visualDiscard.innerHTML = cardElement.innerHTML;
+            visualDiscard.style.color = cardElement.style.color;
+            
+            const randomRot = Math.floor(Math.random() * 40) - 20; 
+            visualDiscard.style.transform = `translate(-50%, -50%) rotate(${randomRot}deg)`;
+            
+            if (discardZone.children.length >= 3) {
+                discardZone.removeChild(discardZone.firstChild);
+            }
+            discardZone.appendChild(visualDiscard);
+
+            if (cardElement.parentNode) cardElement.remove();
+            
+            renderHand(); 
+            
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
+        }, 400);
+
+    } else {
+        console.error("GABIM: Letra nuk u gjet lokalisht! ID:", cardId);
+        isMyTurn = true; 
+        renderHand(); 
+    }
+}
+
+function verifyZionRules(cards) {
+    if (!cards || cards.length !== 11) return false;
+
+    for (let i = 0; i < cards.length; i++) {
+        const testHand = cards.filter((_, idx) => idx !== i);
+        const closingCard = cards[i];
+
+        if (closingCard.v === '★' || closingCard.v === 'Xhoker') continue;
+
+        const suits = ['♠', '♣', '♥', '♦'];
+        const jokersCount = testHand.filter(c => c.v === '★' || c.v === 'Xhoker').length;
+
+        let isFlush = false;
+        for (let s of suits) {
+            const sameSuitNormal = testHand.filter(c => c.s === s && c.v !== '★' && c.v !== 'Xhoker').length;
+            if (sameSuitNormal + jokersCount >= 10) {
+                console.log("ZION FLUSH gati me:", closingCard.v + closingCard.s);
+                isFlush = true;
+                break; 
+            }
+        }
+        
+        if (isFlush) return true;
+
+        if (typeof isDoraValid === "function") {
+            if (isDoraValid(testHand)) {
+                console.log("ZION NORMAL gati me:", closingCard.v + closingCard.s);
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
+function findAndRemoveSequence(suitCards, len, jokers) {
+    const sorted = [...suitCards].sort((a, b) => cardOrder[a.v] - cardOrder[b.v]);
+
+    const acePositions = [1, 14]; 
+
+    for (let aceVal of acePositions) {
+        let values = sorted.map(c => (c.v === 'A' ? aceVal : cardOrder[c.v]));
+        values = [...new Set(values)].sort((a, b) => a - b);
+
+        for (let i = 0; i < values.length; i++) {
+            let currentSeq = [];
+            let tempJokers = jokers;
+            let targetVal = values[i];
+
+            for (let k = 0; k < len; k++) {
+                let valToFind = targetVal + k;
+                
+                if (valToFind > 14) break; 
+
+                let cardFound = sorted.find(c => (c.v === 'A' ? aceVal : cardOrder[c.v]) === valToFind);
+
+                if (cardFound) {
+                    currentSeq.push(cardFound);
+                } else if (tempJokers > 0) {
+                    tempJokers--;
+                } else {
+                    break;
+                }
+            }
+
+            if (currentSeq.length + (jokers - tempJokers) === len) {
+                return {
+                    usedCards: currentSeq,
+                    jokersUsed: jokers - tempJokers
+                };
+            }
+        }
+    }
+    return null;
+}
+
+document.getElementById('btn-mbyll').addEventListener('click', () => {
+    if (!isMyTurn || doraImeData.length !== 11) {
+        alert("Nuk mund të mbyllësh! Duhet të kesh 11 letra dhe të jetë radha jote.");
+        return;
+    }
+
+    if (confirm("A dëshiron të mbyllësh lojën (ZION)?")) {
+        socket.emit('declareZion', { 
+            isJackpotClosing: (typeof tookJackpotThisTurn !== 'undefined') ? tookJackpotThisTurn : false 
+        });
+
+        document.getElementById('btn-mbyll').style.display = 'none';
+        isMyTurn = false; 
+    }
+});
+
+if (jackpotElement) {
+    jackpotElement.addEventListener('click', () => {
+        if (isMyTurn && doraImeData.length === 10) {
+            
+            tookJackpotThisTurn = true; 
+            
+            socket.emit('drawJackpot');
+            
+            jackpotElement.style.transform = "translateY(-50px) scale(1.2)";
+            jackpotElement.style.opacity = "0";
+            
+            setTimeout(() => {
+                jackpotElement.style.display = "none";
+            }, 300);
+        } else {
+            alert("Jackpot merret vetëm si letra e fundit për mbyllje!");
+        }
+    });
+}
+
+function checkRecursive(cards, jokers) {
+    if (cards.length === 0) return true;
+
+    cards.sort((a, b) => getValForSequence(a) - getValForSequence(b));
+
+    const first = cards[0];
+
+    const sameValue = cards.filter(c => c.v === first.v);
+    for (let size = 3; size <= 4; size++) {
+        for (let jUsed = 0; jUsed <= jokers; jUsed++) {
+            let normalNeeded = size - jUsed;
+            if (normalNeeded > 0 && normalNeeded <= sameValue.length) {
+                const used = sameValue.slice(0, normalNeeded);
+                const remaining = cards.filter(c => !used.includes(c));
+                if (checkRecursive(remaining, jokers - jUsed)) return true;
+            }
+        }
+    }
+
+    const sameSuit = cards.filter(c => c.s === first.s);
+    if (sameSuit.length + jokers >= 3) {
+        for (let len = 3; len <= 10; len++) {
+            const res = findAndRemoveSequence(sameSuit, len, jokers);
+            if (res) {
+                const remaining = cards.filter(c => !res.usedCards.includes(c));
+                if (checkRecursive(remaining, jokers - res.jokersUsed)) return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+socket.on('roundOver', (data) => {
+    const modal = document.getElementById('round-modal');
+    const tableBody = document.getElementById('score-body');
+    const timerText = document.getElementById('next-round-timer'); 
+    
+    if (modal && tableBody) {
+        tableBody.innerHTML = ''; 
+
+        data.updatedPlayers.forEach(p => {
+            const lastScore = p.history[p.history.length - 1]; 
+            const isEliminated = p.isOut; 
+            
+            let scoreClass = "";
+            if (lastScore === 'X') scoreClass = "winner-x";
+            else if (typeof lastScore === 'string' && lastScore.includes('!')) scoreClass = "jackpot-points";
+
+            const row = document.createElement('tr');
+            if (p.id === socket.id) row.className = 'active-row'; 
+
+            row.innerHTML = `
+                <td class="${isEliminated ? 'eliminated' : ''}">${p.name}</td>
+                <td class="${scoreClass}">${lastScore}</td>
+                <td style="font-weight: bold;">${p.score} / 71</td>
+                <td>${isEliminated ? '💀 I ELIMINUAR' : '✅ Në Lojë'}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        if (timerText) {
+            let koha = 5; 
+            timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
+            
+            const interval = setInterval(() => {
+                koha--;
+                if (koha >= 0) {
+                    timerText.innerHTML = `Raundi i ri nis pas <strong>${koha}</strong> sekondash...`;
+                }
+                if (koha <= 0) clearInterval(interval);
+            }, 1000);
+        }
+
+        modal.style.display = 'flex'; 
+    }
+
+    doraImeData = [];
+    if (typeof renderHand === "function") renderHand();
+    
+    const discardPileElement = document.getElementById('discard-pile');
+    if (discardPileElement) {
+        discardPileElement.innerHTML = '<span class="label">ZION 71</span>';
+    }
+
+    setTimeout(() => {
+        if (modal) modal.style.display = 'none';
+    }, 4500);
+});
+
+socket.on('playerEliminated', (playerName) => {
+    console.log(`${playerName} u eliminua sepse kaloi 71 pikë! 💀`);
+});
+
+function getHandOrder() {
+    const cards = [...handContainer.querySelectorAll('.card')];
+    return cards.map(c => ({
+        v: c.dataset.v,
+        s: c.dataset.s
+    }));
+}
+
+window.addEventListener('beforeunload', () => {
+    localStorage.setItem('zion_player_name', myName);
+});
+
+socket.on('initGame', () => {
+    console.log("Loja nisi! Po fsheh Lobby-n...");
+    
+    const lobby = document.getElementById('lobby-controls'); 
+    const lobbyText = document.getElementById('lobby-text');
+    const table = document.getElementById('game-table');
+
+    if (lobby) {
+        lobby.style.display = 'none'; 
+        lobby.classList.add('hidden');
+    } else {
+        console.warn("Elementi 'lobby-controls' nuk u gjet!");
+    }
+
+    if (table) {
+        table.style.display = 'block';
+        table.classList.remove('hidden');
+    } else {
+        console.warn("Elementi 'game-table' nuk u gjet!");
+    }
+});
+
+socket.on('yourCards', (cards) => {
+    console.log("DEBUG: Eventi yourCards u thirr. Letrat e marra:", cards);
+    
+    if (cards && Array.isArray(cards) && cards.length > 0) {
+        
+        const gameTable = document.getElementById('game-table');
+        const lobby = document.getElementById('lobby-controls');
+        const lobbyText = document.getElementById('lobby-text');
+        
+        if (gameTable) {
+            gameTable.style.display = 'block';
+            document.body.classList.add('game-active');
+        }
+        
+        if (lobby) {
+            lobby.style.display = 'none';
+        }
+        
+        doraImeData = cards.map((c, i) => ({
+            ...c, 
+            id: c.id || `${c.v}-${c.s}-${i}-${Math.random().toString(36).substring(2, 6)}`
+        }));
+        
+        console.log("DEBUG: doraImeData u mbush me sukses. Numri i letrave:", doraImeData.length);
+        
+        setTimeout(() => {
+            if (typeof renderHand === "function") {
+                renderHand();
+            } else {
+                console.error("GABIM: Funksioni renderHand() nuk u gjet!");
+            }
+            
+            if (typeof checkZionCondition === "function") {
+                checkZionCondition();
+            }
+        }, 100);
+
+    } else {
+        console.error("GABIM KRITIK: Serveri dërgoi 'yourCards' por data ishte e zbrazët ose korruptuar!");
+        
+        doraImeData = [];
+        if (typeof renderHand === "function") renderHand();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const handContainer = document.getElementById('player-hand');
+    const discardPile = document.getElementById('discard-pile');
+
+    new Sortable(handContainer, {
+        group: {
+            name: 'zion-game',
+            pull: true,
+            put: false
+        },
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        onEnd: function (evt) {
+            const cardElements = Array.from(document.querySelectorAll('#player-hand .card'));
+            
+            doraImeData = cardElements.map(el => ({
+                v: el.dataset.v,
+                s: el.dataset.s,
+                id: el.dataset.id
+            }));
+
+            console.log("Renditja u 'gozhdua' në memorie:", doraImeData.map(c => c.v));
+            
+            socket.emit('update_my_hand_order', doraImeData);
+        }    
+    });
+
+    new Sortable(discardPile, {
+        group: 'zion-game',
+        onAdd: function (evt) {
+            const cardEl = evt.item;
+            const v = cardEl.dataset.v;
+            const s = cardEl.dataset.s;
+
+            cardEl.remove();
+
+            if (typeof hedhLetren === "function") {
+                hedhLetren(v, s); 
+            }
+            
+            console.log(`U hodh letra: ${v} ${s}`);
+        }
+    });
+});
+
+socket.on('showWinnerCards', (winnerCards) => {
+    const winnerDisplay = document.getElementById('winner-cards-display');
+    const winnerContainer = document.getElementById('winner-cards-container');
+    
+    if (!winnerDisplay || !winnerContainer) return;
+    
+    winnerContainer.innerHTML = '';
+    
+    winnerCards.forEach(card => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        
+        if (card.v === '★' || card.v === 'Xhoker') {
+            div.classList.add('joker');
+            div.innerHTML = `<span class="joker-star">★</span><br><small>ZION</small>`;
+        } else {
+            div.innerHTML = `${card.v}<br>${card.s}`;
+            if (['♥', '♦'].includes(card.s)) {
+                div.style.color = 'red';
+            }
+        }
+        
+        winnerContainer.appendChild(div);
+    });
+    
+    winnerDisplay.style.display = 'flex';
+    
+    setTimeout(() => {
+        winnerDisplay.style.display = 'none';
+    }, 5000);
+});
+
+console.log("Lidhja HTML -> Script: OK ✅");
