@@ -1,1 +1,459 @@
+/* ==========================================
+   ZION 71 - STYLE I PLOTË (MOBILE LANDSCAPE)
+   ========================================== */
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+}
+
+body {
+    background: #1a4a2a;
+    background: radial-gradient(circle at 50% 30%, #2a6a3a, #0d2a0d);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* ========== HEADER ========== */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 20, 0, 0.5);
+    backdrop-filter: blur(8px);
+    padding: 8px 16px;
+    border-radius: 40px;
+    margin-bottom: 8px;
+    border: 1px solid #b8915a;
+    color: #f0e6d2;
+    font-weight: bold;
+    font-size: 14px;
+    height: 48px;
+}
+
+.round-info {
+    background: #2c4f2c;
+    padding: 6px 14px;
+    border-radius: 30px;
+    border: 1px solid #d4a76a;
+}
+
+.score-toggle {
+    background: #c9a04b;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 3px 0 #7a5c2e;
+    cursor: pointer;
+}
+
+.player-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #2a3f2a;
+    padding: 6px 14px;
+    border-radius: 30px;
+    border: 1px solid #b8915a;
+}
+
+.led {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #555;
+    box-shadow: 0 0 5px currentColor;
+}
+
+.led-red { background: #e74c3c; box-shadow: 0 0 10px #e74c3c; }
+.led-yellow { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
+.led-green { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; }
+.led-orange { background: #e67e22; box-shadow: 0 0 10px #e67e22; }
+
+/* ========== CENTER AREA (Stack + Jackpot) ========== */
+.center-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin: 8px 0;
+    height: 100px;
+}
+
+.deck-container, .jackpot-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.deck-card {
+    width: 60px;
+    height: 85px;
+    background: #2b1e10;
+    border: 2px solid #c9a87c;
+    border-radius: 8px;
+    box-shadow: 0 6px 0 #0f0b06, 0 8px 12px black;
+    position: relative;
+}
+
+.deck-container .deck-card:nth-child(1) { transform: rotate(-1deg) translateX(2px); }
+.deck-container .deck-card:nth-child(2) { transform: rotate(0.5deg) translateX(-2px) translateY(-5px); }
+.deck-container .deck-card:nth-child(3) { transform: rotate(2deg) translateX(-4px) translateY(-8px); }
+.deck-container .deck-card:nth-child(4) { transform: rotate(-0.5deg) translateX(4px) translateY(-12px); }
+
+.deck-label, .jackpot-label {
+    color: #ecd59c;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #1f3b1f;
+}
+
+.jackpot-card {
+    width: 60px;
+    height: 85px;
+    background: linear-gradient(145deg, #ffd966, #b8860b);
+    border: 3px solid #ffd700;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff2c0;
+    text-shadow: 2px 2px 0 #7a4f0b;
+    box-shadow: 0 0 20px gold;
+    transform: rotate(5deg);
+}
+
+.jackpot-card .v { font-size: 28px; line-height: 1; }
+.jackpot-card .s { font-size: 24px; }
+
+.active-deck {
+    animation: pulse-deck 1.2s infinite;
+    cursor: pointer;
+}
+
+@keyframes pulse-deck {
+    0% { filter: drop-shadow(0 0 5px #ffd966); }
+    50% { filter: drop-shadow(0 0 20px #ffd966) drop-shadow(0 0 30px #ffb347); }
+}
+
+/* ========== HAND AREA ========== */
+.hand-area {
+    background: #1e4f2e;
+    border-radius: 30px 30px 20px 20px;
+    padding: 10px 8px;
+    margin: 8px 0;
+    border: 2px solid #b2915d;
+    box-shadow: inset 0 -3px 0 #6f5438;
+}
+
+.hand-header {
+    display: flex;
+    justify-content: space-between;
+    color: #f9e2b7;
+    font-weight: bold;
+    padding: 0 8px 8px 8px;
+    font-size: 14px;
+}
+
+.hand-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    min-height: 95px;
+    padding: 4px;
+    background: #2c5e3a80;
+    border-radius: 20px;
+    transition: 0.2s;
+}
+
+.card {
+    width: 55px;
+    height: 80px;
+    background: white;
+    border-radius: 8px;
+    border: 2px solid #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+    box-shadow: -3px 3px 5px rgba(0,0,0,0.6);
+    cursor: grab;
+    transition: 0.1s;
+    position: relative;
+    color: #1a1a1a;
+    flex-shrink: 0;
+}
+
+.card[data-suit="♥"], .card[data-suit="♦"] { color: #c33; }
+
+.card.joker {
+    background: #f7d84a;
+    border: 3px solid #b8860b;
+    color: #5e3a1c;
+    font-size: 28px;
+}
+
+.card.dragging {
+    opacity: 0.7;
+    transform: scale(1.05) rotate(3deg);
+    cursor: grabbing;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    z-index: 10000;
+}
+
+.card-placeholder {
+    background: rgba(255,255,200,0.2);
+    border: 2px dashed #ffd966;
+    border-radius: 8px;
+    width: 55px;
+    height: 80px;
+    flex-shrink: 0;
+}
+
+/* ========== DISCARD AREA ========== */
+.discard-area {
+    margin: 8px 0;
+}
+
+.discard-header {
+    color: #ecd59c;
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-size: 13px;
+    padding-left: 8px;
+}
+
+.discard-pile {
+    background: #1f4623;
+    border: 3px dashed #be9f6b;
+    border-radius: 30px;
+    min-height: 75px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    transition: 0.2s;
+}
+
+.discard-pile.over {
+    background: #3c7844;
+    border-color: #ffd966;
+    transform: scale(1.02);
+}
+
+.discard-cards-container {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+}
+
+.card-mini {
+    width: 45px;
+    height: 65px;
+    background: #ecf0f1;
+    border-radius: 6px;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    transform: rotate(3deg);
+    box-shadow: -3px 4px 5px black;
+}
+
+.card-mini.red { color: #e74c3c; }
+.card-mini.joker { background: #f1c40f; }
+
+/* ========== CLOSE BUTTON ========== */
+.close-button-container {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.zion-button {
+    background: #27ae60;
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    padding: 14px 40px;
+    border-radius: 50px;
+    box-shadow: 0 6px 0 #1e8449, 0 8px 15px black;
+    cursor: pointer;
+    transition: 0.06s linear;
+    letter-spacing: 2px;
+    width: fit-content;
+}
+
+.zion-button:active {
+    transform: translateY(5px);
+    box-shadow: 0 2px 0 #1e8449, 0 5px 10px black;
+}
+
+/* ========== CHAT (Mobile Minimal) ========== */
+.chat-container {
+    position: fixed;
+    bottom: 8px;
+    right: 8px;
+    width: 200px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+    border-radius: 20px;
+    border: 1px solid #b2915d;
+    z-index: 100;
+}
+
+.chat-messages {
+    height: 100px;
+    overflow-y: auto;
+    padding: 8px;
+    color: white;
+    font-size: 12px;
+    border-bottom: 1px solid #6f5438;
+}
+
+.chat-message {
+    margin: 4px 0;
+    word-wrap: break-word;
+}
+
+.chat-username { color: #ffd966; font-weight: bold; }
+.chat-text { color: #ecf0f1; }
+
+.chat-input-area {
+    display: flex;
+    padding: 5px;
+    gap: 5px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    background: #2c3e50;
+    border: none;
+    border-radius: 30px;
+    padding: 8px 12px;
+    color: white;
+    font-size: 12px;
+}
+
+.chat-input-area button {
+    background: #d4a76a;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* ========== MODALS ========== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background: #1e4a2e;
+    border: 3px solid #d4a76a;
+    border-radius: 30px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px;
+    color: #ecd59c;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #b2915d;
+}
+
+.close-modal {
+    font-size: 30px;
+    cursor: pointer;
+    color: #ffaa66;
+}
+
+/* Winner cards */
+#winner-cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* ========== UTILITIES ========== */
+.hidden { display: none !important; }
+
+.my-turn-glow {
+    box-shadow: inset 0 0 30px #2ecc7133;
+}
+
+/* Landscape optimization */
+@media (orientation: landscape) {
+    body {
+        padding: 5px;
+    }
+    
+    .hand-container {
+        min-height: 90px;
+    }
+    
+    .card {
+        width: 50px;
+        height: 72px;
+        font-size: 18px;
+    }
+    
+    .chat-container {
+        width: 180px;
+    }
+}
+
+/* Small height screens */
+@media (max-height: 400px) {
+    .game-header { height: 40px; font-size: 12px; }
+    .center-area { height: 80px; gap: 15px; }
+    .deck-card, .jackpot-card { width: 50px; height: 70px; }
+    .card { width: 45px; height: 65px; font-size: 16px; }
+    .chat-container { width: 150px; }
+    .chat-messages { height: 70px; }
+}
